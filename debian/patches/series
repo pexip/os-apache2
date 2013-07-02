@@ -32,3 +32,4 @@
 CVE-2012-2687.patch
 CVE-2012-4929.patch
 CVE-2012-3499_4558.patch
+apache-2.2.22ubuntu1.3-wstunnel.patch
