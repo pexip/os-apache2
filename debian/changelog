@@ -1,3 +1,16 @@
+apache2 (2.2.22-1ubuntu1.4) precise-security; urgency=low
+
+  * SECURITY UPDATE: log file poisoning via mod_rewrite (LP: #1188069)
+    - debian/patches/CVE-2013-1862.patch: properly escape items in
+      modules/mappers/mod_rewrite.c.
+    - CVE-2013-1862
+  * SECURITY UPDATE: denial of service via MERGE request
+    - debian/patches/CVE-2013-1896.patch: make sure DAV is enabled for URI
+      in modules/dav/main/mod_dav.c.
+    - CVE-2013-1896
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 12 Jul 2013 08:58:01 -0400
+
 apache2 (2.2.22-1ubuntu1.3) precise-security; urgency=low
 
   * SECURITY UPDATE: multiple cross-site scripting issues
