@@ -1,3 +1,9 @@
+apache2 (2.2.22-1ubuntu1.4pexip2) precise; urgency=low
+
+  * Adjust log directory permissions.
+
+ -- Alan Ford <alan@pexip.com>  Thu, 16 Jan 2014 17:45:50 +0000
+
 apache2 (2.2.22-1ubuntu1.4pexip1) precise; urgency=low
 
   * Update for ubuntu1.4.

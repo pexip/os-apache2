@@ -16,7 +16,9 @@ if [ -z "$2" ]; then
         fi
         touch /var/log/apache2/error.log /var/log/apache2/access.log
         chown root:adm /var/log/apache2/error.log /var/log/apache2/access.log
-        chmod 0640 /var/log/apache2/error.log /var/log/apache2/access.log
+        chmod 0644 /var/log/apache2/error.log /var/log/apache2/access.log
+else
+        chmod -R o+rX /var/log/apache2
 fi
 
 # Note, this line catches new installs as well as upgrades
