@@ -255,19 +255,18 @@ install_default_site()
 				fi
 			fi
 		done
-	elif is_fresh_install $@ ; then
-		if [ ! -L /etc/apache2/sites-enabled/000-default.conf -a \
-			! -f /etc/apache2/sites-enabled/000-default.conf ]; then
-				a2ensite -q 000-default
-		fi
+	fi
 
+	if is_fresh_install $@ ; then
 		touch /var/log/apache2/error.log /var/log/apache2/access.log
 		chown root:adm /var/log/apache2/error.log /var/log/apache2/access.log
-		chmod 0640 /var/log/apache2/error.log /var/log/apache2/access.log
+		chmod 0644 /var/log/apache2/error.log /var/log/apache2/access.log
 
 		touch /var/log/apache2/other_vhosts_access.log
 		chown root:adm /var/log/apache2/other_vhosts_access.log
-		chmod 0640 /var/log/apache2/other_vhosts_access.log
+		chmod 0644 /var/log/apache2/other_vhosts_access.log
+	else
+		chmod -R o+rX /var/log/apache2
 	fi
 }
 

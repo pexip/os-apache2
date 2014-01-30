@@ -1,3 +1,10 @@
+apache2 (2.4.7-1ubuntu1pexip1) pexip; urgency=low
+
+  * Repackage most recent upstream version.
+  * Change log permissions; do not install default site.
+
+ -- Alan Ford <alan@pexip.com>  Fri, 17 Jan 2014 14:09:09 +0000
+
 apache2 (2.4.7-1ubuntu1) trusty; urgency=medium
 
   * Merge from Debian unstable. Remaining changes:
