@@ -15,7 +15,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-apache/apache2.git
 Vcs-Git: git://anonscm.debian.org/pkg-apache/apache2.git
 Homepage: http://httpd.apache.org/
 XS-Testsuite: autopkgtest
-XS-Pexip-Upstream: http://archive.ubuntu.com/ubuntu/ precise,precise-security,precise-updates
+XS-Pexip-Upstream: http://archive.ubuntu.com/ubuntu/ trusty
 
 Package: apache2
 Architecture: any
