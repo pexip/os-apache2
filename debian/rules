@@ -18,8 +18,7 @@ AP2_CFLAGS = -pipe $(CFLAGS)
 AP2_LDFLAGS = -Wl,--as-needed $(LDFLAGS)
 AP2_CPPFLAGS = -DPLATFORM='\"$(LSB_RELEASE)\"' $(CPPFLAGS)
 AP2_LTFLAGS = --no-silent
-DEB_HOST_GNU_TYPE := $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
 
 support/suexec-custom.c: support/suexec.c debian/patches/suexec-custom.patch
 	cp support/suexec.c support/suexec-custom.c

@@ -10,4 +10,3 @@ var/cache/apache2/mod_cache_disk
 var/log/apache2
 var/www/html
 usr/share/bug/apache2
-/etc/ufw/applications.d/apache2

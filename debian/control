@@ -1,19 +1,17 @@
 Source: apache2
 Section: httpd
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-XSBC-Original-Maintainer: Debian Apache Maintainers <debian-apache@lists.debian.org>
+Maintainer: Debian Apache Maintainers <debian-apache@lists.debian.org>
 Uploaders: Stefan Fritsch <sf@debian.org>, Arno Töll <arno@debian.org>
 Build-Depends: debhelper (>= 8.9.7~), lsb-release, dpkg-dev (>= 1.16.1~),
  libaprutil1-dev (>= 1.5.0), libapr1-dev (>= 1.5.0), libpcre3-dev, zlib1g-dev,
  libssl-dev (>= 0.9.8m), libcap-dev [linux-any], perl,
- liblua5.2-dev, libxml2-dev, autotools-dev, gawk | awk
+ liblua5.1-0-dev, libxml2-dev, autotools-dev, gawk | awk
 Build-Conflicts: autoconf2.13
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-apache/apache2.git
 Vcs-Git: git://anonscm.debian.org/pkg-apache/apache2.git
 Homepage: http://httpd.apache.org/
-XS-Testsuite: autopkgtest
 
 Package: apache2
 Architecture: any
@@ -23,7 +21,7 @@ Depends: ${misc:Depends}, lsb-base, procps [!hurd-i386],
 Replaces: apache2.2-common
 Conflicts: apache2.2-common
 Recommends: ssl-cert
-Suggests: www-browser, apache2-doc, apache2-suexec-pristine | apache2-suexec-custom, ufw,
+Suggests: www-browser, apache2-doc, apache2-suexec-pristine | apache2-suexec-custom,
  apache2-utils
 Description: Apache HTTP Server
  The Apache Software Foundation's goal is to build a secure, efficient and

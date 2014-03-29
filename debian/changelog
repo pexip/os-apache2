@@ -1,59 +1,34 @@
-apache2 (2.4.7-1ubuntu4) trusty; urgency=medium
+apache2 (2.4.9-1) unstable; urgency=medium
 
-  * d/p/split-logfile.patch: fix completely broken split-logfile command
-    (LP: #1299162). Thanks to Holger Mauermann.
+  * New upstream version.
+    Security fixes:
+    - CVE-2013-6438: mod_dav: Fix DoS from crafted DAV WRITE requests.
+    - CVE-2014-0098: mod_log_config: Fix segfaults when logging truncated
+                     cookies.
+    Notable new features:
+    - Support named groups and backreferences within the LocationMatch,
+      DirectoryMatch, FilesMatch and ProxyMatch directives.
+    - mod_proxy: Added support for unix domain sockets as the backend server
+      endpoint.
+    - mod_ssl: Add support for OpenSSL configuration commands by introducing
+      the SSLOpenSSLConfCmd directive.
+    - mod_authz_user, mod_authz_host, mod_authz_groupfile, mod_authz_dbm,
+      mod_authz_dbd, mod_authnz_ldap: Support the expression parser within the
+      require directives.
+    - mod_rewrite: Add RewriteOptions InheritDown, InheritDownBefore,
+      and IgnoreInherit.
+    - Bugfix in the build system to avoid problems with patched config.m4
+      files as in LP #1251939.
+  * Make default cipher list in ssl.conf more secure:
+    - Remove 'MEDIUM'. This disables RC4 and SEED. Also remove '!MD5' because
+      'HIGH' does not include MD5.
+    - Remove the 'Speed-optimized SSL Cipher' configuration example because
+      it depends on RC4, which is considered insecure.
+  * Change init script short description to describe the service, not the
+    script.  Closes: #738315
+  * Bump Standards-Version (no changes).
 
- -- Robie Basak <robie.basak@ubuntu.com>  Thu, 03 Apr 2014 11:21:22 +0000
-
-apache2 (2.4.7-1ubuntu3) trusty; urgency=medium
-
-  * SECURITY UPDATE: denial of service via mod_dav incorrect end of string
-    calculation
-    - debian/patches/CVE-2013-6438.patch: properly calculate correct length
-      in modules/dav/main/util.c.
-    - CVE-2013-6438
-  * SECURITY UPDATE: denial of service via truncated cookie and
-    mod_log_config
-    - debian/patches/CVE-2014-0098.patch: properly parse tokens in
-      modules/loggers/mod_log_config.c.
-    - CVE-2014-0098
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 20 Mar 2014 08:34:10 -0400
-
-apache2 (2.4.7-1ubuntu2) trusty; urgency=medium
-
-  * d/index.html: replace Debian with Ubuntu on default page
-    (LP: #1288690).
-
- -- Robie Basak <robie.basak@ubuntu.com>  Wed, 19 Mar 2014 11:04:21 +0000
-
-apache2 (2.4.7-1ubuntu1) trusty; urgency=medium
-
-  * Merge from Debian unstable. Remaining changes:
-    - debian/{control, apache2.install, apache2-utils.ufw.profile,
-      apache2.dirs}: Add ufw profiles.
-    - debian/apache2.py, debian/apache2-bin.install: Add apport hook.
-    - d/control, d/config-dir/mods-available/ssl.conf,
-      d/ask-for-passphrase, d/apache2.install, d/tests/ssl-passphrase:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-    - debian/rules: Fix cross-building by passing DEB_{HOST,BUILD}_GNU_TYPE
-      to configure.
-    - debian/patches/086_svn_cross_compiles: Backport several cross fixes
-      from upstream
-    - Build using lua5.2.
-    - d/tests/chroot: dep8 test for ChrootDir case.
-    - d/p/ignore-quilt-dir: adjust build system so that it does not use
-      files find inside the .pc directory. This stops a double module load
-      causing later havoc, including "ChrootDir" directive failure.
-  * Drop changes:
-    - debian/{control, rules}: Enable PIE hardening: no longer required;
-      2.4.7-1 is already hardened.
-    - d/p/itk-rerun-configure.patch: no longer needed, as ITK support has moved
-      out of this package.
-  * d/tests/ssl-passphrase: update for new default path /var/www/html.
-  * d/tests/duplicate-module-load: check for duplicate module loads.
-
- -- Robie Basak <robie.basak@ubuntu.com>  Tue, 14 Jan 2014 17:23:47 +0000
+ -- Stefan Fritsch <sf@debian.org>  Sat, 29 Mar 2014 22:50:32 +0100
 
 apache2 (2.4.7-1) unstable; urgency=low
 
@@ -118,53 +93,6 @@ apache2 (2.4.6-3) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Mon, 12 Aug 2013 20:15:38 +0200
 
-apache2 (2.4.6-2ubuntu4) trusty; urgency=low
-
-  * d/p/ignore-quilt-dir, d/p/itk-rerun-configure.patch: adjust build system so
-    that it does not use files find inside the .pc directory. This stops a
-    double module load causing later havoc, including "ChrootDir" directive
-    failure (LP: #1251939). Thanks to Stefan Fritsch.
-  * d/tests/chroot: dep8 test for ChrootDir case.
-
- -- Robie Basak <robie.basak@ubuntu.com>  Thu, 28 Nov 2013 16:21:51 +0000
-
-apache2 (2.4.6-2ubuntu3) trusty; urgency=low
-
-  * debian/apache2.install: Correct path for ufw.
-    (LP: #1252722) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 19 Nov 2013 08:59:54 -0500
-
-apache2 (2.4.6-2ubuntu2) saucy; urgency=low
-
-  * d/ask-for-passphrase: mark executable so that apache2 can run it. Fixes
-    passphrase prompting for SSL certificates that are passphrase protected.
-  * Add dep8 test for SSL passphrase prompting.
-
- -- Robie Basak <robie.basak@ubuntu.com>  Fri, 09 Aug 2013 13:08:52 +0000
-
-apache2 (2.4.6-2ubuntu1) saucy; urgency=low
-
-  * Merge from Debian unstable. Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, apache2.install, apache2-utils.ufw.profile,
-      apache2.dirs}: Add ufw profiles.
-    - debian/apache2.py, debian/apache2-bin.install: Add apport hook.
-    - debian/control, debian/config-dir/mods-available/ssl.conf,
-      debian/ask-for-passphrase, debian/apache2.install: Plymouth aware
-      passphrase dialog program ask-for-passphrase.
-    - debian/rules: Fix cross-building by passing DEB_{HOST,BUILD}_GNU_TYPE
-      to configure.
-    - debian/patches/086_svn_cross_compiles: Backport several cross fixes
-      from upstream
-  * Dropped changes:
-    - debian/patches/CVE-2013-1896.patch: upstream
-  * Fixed module dependencies (LP: #1205314)
-    - debian/config-dir/mods-available/lbmethod_*: properly specify
-      proxy_balancer, not mod_proxy_balancer.
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 26 Jul 2013 08:31:33 -0400
-
 apache2 (2.4.6-2) unstable; urgency=low
 
   [ Stefan Fritsch ]
@@ -216,56 +144,6 @@ apache2 (2.4.6-1) unstable; urgency=low
     (Closes: #717448)
 
  -- Arno Töll <arno@debian.org>  Sun, 21 Jul 2013 18:44:42 +0200
-
-apache2 (2.4.4-6ubuntu5) saucy; urgency=low
-
-  * SECURITY UPDATE: denial of service via MERGE request
-    - debian/patches/CVE-2013-1896.patch: make sure DAV is enabled for URI
-      in modules/dav/main/mod_dav.c.
-    - CVE-2013-1896
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 18 Jul 2013 11:20:47 -0400
-
-apache2 (2.4.4-6ubuntu4) saucy; urgency=low
-
-  * d/apache2-{utils,bin}.install: move apport hook from apache2-utils to
-    apache2-bin. apache2-utils is only suggested by apache2, so may not
-    always be installed by bug reporters. However, apache2-bin will always
-    need to be installed for Apache to be functional, so this is a better
-    place for the apport hook. apache2-bin already Conflicts/Replaces
-    apache2.2-common, so this also fixes (LP: #1199318).
-  * d/apache2.py: adjust apport hook for new location of configuration
-    files in apache2 >= 2.4: they have moved from apache2.2-common to
-    apache2.
-
- -- Robie Basak <robie.basak@ubuntu.com>  Wed, 17 Jul 2013 17:54:22 +0000
-
-apache2 (2.4.4-6ubuntu3) saucy; urgency=low
-
-  * Build using lua5.2.
-
- -- Matthias Klose <doko@ubuntu.com>  Wed, 17 Jul 2013 14:24:42 +0200
-
-apache2 (2.4.4-6ubuntu2) saucy; urgency=low
-
-  * debian/rules: Fix FTBFS while installing ufw. 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 02 Jul 2013 10:10:14 -0500
-
-apache2 (2.4.4-6ubuntu1) saucy; urgency=low
-
-  * Merge from Debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-  * Dropped changes:
-    - debian/patches/CVE-2012-2687.patch: Dropped no longer needed.
-    - debian/patches/CVE-2012-3499_4558.patch: Dropped no longer needed.
-    - debian/patches/CVE-2012-4929.patch: Dropped no longer needed.
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 02 Jul 2013 08:34:01 -0500
 
 apache2 (2.4.4-6) unstable; urgency=low
 
@@ -738,122 +616,6 @@ apache2 (2.4.1-1) experimental; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Mon, 19 Mar 2012 10:46:02 +0100
 
-apache2 (2.2.22-6ubuntu5) raring; urgency=low
-
-  * SECURITY UPDATE: multiple cross-site scripting issues
-    - debian/patches/CVE-2012-3499_4558.patch: properly escape html in
-      modules/generators/{mod_info.c,mod_status.c},
-      modules/ldap/util_ldap_cache_mgr.c, modules/mappers/mod_imagemap.c,
-      modules/proxy/{mod_proxy_balancer.c,mod_proxy_ftp.c}.
-    - CVE-2012-3499
-    - CVE-2012-4558
-  * SECURITY UPDATE: symlink attack in apache2ctl script
-    - debian/apache2ctl: introduce and use a safer mkdir_chown() function.
-    - Thanks to Stefan Fritsch for the fix.
-    - CVE-2013-1048
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 15 Mar 2013 07:59:58 -0400
-
-apache2 (2.2.22-6ubuntu4) raring; urgency=low
-
-  * Fix cross-building by passing DEB_{HOST,BUILD}_GNU_TYPE to configure.
-  * Skip module sanity check between MPMs if cross-building without the
-    kernel/binfmt support to run our target binaries on the build system.
-  * Backport several cross fixes from upstream as 086_svn_cross_compiles.
-
- -- Adam Conrad <adconrad@ubuntu.com>  Wed, 05 Dec 2012 02:21:46 -0700
-
-apache2 (2.2.22-6ubuntu3) raring; urgency=low
-
-  * SECURITY UPDATE: XSS vulnerability in mod_negotiation
-    - debian/patches/CVE-2012-2687.patch: escape filenames in
-      modules/mappers/mod_negotiation.c.
-    - CVE-2012-2687
-  * SECURITY UPDATE: CRIME attack ssl attack (LP: #1068854)
-    - debian/patches/CVE-2012-4929.patch: backport SSLCompression on|off
-      directive. Defaults to off as enabling compression enables the CRIME
-      attack.
-    - CVE-2012-4929
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 08 Nov 2012 17:56:24 -0500
-
-apache2 (2.2.22-6ubuntu2) quantal; urgency=low
-
-  * debian/apache2.py
-   - Update apport hook for python3 ; thanks to Edward Donovan (LP: #1013171)
-   - Check if this directory exists: /etc/apache2/sites-enabled/
-
- -- Matthieu Baerts (matttbe) <matttbe@gmail.com>  Mon, 16 Jul 2012 10:02:18 +0200
-
-apache2 (2.2.22-6ubuntu1) quantal; urgency=low
-
-  * Merge from Debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-  * Dropped changes:
-    - debian/control: Add bzr tag and point it to our tree; this is not 
-      really required and just increases the delta.
-
- -- Robie Basak <robie.basak@ubuntu.com>  Fri, 08 Jun 2012 11:37:31 +0100
-
-apache2 (2.2.22-6) unstable; urgency=low
-
-  [ Stefan Fritsch ]
-  * Fix regression causing apache2 to cache "206 partial content" responses,
-    and then serving these partial responses when replying to normal requests.
-    Closes: #671204
-  * Add section to security.conf that shows how to forbid access to VCS
-    directories. Closes: #548213
-  * Update ssl default cipher config, add alternative speed optimized config.
-    Closes: #649020
-  * Add "AddCharset" for .brf files in default mod_mime config.
-    Closes: #402567
-  * Don't create httpd.conf anymore and don't include it in apache2.conf. If
-    it contains local modifications, move it to /etc/apache2/conf.d/httpd.conf
-  * Port some of the comments in apache2.conf from the 2.4 package.
-  * Compile mod_version statically, drop associated module load file.
-  * If apache2 is not running, make "/etc/init.d/apache2 reload" skip the
-    configtest.
-  * Note in README.Debian that future versions of the package will have the
-    include statements changed to include only *.conf.
-  * Change compiled-in document root to /var/www, to avoid strange error
-    messages.
-  * Use "dh --with autotools_dev" instead of patching config.sub/config.guess.
-
-  [ Arno Töll ]
-  * Fix apxs to import LDFLAGS from config_vars.mk. Moreover, make it possible
-    to override LDFLAGS at compile time by defining LDLAGS in the environment,
-    just like it is possible for CFLAGS. This also means, config_vars.mk now
-    exports hardening build flags by default.
-  * Update doc-base metadata for the apache2-doc package.
-
- -- Stefan Fritsch <sf@debian.org>  Tue, 29 May 2012 22:05:48 +0200
-
-apache2 (2.2.22-5) unstable; urgency=low
-
-  * Make LoadFile and LoadModule look in the standard search paths if the
-    dso file name is given as a pure filename. This helps with the multi-arch
-    transition.
-
- -- Stefan Fritsch <sf@debian.org>  Mon, 30 Apr 2012 23:38:33 +0200
-
-apache2 (2.2.22-4) unstable; urgency=high
-
-  * CVE-2012-0216: Remove "Alias /doc /usr/share/doc" from the default virtual
-    hosts' config files.
-    If scripting modules like mod_php or mod_rivet are enabled on systems
-    where either 1) some frontend server forwards connections to an apache2
-    backend server on the localhost address, or 2) the machine running
-    apache2 is also used for web browsing, this could allow a remote
-    attacker to execute example scripts stored under /usr/share/doc.
-    Depending on the installed packages, this could lead to issues like cross
-    site scripting, code execution, or leakage of sensitive data.
-
- -- Stefan Fritsch <sf@debian.org>  Sun, 15 Apr 2012 23:41:43 +0200
-
 apache2 (2.2.22-3) unstable; urgency=low
 
   * Fix "FTBFS: mkdir: cannot create directory `debian/build-tree/arch':
@@ -874,18 +636,6 @@ apache2 (2.2.22-2) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Thu, 15 Mar 2012 00:02:31 +0100
 
-apache2 (2.2.22-1ubuntu1) precise; urgency=low
-
-  * Merge from Debian testing.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Chuck Short <zulcss@ubuntu.com>  Sun, 12 Feb 2012 20:06:35 -0500
-
 apache2 (2.2.22-1) unstable; urgency=low
 
    [ Stefan Fritsch ]
@@ -902,18 +652,6 @@ apache2 (2.2.22-1) unstable; urgency=low
    * Fix "typo in /etc/apache2/apache2.conf" (Closes: #653801)
 
  -- Stefan Fritsch <sf@debian.org>  Wed, 01 Feb 2012 21:49:04 +0100 
-
-apache2 (2.2.21-5ubuntu1) precise; urgency=low
-
-  * Merge from Debian testing.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 09 Jan 2012 06:26:31 +0000
 
 apache2 (2.2.21-5) unstable; urgency=low
 
@@ -968,26 +706,6 @@ apache2 (2.2.21-4) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Thu, 29 Dec 2011 12:09:14 +0100
 
-apache2 (2.2.21-3ubuntu2) precise; urgency=low
-
-  * d/ask-for-passphrase: Flip the logic of this script so that it checks
-    first to see if apache is being started from a TTY, and then if not,
-    tries plymouth. (LP: #887410)
-
- -- Clint Byrum <clint@ubuntu.com>  Tue, 06 Dec 2011 16:49:33 -0800
-
-apache2 (2.2.21-3ubuntu1) precise; urgency=low
-
-  * Merge from Debian testing.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Chuck Short <zulcss@ubuntu.com>  Fri, 09 Dec 2011 05:20:43 +0000
-
 apache2 (2.2.21-3) unstable; urgency=medium
 
   * Fix CVE-2011-4317: Prevent unintended pattern expansion in some
@@ -1001,24 +719,6 @@ apache2 (2.2.21-3) unstable; urgency=medium
     Thanks for your work in the past.
 
  -- Stefan Fritsch <sf@debian.org>  Sat, 03 Dec 2011 18:54:03 +0100
-
-apache2 (2.2.21-2ubuntu2) precise; urgency=low
-
-  * No-change rebuild to drop spurious libsfgcc1 dependency on armhf.
-
- -- Adam Conrad <adconrad@ubuntu.com>  Fri, 02 Dec 2011 17:36:28 -0700
-
-apache2 (2.2.21-2ubuntu1) precise; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Chuck Short <zulcss@ubuntu.com>  Fri, 14 Oct 2011 16:01:29 +0000
 
 apache2 (2.2.21-2) unstable; urgency=high
 
@@ -1036,19 +736,6 @@ apache2 (2.2.21-1) unstable; urgency=low
       if combined with mod_proxy_balancer
 
  -- Stefan Fritsch <sf@debian.org>  Mon, 26 Sep 2011 18:16:11 +0200
-
-apache2 (2.2.20-1ubuntu1) oneiric; urgency=low
-
-  * Merge from debian unstable to fix CVE-2011-3192 (LP: #837991).
-    Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Steve Beattie <sbeattie@ubuntu.com>  Tue, 06 Sep 2011 01:17:15 -0700
 
 apache2 (2.2.20-1) unstable; urgency=low
 
@@ -1072,18 +759,6 @@ apache2 (2.2.19-2) unstable; urgency=high
 
  -- Stefan Fritsch <sf@debian.org>  Mon, 29 Aug 2011 17:08:17 +0200
 
-apache2 (2.2.19-1ubuntu1) oneiric; urgency=low
-
-  * Merge from debian unstable (LP: #787013). Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debian/apache2.py, debian/apache2.2-common.install: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Andres Rodriguez <andreserl@ubuntu.com>  Mon, 23 May 2011 10:16:09 -0400
-
 apache2 (2.2.19-1) unstable; urgency=low
 
   * New upstream release.
@@ -1100,18 +775,6 @@ apache2 (2.2.19-1) unstable; urgency=low
     in the apache2.2-bin package.
 
  -- Stefan Fritsch <sf@debian.org>  Sun, 22 May 2011 10:21:21 +0200
-
-apache2 (2.2.17-3ubuntu1) oneiric; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debain/apache2.py, debian/apache2.2-common.isntall: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 11 Apr 2011 02:13:30 +0100
 
 apache2 (2.2.17-3) unstable; urgency=low
 
@@ -1139,18 +802,6 @@ apache2 (2.2.17-2) unstable; urgency=high
 
  -- Stefan Fritsch <sf@debian.org>  Mon, 21 Mar 2011 23:01:17 +0100
 
-apache2 (2.2.17-1ubuntu1) natty; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debain/apache2.py, debian/apache2.2-common.isntall: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase. 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 22 Feb 2011 13:02:08 -0500
-
 apache2 (2.2.17-1) unstable; urgency=low
 
   * New upstream version
@@ -1158,32 +809,6 @@ apache2 (2.2.17-1) unstable; urgency=low
   * Fix order of comments in "worker" section in apache2.conf. Closes: #608488
 
  -- Stefan Fritsch <sf@debian.org>  Tue, 15 Feb 2011 23:30:18 +0100
-
-apache2 (2.2.16-6ubuntu3) natty; urgency=low
-
-  * debian/rules: Don't use "-fno-strict-aliasing" since it causes
-    apache FTBFS on amd64. (LP: #711293) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 01 Feb 2011 10:19:55 -0500
-
-apache2 (2.2.16-6ubuntu2) natty; urgency=low
-
-  * debian/rules: Use "-fno-strict-aliasing" to work around a gcc bug.
-   (LP: #697105) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 25 Jan 2011 11:14:58 -0500
-
-apache2 (2.2.16-6ubuntu1) natty; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-    - debain/apache2.py, debian/apache2.2-common.isntall: Add apport hook.
-    - debian/control, debian/ask-for-passphrase, debian/config-dir/mods-available/ssl.conf:
-      Plymouth aware passphrase dialog program ask-for-passphrase.
-
- -- Chuck Short <zulcss@ubuntu.com>  Sun, 02 Jan 2011 06:05:51 +0000
 
 apache2 (2.2.16-6) unstable; urgency=low
 
@@ -1200,30 +825,6 @@ apache2 (2.2.16-5) unstable; urgency=medium
 
  -- Stefan Fritsch <sf@debian.org>  Fri, 31 Dec 2010 01:22:19 +0100
 
-apache2 (2.2.16-4ubuntu2) natty; urgency=low
-
-  [Clint Byrum]
-  * Adding plymouth aware passphrase dialog program ask-for-passphrase.
-    (LP: #582963)
-    + debian/control: apache2.2-common depends on bash for ask-for-passphrase
-    + debian/config-dir/mods-available/ssl.conf:
-      - SSLPassPhraseDialog now uses exec:/usr/share/apache2/ask-for-passhrase
-
-  [Chuck Short]
-  * Add apport hook. (LP: #609177)
-    + debian/apache2.py, debian/apache2.2-common.install
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 22 Nov 2010 09:43:43 -0500
-
-apache2 (2.2.16-4ubuntu1) natty; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 22 Nov 2010 09:43:41 -0500
-
 apache2 (2.2.16-4) unstable; urgency=medium
 
   * Increase the mod_reqtimeout default timeouts to avoid potential problems
@@ -1233,15 +834,6 @@ apache2 (2.2.16-4) unstable; urgency=medium
   * Clarify comments in suexec-custom's default config file. LP: #673289
 
  -- Stefan Fritsch <sf@debian.org>  Sun, 14 Nov 2010 19:05:55 +0100
-
-apache2 (2.2.16-3ubuntu1) natty; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree.
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 12 Oct 2010 11:54:48 +0100
 
 apache2 (2.2.16-3) unstable; urgency=high
 
@@ -1264,30 +856,6 @@ apache2 (2.2.16-2) unstable; urgency=low
   * Bump Standards-Version (no changes).
 
  -- Stefan Fritsch <sf@debian.org>  Sun, 29 Aug 2010 15:29:21 +0200
-
-apache2 (2.2.16-1ubuntu3) maverick; urgency=low
-
-  * Revert "stty sane" to unbreak apache starting, this will have to be
-    fixed a different way. (LP: #626723) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 08 Sep 2010 08:33:17 -0400
-
-apache2 (2.2.16-1ubuntu2) maverick; urgency=low
-
-  * debian/apache2.2-common.apache2.init: Add stty sane so that users will get a 
-    password prompt when using apache-ssl. (LP: #582963)
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 25 Aug 2010 09:25:05 -0400
-
-apache2 (2.2.16-1ubuntu1) maverick; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree.
-    - debian/apache2-2.common.apache2.init: Add graceful restart (LP: #456381)
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 26 Jul 2010 20:21:37 +0100
 
 apache2 (2.2.16-1) unstable; urgency=medium
 
@@ -1320,24 +888,6 @@ apache2 (2.2.15-6) unstable; urgency=low
   * Bump Standards-Version (no changes).
 
  -- Stefan Fritsch <sf@debian.org>  Fri, 16 Jul 2010 23:41:08 +0200
-
-apache2 (2.2.15-5ubuntu1) maverick; urgency=low
-
-  * Merge from debian unstable.  Remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree.
-    - debian/apache2-2.common.apache2.init: Add graceful restart (LP: #456381)
-    + Dropped:
-      - debian/patches/206-fix-potential-memory-leaks.dpatch: No longer needed.
-      - debian/patches/206-report-max-client-mpm-worker.dpatch: No longer needed.
-      - debian/config-dir/apache2.conf: Merged back from debian.
-      - mod-reqtimeout functionality: Merge back from debian.
-      - debian/patches/204_CVE-2010-0408.dpatch: No longer needed.
-      - debian/patches/205_CVE-2010-0434.dpatch: No longer needed.
-      - debian/patches/203_fix-ab-segfault.dpatch: No longer needed.
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 05 May 2010 01:28:04 +0100
 
 apache2 (2.2.15-5) unstable; urgency=low
 
@@ -1459,80 +1009,6 @@ apache2 (2.2.14-6) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Sun, 07 Feb 2010 17:29:45 +0100
 
-apache2 (2.2.14-5ubuntu8) lucid; urgency=low
-
-  * debian/patches/210-backport-mod-reqtimeout-ftbfs.dpatch: Add missing mod_reqtime.so
-    (LP: #562370) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 13 Apr 2010 15:09:57 -0400
-
-apache2 (2.2.14-5ubuntu7) lucid; urgency=low
-
-  * debian/patches/206-fix-potential-memory-leaks.dpatch: Fix potential memory
-    leaks by making sure to not destroy bucket brigades that have been created
-    by earlier filters. Backported from 2.2.15.
-  * debian/patches/206-report-max-client-mpm-worker.dpatch: Don't report server 
-    has reached MaxClients until it has. Backported from 2.2.15
-  * debian/config-dir/apache2.conf: Make the Files ~ "^\.ht" block in apache2.conf 
-    more secure by adding Satisfy all. (Debian bug: #572075)
-  * debian/rules, debian/patches/209-backport-mod-reqtimeout.dpatch, 
-    debian/config2-dir/mods-available/reqtimeout.load,
-    debian/config2-dir/mods-available/reqtimeout.conf debian/NEWS : Backport the 
-    mod-reqtimeout module from 2.2.15, this will mitigate apache slowloris
-    bug in apache. Enable it by default. (LP: #392759)
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 05 Apr 2010 09:53:35 -0400
-
-apache2 (2.2.14-5ubuntu6) lucid; urgency=low
-
-  * debian/apache2.2-common.apache2.init: Fix thinko. (LP: #551681) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 30 Mar 2010 09:41:11 -0400
-
-apache2 (2.2.14-5ubuntu5) lucid; urgency=low
-
-  * Revert 99-fix-mod-dav-permissions.dpatch 
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 30 Mar 2010 07:55:46 -0400
-
-apache2 (2.2.14-5ubuntu4) lucid; urgency=low
-
-  * debian/patches/99-fix-mod-dav-permissions.dpatch: Fix permisisons when 
-    downloading files from webdav (LP: #540747)
-  * debian/apache2.2-common.apache2.init: Add graceful restart (LP: #456381)
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 29 Mar 2010 13:37:39 -0400
-
-apache2 (2.2.14-5ubuntu3) lucid; urgency=low
-
-  * SECURITY UPDATE: denial of service via crafted request in mod_proxy_ajp
-    - debian/patches/204_CVE-2010-0408.dpatch: return the right error code
-      in modules/proxy/mod_proxy_ajp.c.
-    - CVE-2010-0408
-  * SECURITY UPDATE: information disclosure via improper handling of
-    headers in subrequests
-    - debian/patches/205_CVE-2010-0434.dpatch: use a copy of r->headers_in
-      in server/protocol.c.
-    - CVE-2010-0434
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 10 Mar 2010 14:48:48 -0500
-
-apache2 (2.2.14-5ubuntu2) lucid; urgency=low
-
-  * debian/patches/203_fix-ab-segfault.dpatch: Fix segfaulting ab when using really
-    wacky options. (LP: #450501) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 08 Mar 2010 14:53:17 -0500
-
-apache2 (2.2.14-5ubuntu1) lucid; urgency=low
-
-  * Merge from debian testing.  Remaining changes: LP: #506862
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/control: Add bzr tag and point it to our tree.
-
- -- Bhavani Shankar <right2bhavi@gmail.com>  Wed, 13 Jan 2010 14:28:41 +0530
-
 apache2 (2.2.14-5) unstable; urgency=low
 
   * Security: Further mitigation for the TLS renegotation attack
@@ -1555,15 +1031,6 @@ apache2 (2.2.14-5) unstable; urgency=low
   * Change build-dep from libcap2-dev to libcap-dev because of package rename.
 
  -- Stefan Fritsch <sf@debian.org>  Sat, 02 Jan 2010 22:44:15 +0100
-
-apache2 (2.2.14-4ubuntu1) lucid; urgency=low
-
-  * Resynchronzie with Debian, remaining changes are:
-   - debian/{control, rules}: Enable PIE hardening.
-   - debian/{control, rules, pache2.2-common.ufw.profile}: Add ufw profiles.
-   - debian/control: Add bzr tag and point it to our tree.
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 23 Dec 2009 14:44:51 -0500
 
 apache2 (2.2.14-4) unstable; urgency=low
 
@@ -1615,17 +1082,6 @@ apache2 (2.2.14-2) unstable; urgency=medium
 
  -- Stefan Fritsch <sf@debian.org>  Sat, 07 Nov 2009 14:37:37 +0100
 
-apache2 (2.2.14-1ubuntu1) lucid; urgency=low
-
-  * Merge from debian testing, remaining changes:
-    - debian/{control, rules}: Enable PIE hardening.
-    - debian/{control, rules, pache2.2-common.ufw.profile}: Add ufw profiles.
-    - debian/conrol: Add bzr tag and point it to our tree.
-    - Dropped debian/patches/203_fix_legacy_ap_rputs_segfaults.dpatch: 
-      Already applied upstream.
-
- -- Chuck Short <zulcss@ubuntu.com>  Fri, 06 Nov 2009 00:29:03 +0000
-
 apache2 (2.2.14-1) unstable; urgency=low
 
   * New upstream version:
@@ -1659,24 +1115,6 @@ apache2 (2.2.13-1) unstable; urgency=low
     - Fixes segfault with mod_deflate and mod_php (closes: #542623).
 
  -- Stefan Fritsch <sf@debian.org>  Mon, 31 Aug 2009 20:28:56 +0200
-
-apache2 (2.2.12-1ubuntu2) karmic; urgency=low
-
-  * debian/patches/203_fix_legacy_ap_rputs_segfaults.dpatch: 
-    - Fix potential segfaults with the use of the legacy ap_rputs() etc
-      interfaces, in cases where an output filter fails. This happens
-      frequently after CVE-2009-1891 got fixed. (LP: #409987) 
-
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 17 Aug 2009 15:38:47 -0400
-
-apache2 (2.2.12-1ubuntu1) karmic; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/{control,rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-    - Dropped debian/patches/203_fix-ssl-timeftm-ignored.dpatch.
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 04 Aug 2009 20:04:24 +0100
 
 apache2 (2.2.12-1) unstable; urgency=low
 
@@ -1725,16 +1163,6 @@ apache2 (2.2.12-1) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Tue, 04 Aug 2009 11:02:34 +0200
 
-apache2 (2.2.11-7ubuntu1) karmic; urgency=low
-
-  * Merge from debian unstable, remaining changes: LP: #398130
-    - debian/patches/203_fix-ssl-timeftm-ignored.dpatch:
-      Fix timefmt is ignored when XBitHack is on. (LP: #258914)
-    - debian/{control,rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Bhavani Shankar <right2bhavi@gmail.com>  Sat, 11 Jul 2009 16:34:32 +0530
-
 apache2 (2.2.11-7) unstable; urgency=low
 
   * Security fixes:
@@ -1749,16 +1177,6 @@ apache2 (2.2.11-7) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Fri, 10 Jul 2009 22:42:57 +0200
 
-apache2 (2.2.11-6ubuntu1) karmic; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/patches/203_fix-ssl-timeftm-ignored.dpatch:
-      Fix timefmt is ignored when XBitHack is on. (LP: #258914)
-    - debian/{control,rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Chuck Short <zulcss@ubuntu.com>  Tue, 09 Jun 2009 01:01:23 +0100
-
 apache2 (2.2.11-6) unstable; urgency=high
 
   * CVE-2009-1195: mod_include allowed to bypass IncludesNoExec for Server
@@ -1766,16 +1184,6 @@ apache2 (2.2.11-6) unstable; urgency=high
   * Fix postinst scripts (closes: #532278).
 
  -- Stefan Fritsch <sf@debian.org>  Mon, 08 Jun 2009 19:22:58 +0200
-
-apache2 (2.2.11-5ubuntu1) karmic; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/patches/203_fix-ssi-timeftm-ignored.dpatch: 
-      Fix timefmt is ignored when XBitHack is on. (LP: #258914) 
-    - debian/{control,rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Andrew Mitchell <ajmitch@ubuntu.com>  Wed, 03 Jun 2009 14:10:54 +1200
 
 apache2 (2.2.11-5) unstable; urgency=low
 
@@ -1825,16 +1233,6 @@ apache2 (2.2.11-4) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Tue, 19 May 2009 22:55:27 +0200
 
-apache2 (2.2.11-3ubuntu1) karmic; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/patches/203_fix-ssi-timeftm-ignored.dpatch: 
-      Fix timefmt is ignored when XBitHack is on. (LP: #258914) 
-    - debian/{control,rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Andrew Mitchell <ajmitch@ubuntu.com>  Tue, 12 May 2009 16:15:34 +1200
-
 apache2 (2.2.11-3) unstable; urgency=low
 
   * Rebuild against apr-util 1.3, to fix undefined symbol errors in mod_ldap
@@ -1842,21 +1240,6 @@ apache2 (2.2.11-3) unstable; urgency=low
     libaprutil1-dbd-* and libaprutil1-ldap packages.
 
  -- Stefan Fritsch <sf@debian.org>  Tue, 31 Mar 2009 21:07:26 +0200
-
-apache2 (2.2.11-2ubuntu2) jaunty; urgency=low
-
-  * debian/patches/203_fix-ssi-timeftm-ignored.dpatch: 
-    Fix timefmt is ignored when XBitHack is on. (LP: #258914) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 01 Apr 2009 11:39:17 -0400
-
-apache2 (2.2.11-2ubuntu1) jaunty; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/{contro,rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Chuck Short <zulcss@ubuntu.com>  Sat, 17 Jan 2009 00:02:55 +0000
 
 apache2 (2.2.11-2) unstable; urgency=low
 
@@ -1866,14 +1249,6 @@ apache2 (2.2.11-2) unstable; urgency=low
     value of MaxClients in the Apache configuration. Closes: #511103
 
  -- Stefan Fritsch <sf@debian.org>  Fri, 16 Jan 2009 19:01:59 +0100
-
-apache2 (2.2.11-1ubuntu1) jaunty; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/{control, rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Chuck Short <zulcss@ubuntu.com>  Mon, 15 Dec 2008 00:06:50 +0000
 
 apache2 (2.2.11-1) unstable; urgency=low
 
@@ -1889,14 +1264,6 @@ apache2 (2.2.11-1) unstable; urgency=low
 
  -- Stefan Fritsch <sf@debian.org>  Sun, 14 Dec 2008 09:34:24 +0100
 
-apache2 (2.2.9-11ubuntu1) jaunty; urgency=low
-
-  * Merge from debian unstable, remaining changes: (LP: #303375)
-    - debian/{control, rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Bhavani Shankar <right2bhavi@gmail.com>  Sat, 29 Nov 2008 14:02:31 +0530
-
 apache2 (2.2.9-11) unstable; urgency=low
 
   * Regression fix from upstream svn for mod_proxy:
@@ -1910,14 +1277,6 @@ apache2 (2.2.9-11) unstable; urgency=low
     upgrading problems.
 
  -- Stefan Fritsch <sf@debian.org>  Wed, 26 Nov 2008 23:10:22 +0100
-
-apache2 (2.2.9-10ubuntu1) jaunty; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/{control, rules}: enable PIE hardening.
-    - debian/{control, rules, apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Chuck Short <zulcss@ubuntu.com>  Wed, 05 Nov 2008 02:23:18 -0400
 
 apache2 (2.2.9-10) unstable; urgency=low
 
@@ -1948,27 +1307,6 @@ apache2 (2.2.9-8) unstable; urgency=low
     "File does not exist: /htdocs".
 
  -- Stefan Fritsch <sf@debian.org>  Thu, 11 Sep 2008 09:17:33 +0200
-
-apache2 (2.2.9-7ubuntu3) intrepid; urgency=low
-
-  * Revert logrotate change since it will break it for everyone. 
-
- -- Chuck Short <zulcss@ubuntu.com>  Fri, 19 Sep 2008 09:32:01 -0400
-
-apache2 (2.2.9-7ubuntu2) intrepid; urgency=low
-
-  * debian/logrotate: Restart rather than reload for busy websites.
-    (LP: #270899) 
-
- -- Chuck Short <zulcss@ubuntu.com>  Thu, 18 Sep 2008 08:42:22 -0400
-
-apache2 (2.2.9-7ubuntu1) intrepid; urgency=low
-
-  * Merge from debian unstable, remaining changes:
-    - debian/{control,rules}: enable PIE hardening.
-    - debian/{control,rules,apache2.2-common.ufw.profile}: add ufw profiles.
-
- -- Kees Cook <kees@ubuntu.com>  Thu, 28 Aug 2008 08:10:59 -0700
 
 apache2 (2.2.9-7) unstable; urgency=low
 
@@ -2011,23 +1349,6 @@ apache2 (2.2.9-4) unstable; urgency=low
     information.
 
  -- Stefan Fritsch <sf@debian.org>  Sun, 06 Jul 2008 10:38:37 +0200
-
-apache2 (2.2.9-3ubuntu2) intrepid; urgency=low
-
-  * add ufw integration (see
-    https://wiki.ubuntu.com/UbuntuFirewall#Integrating%20UFW%20with%20Packages)
-    (LP: #261198)
-    - debian/control: suggest ufw for apache2.2-common
-    - add apache2.2-common.ufw.profile with 3 profiles and install it to
-      /etc/ufw/applications.d/apache2.2-common
-
- -- Didier Roche <didrocks@ubuntu-fr.org>  Tue, 26 Aug 2008 19:03:42 +0200
-
-apache2 (2.2.9-3ubuntu1) intrepid; urgency=low
-
-  * debian/{control,rules}: enable PIE hardening
-
- -- Kees Cook <kees@ubuntu.com>  Wed, 20 Aug 2008 15:45:00 -0700
 
 apache2 (2.2.9-3) unstable; urgency=low
 
@@ -3599,7 +2920,9 @@ apache2 (2.0.37-1) unstable; urgency=low
  -- Thom May <thom@debian.org>  Thu, 13 Jun 2002 17:47:12 +0100
 
 apache2 (2.0.37+cvs.JCW_PRE2_2037-1) unstable; urgency=low
+
   * New upstream release
+
  -- Thom May <thom@debian.org>  Wed,  5 Jun 2002 12:42:34 +0100
 
 apache2 (2.0.36-2) unstable; urgency=low
@@ -4107,4 +3430,3 @@ apache2 (2.0.18-1) unstable; urgency=low
   * Initial Release.
 
  -- Daniel Stone <daniel@sfarc.net>  Wed,  4 Jul 2001 21:29:29 +1000
-
