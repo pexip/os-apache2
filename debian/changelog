@@ -1,3 +1,32 @@
+apache2 (2.4.7-1ubuntu4) trusty; urgency=medium
+
+  * d/p/split-logfile.patch: fix completely broken split-logfile command
+    (LP: #1299162). Thanks to Holger Mauermann.
+
+ -- Robie Basak <robie.basak@ubuntu.com>  Thu, 03 Apr 2014 11:21:22 +0000
+
+apache2 (2.4.7-1ubuntu3) trusty; urgency=medium
+
+  * SECURITY UPDATE: denial of service via mod_dav incorrect end of string
+    calculation
+    - debian/patches/CVE-2013-6438.patch: properly calculate correct length
+      in modules/dav/main/util.c.
+    - CVE-2013-6438
+  * SECURITY UPDATE: denial of service via truncated cookie and
+    mod_log_config
+    - debian/patches/CVE-2014-0098.patch: properly parse tokens in
+      modules/loggers/mod_log_config.c.
+    - CVE-2014-0098
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 20 Mar 2014 08:34:10 -0400
+
+apache2 (2.4.7-1ubuntu2) trusty; urgency=medium
+
+  * d/index.html: replace Debian with Ubuntu on default page
+    (LP: #1288690).
+
+ -- Robie Basak <robie.basak@ubuntu.com>  Wed, 19 Mar 2014 11:04:21 +0000
+
 apache2 (2.4.7-1ubuntu1) trusty; urgency=medium
 
   * Merge from Debian unstable. Remaining changes:
