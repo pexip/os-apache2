@@ -1,6 +1,9 @@
 apache2 (2.4.9-1pexip1) pexip; urgency=medium
 
   * New upstream version.
+  * debian/config-dir/security.conf:
+    Suppress detailed product information from Server header and
+    the server signature.
 
  -- John-Mark Bell <jmb@pexip.com>  Mon, 28 Apr 2014 13:03:24 +0100
 
