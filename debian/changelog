@@ -1,3 +1,50 @@
+apache2 (2.4.10-1) unstable; urgency=medium
+
+  [ Arno Töll ]
+  * New upstream version
+    + Refresh debian/patches/fhs_compliance.patch
+    + Security Fixes:
+      - CVE-2014-0117 mod_proxy: Fix DoS that could cause a crash
+      - CVE-2014-0226 Fix a race condition resulting in a heap overflow in
+        scoreboard handling
+      - CVE-2014-0118 mod_deflate: The DEFLATE input filter now limits the
+        length and compression ratio of inflated request to mitigate a
+        possible DoS
+      - CVE-2014-0231 mod_cgid: Fix a denial of service against CGI scripts
+    + Fixes SNI with certificate defined in global scope. (Closes: #751361)
+  * Warn users if they try to disable modules that we consider essential for
+    operation of the Apache web server (Closes: #709461)
+  * Drop libcap from our build-dependencies. That was needed for itk which we
+    gave source out to it's own package again.
+  * Provide apache2.2-common package to avoid upgrading problems for people
+    using --purge (apt) or --purge-unused (aptitude) even though that's
+    clearly discouraged. This caused disappearing of conffiles because we move
+    them from apache2.2-common to apache2 during the upgrade. Ugh. This was
+    not a bug in our packaging, but an unfortunately people blame us
+    nonetheless even though it's not all our fault. This alternative helps
+    those people, but at the same time means that incompatible modules aren't
+    force-removed by dpkg during the upgrade. Hopefully we catch all of them
+    with the Breaks relation coming along (Closes: #716880, #752922, #711925)
+
+ -- Stefan Fritsch <sf@debian.org>  Tue, 22 Jul 2014 23:16:20 +0200
+
+apache2 (2.4.9-2) unstable; urgency=medium
+
+  * Fix logic in postinst to detect existing index.* files in both
+    DocumentRoots, the old /var/www and the new /var/www/html. Also
+    change the compiled in default DocumentRoot to /var/www/html.
+    Closes: #743915
+  * Fix buffer overflows in suexec with very long (unix) usernames. Not
+    exploitable due to FORTIFY_SOURCE. And creating users usually requires
+    root privileges, anyway. Thanks to Luca Bruno for the report.
+  * Remove conflicts of mpm modules with mpm_itk, which isn't an mpm
+    anymore. Fixes a part of: #734865. libapache2-mpm-itk needs a fix, too.
+  * Remove obsolete warning in a2enmod about mpm-itk.
+  * Fix lintian warning: Remove image ref to w3.org, which is a privacy
+    breach.
+
+ -- Stefan Fritsch <sf@debian.org>  Sun, 08 Jun 2014 10:38:04 +0200
+
 apache2 (2.4.9-1) unstable; urgency=medium
 
   * New upstream version.
