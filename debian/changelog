@@ -1,3 +1,9 @@
+apache2 (2.4.10-1pexip2) pexip; urgency=medium
+
+  * Change log rotation to 50 x 10MB.
+
+ -- Alan Ford <alan@pexip.com>  Thu, 31 Jul 2014 23:09:30 +0100
+
 apache2 (2.4.10-1pexip1) pexip; urgency=medium
 
   * New upstream version.
