@@ -205,7 +205,7 @@ enable_default_modules()
 		for module in authz_host auth_basic access_compat authn_file authz_user \
 				alias dir autoindex \
 				env mime negotiation setenvif \
-				filter deflate \
+				filter deflate reqtimeout \
 				status ; do
 			a2enmod -m -q $module
 		done
@@ -223,6 +223,9 @@ enable_default_modules()
 				a2enmod -m -q $module
 			fi
 		done
+        elif dpkg --compare-versions "$2" "le" "2.4.10-1pexip2" ; then
+		# Ensure mod_reqtimeout is enabled
+		a2enmod -m -q reqtimeout
 	fi
 }
 

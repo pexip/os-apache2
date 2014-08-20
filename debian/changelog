@@ -1,3 +1,9 @@
+apache2 (2.4.10-1pexip3) pexip; urgency=medium
+
+  * debian/apache2.postinst: Enable mod_reqtimeout
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 20 Aug 2014 20:46:28 +0100
+
 apache2 (2.4.10-1pexip2) pexip; urgency=medium
 
   * Change log rotation to 50 x 10MB.
