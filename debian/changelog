@@ -1,3 +1,9 @@
+apache2 (2.4.10-1pexip4) pexip; urgency=medium
+
+  * debian/apache2.init: Insert sleep in restart.
+
+ -- Alan Ford <alan@pexip.com>  Thu, 28 Aug 2014 10:58:36 +0100
+
 apache2 (2.4.10-1pexip3) pexip; urgency=medium
 
   * debian/apache2.postinst: Enable mod_reqtimeout

@@ -367,6 +367,7 @@ case "$1" in
 	do_stop stop
 	case "$?" in
 		0|1)
+			sleep 5
 			do_start
 			case "$?" in
 				0)
