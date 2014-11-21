@@ -1,3 +1,16 @@
+apache2 (2.4.10-1pexip5) pexip; urgency=medium
+
+  * debian/apache2.postinst: Disable unused modules
+  * debian/config-dir/apache2.conf:
+    + Disable FollowSymLinks for /
+    + Remove permissions for /usr/share and /var/www
+  * debian/config-dir/conf-available/security.conf:
+    + Add explicit request limits
+  * debian//config-dir/mods-available/alias.conf:
+    + Only create /icons/ if mod_autoindex is enabled
+
+ -- John-Mark Bell <jmb@pexip.com>  Fri, 21 Nov 2014 01:32:47 +0000
+
 apache2 (2.4.10-1pexip4) pexip; urgency=medium
 
   * debian/apache2.init: Insert sleep in restart.

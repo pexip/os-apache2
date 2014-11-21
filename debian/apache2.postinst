@@ -203,10 +203,10 @@ enable_default_modules()
 {
 	if is_fresh_install $@; then
 		for module in authz_host auth_basic access_compat authn_file authz_user \
-				alias dir autoindex \
-				env mime negotiation setenvif \
+				alias dir \
+				mime negotiation setenvif \
 				filter deflate reqtimeout \
-				status ; do
+				; do
 			a2enmod -m -q $module
 		done
 	elif we_are_upgrading_from_wheezy $@; then
@@ -223,10 +223,18 @@ enable_default_modules()
 				a2enmod -m -q $module
 			fi
 		done
-        elif dpkg --compare-versions "$2" "le" "2.4.10-1pexip2" ; then
+        fi
+
+        if dpkg --compare-versions "$2" "le" "2.4.10-1pexip2" ; then
 		# Ensure mod_reqtimeout is enabled
 		a2enmod -m -q reqtimeout
-	fi
+        fi
+        if dpkg --compare-versions "$2" "le" "2.4.10-1pexip4" ; then
+		# Disable unused modules
+		for module in autoindex env status ; do
+			a2dismod -f -m -q $module
+		done
+        fi
 }
 
 enable_default_conf()
