@@ -1,11 +1,11 @@
 /var/log/apache2/*.log {
 	missingok
-	size 10MB
+	size 10M
 	rotate 50
 	compress
 	delaycompress
 	notifempty
-	create 640 root adm
+	create 644 root adm
 	sharedscripts
 	postrotate
                 if /etc/init.d/apache2 status > /dev/null ; then \
