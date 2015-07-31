@@ -14,38 +14,14 @@
  * limitations under the License.
  */
 
-/**
- * @file  util_xml.h
- * @brief Apache XML library
- *
- * @defgroup APACHE_CORE_XML XML Library
- * @ingroup  APACHE_CORE
- * @{
- */
+#ifndef MOD_AUTHZ_OWNER_H
+#define MOD_AUTHZ_OWNER_H
 
-#ifndef UTIL_XML_H
-#define UTIL_XML_H
+#include "http_request.h"
 
-#include "apr_xml.h"
+/* mod_authz_owner exports an optional function which retrieves the
+ * group name of the file identified by r->filename, if available, or
+ * else returns NULL. */
+APR_DECLARE_OPTIONAL_FN(char*, authz_owner_get_file_group, (request_rec *r));
 
-#include "httpd.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * Get XML post data and parse it.
- * @param   r       The current request
- * @param   pdoc    The XML post data
- * @return HTTP status code
- */
-AP_DECLARE(int) ap_xml_parse_input(request_rec *r, apr_xml_doc **pdoc);
-
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* UTIL_XML_H */
-/** @} */
+#endif /* MOD_AUTHZ_OWNER_H */
