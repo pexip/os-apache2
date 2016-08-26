@@ -508,7 +508,7 @@ static void log_xlate_error(ap_filter_t *f, apr_status_t rv)
     default:
         msg = APLOGNO(02198) "xlate filter - returning error";
     }
-    ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, f->r, "%s", msg);
+    ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, f->r, APLOGNO(02997) "%s", msg);
 }
 
 /* chk_filter_chain() is called once per filter instance; it tries to
@@ -1026,7 +1026,7 @@ static apr_status_t xlate_in_filter(ap_filter_t *f, apr_bucket_brigade *bb,
              * Content-Length can't be unset here because that would break
              * being able to read the request body.
              * Processing of chunked request bodies is not impacted by this
-             * filter since the the length was not declared anyway.
+             * filter since the length was not declared anyway.
              */
             ap_log_rerror(APLOG_MARK, APLOG_TRACE1, 0, f->r,
                           "Request body length may change, resulting in "

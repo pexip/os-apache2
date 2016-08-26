@@ -142,60 +142,61 @@ static const char* really_last_key = "rewrite_really_last";
 #define REDIRECT_ENVVAR_SCRIPT_URL "REDIRECT_" ENVVAR_SCRIPT_URL
 #define ENVVAR_SCRIPT_URI "SCRIPT_URI"
 
-#define CONDFLAG_NONE               1<<0
-#define CONDFLAG_NOCASE             1<<1
-#define CONDFLAG_NOTMATCH           1<<2
-#define CONDFLAG_ORNEXT             1<<3
-#define CONDFLAG_NOVARY             1<<4
+#define CONDFLAG_NONE               (1<<0)
+#define CONDFLAG_NOCASE             (1<<1)
+#define CONDFLAG_NOTMATCH           (1<<2)
+#define CONDFLAG_ORNEXT             (1<<3)
+#define CONDFLAG_NOVARY             (1<<4)
 
-#define RULEFLAG_NONE               1<<0
-#define RULEFLAG_FORCEREDIRECT      1<<1
-#define RULEFLAG_LASTRULE           1<<2
-#define RULEFLAG_NEWROUND           1<<3
-#define RULEFLAG_CHAIN              1<<4
-#define RULEFLAG_IGNOREONSUBREQ     1<<5
-#define RULEFLAG_NOTMATCH           1<<6
-#define RULEFLAG_PROXY              1<<7
-#define RULEFLAG_PASSTHROUGH        1<<8
-#define RULEFLAG_QSAPPEND           1<<9
-#define RULEFLAG_NOCASE             1<<10
-#define RULEFLAG_NOESCAPE           1<<11
-#define RULEFLAG_NOSUB              1<<12
-#define RULEFLAG_STATUS             1<<13
-#define RULEFLAG_ESCAPEBACKREF      1<<14
-#define RULEFLAG_DISCARDPATHINFO    1<<15
-#define RULEFLAG_QSDISCARD          1<<16
-#define RULEFLAG_END                1<<17
+#define RULEFLAG_NONE               (1<<0)
+#define RULEFLAG_FORCEREDIRECT      (1<<1)
+#define RULEFLAG_LASTRULE           (1<<2)
+#define RULEFLAG_NEWROUND           (1<<3)
+#define RULEFLAG_CHAIN              (1<<4)
+#define RULEFLAG_IGNOREONSUBREQ     (1<<5)
+#define RULEFLAG_NOTMATCH           (1<<6)
+#define RULEFLAG_PROXY              (1<<7)
+#define RULEFLAG_PASSTHROUGH        (1<<8)
+#define RULEFLAG_QSAPPEND           (1<<9)
+#define RULEFLAG_NOCASE             (1<<10)
+#define RULEFLAG_NOESCAPE           (1<<11)
+#define RULEFLAG_NOSUB              (1<<12)
+#define RULEFLAG_STATUS             (1<<13)
+#define RULEFLAG_ESCAPEBACKREF      (1<<14)
+#define RULEFLAG_DISCARDPATHINFO    (1<<15)
+#define RULEFLAG_QSDISCARD          (1<<16)
+#define RULEFLAG_END                (1<<17)
+#define RULEFLAG_QSLAST             (1<<19)
 
 /* return code of the rewrite rule
  * the result may be escaped - or not
  */
-#define ACTION_NORMAL               1<<0
-#define ACTION_NOESCAPE             1<<1
-#define ACTION_STATUS               1<<2
+#define ACTION_NORMAL               (1<<0)
+#define ACTION_NOESCAPE             (1<<1)
+#define ACTION_STATUS               (1<<2)
 
 
-#define MAPTYPE_TXT                 1<<0
-#define MAPTYPE_DBM                 1<<1
-#define MAPTYPE_PRG                 1<<2
-#define MAPTYPE_INT                 1<<3
-#define MAPTYPE_RND                 1<<4
-#define MAPTYPE_DBD                 1<<5
-#define MAPTYPE_DBD_CACHE           1<<6
+#define MAPTYPE_TXT                 (1<<0)
+#define MAPTYPE_DBM                 (1<<1)
+#define MAPTYPE_PRG                 (1<<2)
+#define MAPTYPE_INT                 (1<<3)
+#define MAPTYPE_RND                 (1<<4)
+#define MAPTYPE_DBD                 (1<<5)
+#define MAPTYPE_DBD_CACHE           (1<<6)
 
-#define ENGINE_DISABLED             1<<0
-#define ENGINE_ENABLED              1<<1
+#define ENGINE_DISABLED             (1<<0)
+#define ENGINE_ENABLED              (1<<1)
 
-#define OPTION_NONE                 1<<0
-#define OPTION_INHERIT              1<<1
-#define OPTION_INHERIT_BEFORE       1<<2
-#define OPTION_NOSLASH              1<<3
-#define OPTION_ANYURI               1<<4
-#define OPTION_MERGEBASE            1<<5
-#define OPTION_INHERIT_DOWN         1<<6
-#define OPTION_INHERIT_DOWN_BEFORE  1<<7
-#define OPTION_IGNORE_INHERIT       1<<8
-#define OPTION_IGNORE_CONTEXT_INFO  1<<9
+#define OPTION_NONE                 (1<<0)
+#define OPTION_INHERIT              (1<<1)
+#define OPTION_INHERIT_BEFORE       (1<<2)
+#define OPTION_NOSLASH              (1<<3)
+#define OPTION_ANYURI               (1<<4)
+#define OPTION_MERGEBASE            (1<<5)
+#define OPTION_INHERIT_DOWN         (1<<6)
+#define OPTION_INHERIT_DOWN_BEFORE  (1<<7)
+#define OPTION_IGNORE_INHERIT       (1<<8)
+#define OPTION_IGNORE_CONTEXT_INFO  (1<<9)
 
 #ifndef RAND_MAX
 #define RAND_MAX 32767
@@ -443,8 +444,7 @@ static void do_rewritelog(request_rec *r, int level, char *perdir,
     if (!APLOG_R_IS_LEVEL(r, APLOG_DEBUG + level))
         return;
 
-    rhost = ap_get_remote_host(r->connection, r->per_dir_config,
-                               REMOTE_NOLOOKUP, NULL);
+    rhost = ap_get_useragent_host(r, REMOTE_NOLOOKUP, NULL);
     rname = ap_get_remote_logname(r);
 
     for (redir=0, req=r; req->prev; req = req->prev) {
@@ -473,6 +473,7 @@ static void do_rewritelog(request_rec *r, int level, char *perdir,
 
     AP_REWRITE_LOG((uintptr_t)r, level, r->main ? 0 : 1, (char *)ap_get_server_name(r), logline);
 
+    /* Intentional no APLOGNO */
     ap_log_rerror(APLOG_MARK, APLOG_DEBUG + level, 0, r, "%s", logline);
 
     return;
@@ -558,6 +559,14 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
         else if (!strncasecmp(uri, "ttps://", 7)) { /* https://  */
             *sqs = 1;
             return 8;
+        }
+        else if (!strncasecmp(uri, "2://", 4)) {    /* h2://     */
+            *sqs = 1;
+            return 5;
+        }
+        else if (!strncasecmp(uri, "2c://", 5)) {   /* h2c://    */
+            *sqs = 1;
+            return 6;
         }
         break;
 
@@ -724,7 +733,8 @@ static char *escape_absolute_uri(apr_pool_t *p, char *uri, unsigned scheme)
  * split out a QUERY_STRING part from
  * the current URI string
  */
-static void splitout_queryargs(request_rec *r, int qsappend, int qsdiscard)
+static void splitout_queryargs(request_rec *r, int qsappend, int qsdiscard, 
+                               int qslast)
 {
     char *q;
     int split;
@@ -743,7 +753,8 @@ static void splitout_queryargs(request_rec *r, int qsappend, int qsdiscard)
         rewritelog((r, 2, NULL, "discarding query string"));
     }
 
-    q = ap_strchr(r->filename, '?');
+    q = qslast ? ap_strrchr(r->filename, '?') : ap_strchr(r->filename, '?');
+
     if (q != NULL) {
         char *olduri;
         apr_size_t len;
@@ -751,18 +762,23 @@ static void splitout_queryargs(request_rec *r, int qsappend, int qsdiscard)
         olduri = apr_pstrdup(r->pool, r->filename);
         *q++ = '\0';
         if (qsappend) {
-            r->args = apr_pstrcat(r->pool, q, "&", r->args, NULL);
+            if (*q) { 
+                r->args = apr_pstrcat(r->pool, q, "&" , r->args, NULL);
+            }
         }
         else {
             r->args = apr_pstrdup(r->pool, q);
         }
 
-        len = strlen(r->args);
-        if (!len) {
-            r->args = NULL;
-        }
-        else if (r->args[len-1] == '&') {
-            r->args[len-1] = '\0';
+        if (r->args) { 
+           len = strlen(r->args);
+      
+           if (!len) {
+               r->args = NULL;
+           }
+           else if (r->args[len-1] == '&') {
+               r->args[len-1] = '\0';
+           }
         }
 
         rewritelog((r, 3, NULL, "split uri=%s -> uri=%s, args=%s", olduri,
@@ -1338,6 +1354,13 @@ static char *lookup_map_dbd(request_rec *r, char *key, const char *label)
     char *ret = NULL;
     int n = 0;
     ap_dbd_t *db = dbd_acquire(r);
+    
+    if (db == NULL) {
+        ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(02963)
+                      "rewritemap: No db handle available! "
+                      "Check your database access");
+        return NULL;
+   }
 
     stmt = apr_hash_get(db->prepared, label, APR_HASH_KEY_STRING);
 
@@ -2478,10 +2501,18 @@ static void add_cookie(request_rec *r, char *s)
 
     char *tok_cntx;
     char *cookie;
+    /* long-standing default, but can't use ':' in a cookie */
+    const char *sep = ":"; 
 
-    var = apr_strtok(s, ":", &tok_cntx);
-    val = apr_strtok(NULL, ":", &tok_cntx);
-    domain = apr_strtok(NULL, ":", &tok_cntx);
+    /* opt-in to ; separator if first character is a ; */
+    if (s && *s == ';') { 
+        sep = ";"; 
+        s++;
+    }
+
+    var = apr_strtok(s, sep, &tok_cntx);
+    val = apr_strtok(NULL, sep, &tok_cntx);
+    domain = apr_strtok(NULL, sep, &tok_cntx);
 
     if (var && val && domain) {
         request_rec *rmain = r;
@@ -2497,10 +2528,10 @@ static void add_cookie(request_rec *r, char *s)
         if (!data) {
             char *exp_time = NULL;
 
-            expires = apr_strtok(NULL, ":", &tok_cntx);
-            path = expires ? apr_strtok(NULL, ":", &tok_cntx) : NULL;
-            secure = path ? apr_strtok(NULL, ":", &tok_cntx) : NULL;
-            httponly = secure ? apr_strtok(NULL, ":", &tok_cntx) : NULL;
+            expires = apr_strtok(NULL, sep, &tok_cntx);
+            path = expires ? apr_strtok(NULL, sep, &tok_cntx) : NULL;
+            secure = path ? apr_strtok(NULL, sep, &tok_cntx) : NULL;
+            httponly = secure ? apr_strtok(NULL, sep, &tok_cntx) : NULL;
 
             if (expires) {
                 apr_time_exp_t tms;
@@ -3569,6 +3600,9 @@ static const char *cmd_rewriterule_setflag(apr_pool_t *p, void *_cfg,
         } else if ( !strcasecmp(key, "SD")
                 || !strcasecmp(key, "sdiscard") ) {       /* qsdiscard */
             cfg->flags |= RULEFLAG_QSDISCARD;
+        } else if ( !strcasecmp(key, "SL")
+                || !strcasecmp(key, "slast") ) {          /* qslast */
+            cfg->flags |= RULEFLAG_QSLAST;
         }
         else {
             ++error;
@@ -4121,7 +4155,9 @@ static int apply_rewrite_rule(rewriterule_entry *p, rewrite_ctx *ctx)
         r->path_info = NULL;
     }
 
-    splitout_queryargs(r, p->flags & RULEFLAG_QSAPPEND, p->flags & RULEFLAG_QSDISCARD);
+    splitout_queryargs(r, p->flags & RULEFLAG_QSAPPEND, 
+                          p->flags & RULEFLAG_QSDISCARD, 
+                          p->flags & RULEFLAG_QSLAST);
 
     /* Add the previously stripped per-directory location prefix, unless
      * (1) it's an absolute URL path and
@@ -4465,6 +4501,7 @@ static int hook_uri2file(request_rec *r)
     unsigned int port;
     int rulestatus;
     void *skipdata;
+    const char *oargs;
 
     /*
      *  retrieve the config structures
@@ -4513,6 +4550,12 @@ static int hook_uri2file(request_rec *r)
                     r->uri));
         return DECLINED;
     }
+
+    /*
+     *  remember the original query string for later check, since we don't
+     *  want to apply URL-escaping when no substitution has changed it.
+     */
+    oargs = r->args;
 
     /*
      *  add the SCRIPT_URL variable to the env. this is a bit complicated
@@ -4648,11 +4691,21 @@ static int hook_uri2file(request_rec *r)
 
             /* append the QUERY_STRING part */
             if (r->args) {
+                char *escaped_args = NULL;
+                int noescape = (rulestatus == ACTION_NOESCAPE ||
+                                (oargs && !strcmp(r->args, oargs)));
+
                 r->filename = apr_pstrcat(r->pool, r->filename, "?",
-                                          (rulestatus == ACTION_NOESCAPE)
+                                          noescape
                                             ? r->args
-                                            : ap_escape_uri(r->pool, r->args),
+                                            : (escaped_args =
+                                               ap_escape_uri(r->pool, r->args)),
                                           NULL);
+
+                rewritelog((r, 1, NULL, "%s %s to query string for redirect %s",
+                            noescape ? "copying" : "escaping",
+                            r->args ,
+                            noescape ? "" : escaped_args));
             }
 
             /* determine HTTP redirect response code */

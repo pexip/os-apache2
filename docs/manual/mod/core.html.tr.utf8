@@ -19,7 +19,7 @@
 <div id="page-header">
 <p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p>
 <p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
-<img alt="" src="../images/feather.gif" /></div>
+<img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
 <a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="../">Sürüm 2.4</a> &gt; <a href="./">Modüller</a></div>
@@ -49,6 +49,7 @@
 <li><img alt="" src="../images/down.gif" /> <a href="#allowoverridelist">AllowOverrideList</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#cgimapextension">CGIMapExtension</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#cgipassauth">CGIPassAuth</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#cgivar">CGIVar</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#contentdigest">ContentDigest</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#defaultruntimedir">DefaultRuntimeDir</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#defaulttype">DefaultType</a></li>
@@ -98,6 +99,9 @@
 <li><img alt="" src="../images/down.gif" /> <a href="#namevirtualhost">NameVirtualHost</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#options">Options</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#protocol">Protocol</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#protocols">Protocols</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#protocolshonororder">ProtocolsHonorOrder</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#qualifyredirecturl">QualifyRedirectURL</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#rlimitcpu">RLimitCPU</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#rlimitmem">RLimitMEM</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#rlimitnproc">RLimitNPROC</a></li>
@@ -120,7 +124,9 @@
 <li><img alt="" src="../images/down.gif" /> <a href="#usecanonicalphysicalport">UseCanonicalPhysicalPort</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#virtualhost">&lt;VirtualHost&gt;</a></li>
 </ul>
-<ul class="seealso"><li><a href="#comments_section">Yorum</a></li></ul></div>
+<h3>Bugfix checklist</h3><ul class="seealso"><li><a href="https://www.apache.org/dist/httpd/CHANGES_2.4">httpd changelog</a></li><li><a href="https://bz.apache.org/bugzilla/buglist.cgi?bug_status=__open__&amp;list_id=144532&amp;product=Apache%20httpd-2&amp;query_format=specific&amp;order=changeddate%20DESC%2Cpriority%2Cbug_severity&amp;component=core">Known issues</a></li><li><a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2&amp;component=core">Report a bug</a></li></ul><h3>Ayrıca bakınız:</h3>
+<ul class="seealso">
+<li><a href="#comments_section">Yorum</a></li></ul></div>
 
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="directive-section"><h2><a name="AcceptFilter" id="AcceptFilter">AcceptFilter</a> <a name="acceptfilter" id="acceptfilter">Yönergesi</a></h2>
@@ -538,8 +544,8 @@ AcceptFilter https data</pre>
         <code class="directive"><a href="#options">Options</a></code> ve
         <code class="directive"><a href="../mod/mod_include.html#xbithack">XBitHack</a></code> yönergelerinin
         kullanımına izin verilir. <code class="directive"><a href="#options">Options</a></code> komutunda belirtilecek seçenekler
-        bir eşit işaretinden sonra aralarına sadece virgül konarak
-        (boşluksuz)  belirtilebilir.
+        bir eşit işaretinden sonra aralarına sadece virgül konarak,
+        fakat virgülden sonra boşluk bırakmadan belirtilebilir.
 
       <div class="note"><h3>Options'ın örtük iptali</h3>
       <p><a href="#accessfilename">.htaccess</a> dosyalarında kullanılabilen
@@ -674,7 +680,7 @@ olarak aktarılmasını etkin kılar</td></tr>
       betiklerin erişebilmesini sağlar. Normalde bu HTTP başlıkları
       betiklerden gizli olup sunucuda HTTP Temel kimlik kanıtlaması etkin
       kılındığında sunucuya erişmekte kullanılan kullanıcı kimliklerinin ve
-      parolalarının betikler tarafından görülmesini mümkün kılar. Bu yönerge,
+      parolalarının betikler tarafından görülmemesini mümkün kılar. Bu yönerge,
       HTTP Temel kimlik kanıtlamasını betiklerin gerçekleştirmesini sağlamak
       için kullanılmalıdır.</p>
 
@@ -691,6 +697,18 @@ olarak aktarılmasını etkin kılar</td></tr>
       bu ayarlamayı kullanmayı tercih edebilir.</p>
 
 </div>
+<div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="directive-section"><h2><a name="CGIVar" id="CGIVar">CGIVar</a> <a name="cgivar" id="cgivar">Yönergesi</a></h2>
+<table class="directive">
+<tr><th><a href="directive-dict.html#Description">Açıklama:</a></th><td>Controls how some CGI variables are set</td></tr>
+<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>CGIVar <var>variable</var> <var>rule</var></code></td></tr>
+<tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>dizin, .htaccess</td></tr>
+<tr><th><a href="directive-dict.html#Override">Geçersizleştirme:</a></th><td>FileInfo</td></tr>
+<tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Çekirdek</td></tr>
+<tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>core</td></tr>
+<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>Available in Apache HTTP Server 2.4.21 and later</td></tr>
+</table><p>Bu yönergenin belgesi henüz Türkçeye çevrilmedi.
+            Lütfen İngilizce sürümüne bakınız.</p></div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="directive-section"><h2><a name="ContentDigest" id="ContentDigest">ContentDigest</a> <a name="contentdigest" id="contentdigest">Yönergesi</a></h2>
 <table class="directive">
@@ -1439,6 +1457,10 @@ ErrorDocument 403 /cgi-bin/forbidden.pl?referrer=%{escape:%{HTTP_REFERER}}</pre>
     <pre class="prettyprint lang-config">ErrorLog syslog:user</pre>
 
 
+    <p>Buna ek olarak, modüller kendi günlük kaydı oluşturucusunu sağlayabilir.
+      Sözdizimi yukarıdaki örnekte kullanılan <code>syslog</code> sözdiziminin
+      benzeridir.</p>
+
     <p>GÜVENLİK: Günlük dosyalarının saklandığı dizin, sunucuyu başlatan
       kullanıcı dışındakiler tarafından yazılabilir olduğu takdirde
       güvenliğinizin nasıl tehlikeye gireceği <a href="../misc/security_tips.html#serverroot">güvenlik ipuçları</a>
@@ -1660,7 +1682,7 @@ ErrorLogFormat connection "[%{uc}t] [C:%{c}L] local\ %a remote\ %A"</pre>
         On</code> için öntanımlı davranışı değiştirecektir. Böyle modüller,
         tüm evrelerin durumu hakkında ayrıntılı bilgi toplanmasına bel bağlar.
         Öntanımlı değer sürüm 2.3.6 itibariyle <code class="module"><a href="../mod/mod_status.html">mod_status</a></code>
-        tarafından değiştirilmiştir; önceki sürümlerde öntanımlı değer daima
+        tarafından değiştirilmiştir. Önceki sürümlerde öntanımlı değer daima
         <code>Off</code> idi.</p>
     </div>
 
@@ -3151,13 +3173,13 @@ LogLevel info ssl_module:warn</pre>
 <tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>sunucu geneli, sanal konak</td></tr>
 <tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Çekirdek</td></tr>
 <tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>core</td></tr>
-<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>2.4.10 ve sonrası</td></tr>
+<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>2.4.11 ve sonrası</td></tr>
 </table>
     <p>Bu yönerge HTTP Trailer alanlarının dahili HTTP başlıklarına kopyalanıp
       kopyalanmayacağını belirler. Kopyalama işlemi istek gövdesi tamamen
       alındığında gerçekleşir, çoğu başlık işleminin çok sonra istek
       başlıklarını inceleme veya değiştirme şansı olur.</p>
-    <p>Bu seçenek, Trailer alanlarını daima kopyalayan 2.4.10 öncesi
+    <p>Bu seçenek, Trailer alanlarını daima kopyalayan 2.4.11 öncesi
       dağıtımlarla uyumluluk için vardır.</p>
 
 </div>
@@ -3177,7 +3199,7 @@ LogLevel info ssl_module:warn</pre>
       özkaynaklara erişimi dizgeleştirmekte kullandıkları mekanizmanın yanında
       isteğe bağlı olarak kilit dosyasının yerini belirler. İlk değiştirge
       olarak <code>default</code> belirtilirse tüm mutekslerin ayarları
-      değişir; ilk değiştirge olarak bir muteks ismi belirtilirse (aşağıdaki
+      değişir; ikinci değiştirge olarak bir muteks ismi belirtilirse (aşağıdaki
       tabloya bakın) yalnızca bu muteksin öntanımlıları değişir.</p>
 
     <p><code class="directive">Mutex</code> yönergesi genelde aşağıdaki istisnai
@@ -3251,11 +3273,12 @@ LogLevel info ssl_module:warn</pre>
           bir muteksi tutarken olağandışı bir şekilde sonlanırsa httpd donar
           ve isteklere yanıt vermeyi durdurur. Bu olduğunda sunucuyu bu
           durumdan kurtarmak için elle yeniden başlatmak gerekir.</p>
-        <p>Bu duruma karşı bir mekanizma sağlayan Solaris dikkate değer bir
-          istisnadır. Bu mekanizma, bir muteksi tutan bir çocuk süreç
-          olağandışı bir şekilde sonlandıktan sonra muteksin kurtarılmasını
-          sağlar.</p>
-        <p>Sisteminiz <code>pthread_mutexattr_setrobust_np()</code> işlevini
+        <p>Bu duruma karşı bir mekanizma sağlayan Solaris ve Linux dikkate 
+          değer bir istisnadır. Bu mekanizma, bir muteksi tutan bir çocuk 
+          süreç olağandışı bir şekilde sonlandıktan sonra muteksin 
+          kurtarılmasını sağlar.</p>
+        <p>Sisteminiz POSIX uyumluysa veya 
+          <code>pthread_mutexattr_setrobust_np()</code> işlevini
           sağlıyorsa <code>pthread</code> seçeneğini rahatça
           kullanabilirsiniz.</p>
         </div>
@@ -3411,8 +3434,9 @@ Mutex fcntl:/var/httpd/locks mpm-accept</pre>
 <tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>core</td></tr>
 <tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>2.3.11 sürümünde öntanımlı değer All değiştirilip FollowSymlinks yapıldı.</td></tr>
 </table>
-    <p><code class="directive">Options</code> yönergesi belli bir dizinde hangi sunucu
-      özelliklerinin etkin olacağını (veya olmayacağını) belirler.</p>
+    <p><code class="directive">Options</code> yönergesi belli bir dizinde hangi
+       sunucu özelliklerinin etkin olacağını (veya olmayacağını)
+       belirler.</p>
 
     <p><var>seçenek</var> olarak hiçbir ek özellik etkin olmayacaksa
       <code>None</code>, aksi takdirde aşağıdakilerden biri veya bir kaçı
@@ -3429,11 +3453,11 @@ Mutex fcntl:/var/httpd/locks mpm-accept</pre>
       <dt><code>FollowSymLinks</code></dt>
       <dd>Sunucu bu dizindeki sembolik bağları izler. Bu öntanımlıdır.
       <div class="note">
-      <p>Sembolik bağlar izlense bile <code class="directive"><a href="#directory">&lt;Directory&gt;</a></code> bölümleriyle eşleşen dosya yolları
-        değiştirilmez.</p>
+      <p>Sembolik bağlar izlense bile <code class="directive"><a href="#directory">&lt;Directory&gt;</a></code> bölümleriyle eşleşen dosya
+       yolları değiştirilmez.</p>
       <p><code>FollowSymLinks</code> ve
-      <code>SymLinksIfOwnerMatch</code> <code class="directive"><a href="#options">Options</a></code> sadece <code class="directive"><a href="#directory">&lt;Directory&gt;</a></code> bölümlerinde veya
-      <code>.htaccess</code> dosyaları içinde çalışır.</p>
+        <code>SymLinksIfOwnerMatch</code> <code class="directive"><a href="#options">Options</a></code> sadece <code class="directive"><a href="#directory">&lt;Directory&gt;</a></code> bölümlerinde veya
+        <code>.htaccess</code> dosyaları içinde çalışır.</p>
       <p>Sembolik bağ sınamaları, atlatılabilir yarış koşullarına konu
         olduğundan bu seçeneğin yokluğu bir güvenlik sınırlaması olarak
         değerlendirilmemelidir.</p>
@@ -3557,8 +3581,8 @@ Mutex fcntl:/var/httpd/locks mpm-accept</pre>
     <pre class="prettyprint lang-config">Protocol https</pre>
 
 
-    <p>Protokolü <code class="directive"><a href="../mod/mpm_common.html#listen">Listen</a></code> yönergesini
-      kullanarak da belirtebilirsiniz.</p>
+    <p>Protokolü <code class="directive"><a href="../mod/mpm_common.html#listen">Listen</a></code>
+       yönergesini kullanarak da belirtebilirsiniz.</p>
 
 <h3>Ayrıca bakınız:</h3>
 <ul>
@@ -3566,6 +3590,109 @@ Mutex fcntl:/var/httpd/locks mpm-accept</pre>
 <li><code class="directive"><a href="#acceptfilter">AcceptFilter</a></code></li>
 <li><code class="directive"><a href="../mod/mpm_common.html#listen">Listen</a></code></li>
 </ul>
+</div>
+<div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="directive-section"><h2><a name="Protocols" id="Protocols">Protocols</a> <a name="protocols" id="protocols">Yönergesi</a></h2>
+<table class="directive">
+<tr><th><a href="directive-dict.html#Description">Açıklama:</a></th><td>Sunucu/sanal konak için kullanılabilecek protokoller</td></tr>
+<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>Protocols <var>protokol</var> ...</code></td></tr>
+<tr><th><a href="directive-dict.html#Default">Öntanımlı:</a></th><td><code>Protocols http/1.1</code></td></tr>
+<tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>sunucu geneli, sanal konak</td></tr>
+<tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Çekirdek</td></tr>
+<tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>core</td></tr>
+<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>Sadece Apache 2.4.17 ve sonrasında kullanılabilir.</td></tr>
+</table>
+    <p>Bu yönerge bir sunucu/sanal konak için kullanılabilecek
+      protokolleri belirtmekte kullanılır. Bu liste, bir istemcinin bir
+      sanal konak veya sunucu ile uzlaşabilmesini sağlayan prokolleri
+      belirler.</p>
+
+    <p>Bir sanal konak veya sunucuda kullanılabilecek protolleri
+      çeşitlendirmek isterseniz bu protokolleri belirtmeniz gerekir.
+      1.0 ve 0.9 istemcilerle uyumlu olan http/1.1 protokolü
+      öntanımlıdır.</p>
+
+    <p>Örneğin, bir sunucunun TLS'li HTTP/2 protokolünü desteklemesini
+      şöyle sağlayabilirsiniz:</p>
+
+    <pre class="prettyprint lang-config">Protocols h2 http/1.1</pre>
+
+
+    <p>Geçerli protokoller, http ve https bağlantıları için
+       <code>http/1.1</code> htps bağlantıları için <code>h2</code> ve
+       http bağlantıları için <code>h2c</code> protokolleridir. Modüller
+       başka protokollerin de etkinleştirilmesini gerektirebilir.</p>
+
+    <p>Kullanımından vazgeçilmiş protokollerin silinmesi gerekmez. Böyle
+       protokol isimleri basitçe yoksayılır.</p>
+
+    <p>Ana sunucu için belirtilen protokoller, kendi protokol yönergesi
+       olmayan sanal konaklar için de geçerlidir. Diğer yandan sanal
+       konaklarda protokol belirtilmesi ana sunucuda belirtien
+       protollerin bu sanal konaklarda geçersiz olmasına sebep olur.
+    </p>
+
+
+<h3>Ayrıca bakınız:</h3>
+<ul>
+<li><code class="directive"><a href="#protocolshonororder">ProtocolsHonorOrder</a></code></li>
+</ul>
+</div>
+<div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="directive-section"><h2><a name="ProtocolsHonorOrder" id="ProtocolsHonorOrder">ProtocolsHonorOrder</a> <a name="protocolshonororder" id="protocolshonororder">Yönergesi</a></h2>
+<table class="directive">
+<tr><th><a href="directive-dict.html#Description">Açıklama:</a></th><td>Uzlaşma sırasında protokollerin öncelik sırasını belirler</td></tr>
+<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>ProtocolsHonorOrder On|Off</code></td></tr>
+<tr><th><a href="directive-dict.html#Default">Öntanımlı:</a></th><td><code>ProtocolsHonorOrder On</code></td></tr>
+<tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>sunucu geneli, sanal konak</td></tr>
+<tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Çekirdek</td></tr>
+<tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>core</td></tr>
+<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>Sadece Apache 2.4.17 ve sonrasında kullanılabilir.</td></tr>
+</table>
+    <p>Sunucuda <code class="directive">Protocols</code> yönergesinde listelemiş
+      protokollerin mi yoksa istemcinin protokol listesinin mi öncelikli
+      olacağı bu yönerge ile belirtilir.</p>
+
+    <p>Off belirtilirse, istemcinin protokol listesi sunucu
+      yapılandırmasındaki sıralamanın önüne geçer.</p>
+
+    <p><code class="directive">ProtocolsHonorOrder</code> yönergesine <code>on</code>
+         belirtilirse (öntanımlıdır), istemicinin protokol sıralaması dikkate
+         alınmaz ve protokol uzlaşımının sonucunu sunucu ayarlarındaki
+         sıralama belirler.</p>
+
+
+<h3>Ayrıca bakınız:</h3>
+<ul>
+<li><code class="directive"><a href="#protocols">Protocols</a></code></li>
+</ul>
+</div>
+<div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="directive-section"><h2><a name="QualifyRedirectURL" id="QualifyRedirectURL">QualifyRedirectURL</a> <a name="qualifyredirecturl" id="qualifyredirecturl">Yönergesi</a></h2>
+<table class="directive">
+<tr><th><a href="directive-dict.html#Description">Açıklama:</a></th><td>REDIRECT_URL ortam değişkeninin tamamen nitelenmiş olup
+olmayacağını denetler</td></tr>
+<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>QualifyRedirectURL ON|OFF</code></td></tr>
+<tr><th><a href="directive-dict.html#Default">Öntanımlı:</a></th><td><code>QualifyRedirectURL OFF</code></td></tr>
+<tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>sunucu geneli, sanal konak, dizin</td></tr>
+<tr><th><a href="directive-dict.html#Override">Geçersizleştirme:</a></th><td>FileInfo</td></tr>
+<tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Çekirdek</td></tr>
+<tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>core</td></tr>
+<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>Yönerge 2.4.18 ve sonrasında desteklenmektedir. 2.4.17
+sürümünde 'QualifyRedirectURL ON' yapılandırması mevcutmuş gibi
+davranılır.</td></tr>
+</table>
+    <p>Bu yönerge sunucuya REDIRECT_URL ortam değişkenin tamamen nitelenmiş
+      olacağını temin eder. Değişken öntanımlı olarak istemci tarafından talep
+      edilen URL'yi harfi harfine içerir, "/index.html" gibi.
+      <code class="directive"><a href="#qualifyredirecturl on">QualifyRedirectURL ON</a></code> belirtilseydi
+      aynı istek "http://www.example.com/index.html" gibi bir değerle
+      sonuçlanırdı.</p>
+
+     <p>Böyle belirtilmemiş olsa bile, istek tam nitelenmiş bir URL
+       içerseydi REDIRECT_URL de tam nitelenmiş URL'yi içerirdi.
+    </p>
+
 </div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="directive-section"><h2><a name="RLimitCPU" id="RLimitCPU">RLimitCPU</a> <a name="rlimitcpu" id="rlimitcpu">Yönergesi</a></h2>
@@ -3852,7 +3979,7 @@ kullanılacak konak adları için başka isimler belirtebilmeyi sağlar.
 <div class="directive-section"><h2><a name="ServerName" id="ServerName">ServerName</a> <a name="servername" id="servername">Yönergesi</a></h2>
 <table class="directive">
 <tr><th><a href="directive-dict.html#Description">Açıklama:</a></th><td>Sunucunun özdeşleşeceği konak ismi ve port.</td></tr>
-<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>ServerName [<var>şema</var>://]<var>tam-nitelenmiş-alan-adı</var>[:<var>port</var>]
+<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>ServerName [<var>şema</var>://]<var>alan-adı</var>|<var>ip-adresi</var>[:<var>port</var>]
 </code></td></tr>
 <tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>sunucu geneli, sanal konak</td></tr>
 <tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Çekirdek</td></tr>
@@ -3860,13 +3987,17 @@ kullanılacak konak adları için başka isimler belirtebilmeyi sağlar.
 </table>
     <p><code class="directive">ServerName</code> yönergesi, sunucunun kendini
       betimlemekte kullanacağı şema, konak adı ve port değerlerini belirler.
-      Bu, yönlendirme URL’leri oluşturulurken kullanılır.</p>
+    </p>
 
-    <p>Ek olarak, <a href="../vhosts/name-based.html">isme dayalı sanal
+    <p><a href="../vhosts/name-based.html">isme dayalı sanal
       konaklar</a> kullanılırken bir sanal konağı eşsiz bir şekilde betimlemek
-      için de <code class="directive">ServerName</code> kullanılır (muhtemelen
+      için <code class="directive">ServerName</code> kullanılır (muhtemelen
       <code class="directive">ServerAlias</code> ile birlikte).</p>
 
+    <p>Ek olarak, <code class="directive">UseCanonicalName</code> yönergesine 
+      öntanımlı olmayan bir değer atanarak özüne yönlendiren URL'ler 
+      oluştururken de bu yönerge kullanılır.</p>
+      
     <p>Örneğin, HTTP
       sunucusunun barındırıldığı makinenin ismi <code>mail.example.com</code>
       olduğu halde makinenin bir de <code>www.example.com</code> diye bir de
@@ -3881,8 +4012,9 @@ kullanılacak konak adları için başka isimler belirtebilmeyi sağlar.
       iptal eder.</p>
 
     <p>Bir <code class="directive">ServerName</code> ataması yapılmamışsa sunucu
-      istemciye görünen sunucu ismi için IP adresine bir ters DNS sorgusu
-      yapacaktır.</p>
+      istemciye görünen sunucu ismini anlamak için önce işletim sistemine 
+      sistemin konak adını sorar. Bu başarılı olmazsa sistem üzerinde IP 
+      adresine bir ters DNS sorgusu yapar.</p>
 
     <p><code class="directive">ServerName</code> yönergesinde bir port belirtilmediği
       takdirde sunucu, isteğin geldiği portu kullanacaktır. Öngörülebilirlik ve
@@ -4083,12 +4215,12 @@ kullanılacak konak adları için başka isimler belirtebilmeyi sağlar.
 <table class="directive">
 <tr><th><a href="directive-dict.html#Description">Açıklama:</a></th><td>Eşleşen tüm dosyaların belli bir eylemci tarafından işlenmesine
 sebep olur.</td></tr>
-<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>SetHandler <var>eylemci-ismi</var>|None</code></td></tr>
+<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>SetHandler <var>eylemci-ismi</var>|none|<var>ifade</var></code></td></tr>
 <tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>sunucu geneli, sanal konak, dizin, .htaccess</td></tr>
 <tr><th><a href="directive-dict.html#Override">Geçersizleştirme:</a></th><td>FileInfo</td></tr>
 <tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Çekirdek</td></tr>
 <tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>core</td></tr>
-<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>Apache httpd 2.0’da core modülüne taşındı.</td></tr>
+<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>ifade seçeneği 2.4.19 sürümünde eklendi</td></tr>
 </table>
     <p>Bir <code>.htaccess</code> dosyasına veya bir <code class="directive"><a href="#directory">&lt;Directory&gt;</a></code> ya da <code class="directive"><a href="#location">&lt;Location&gt;</a></code> bölümüne yerleştirildiğinde, eşleşen
       tüm dosyaların, ismi <var>eylemci-ismi</var> ile belirtilen <a href="../handler.html">eylemci</a> tarafından çözümlenmesine sebep olur.
@@ -4115,6 +4247,15 @@ sebep olur.</td></tr>
     <pre class="prettyprint lang-config">&lt;FilesMatch "\.php$"&gt;
     SetHandler application/x-httpd-php
 &lt;/FilesMatch&gt;</pre>
+
+
+    <p>Dizge değerli ifadeler istek öncesi değişkenleri içerecek şekilde 
+      düzenlenebilir. Buna ismli düzenli ifadelere yapılan geriye başvurular 
+      dahildir:</p>
+
+    <pre class="prettyprint lang-config">&lt;LocationMatch ^/app/(?&lt;sub&gt;[^/]+)/&gt;
+     SetHandler "proxy:unix:/var/run/app_%{env:MATCH_sub}.sock|fcgi://localhost:8080"
+&lt;/LocationMatch&gt;</pre>
 
 
      <p>Evvelce tanımlanmış bir <code class="directive">SetHandler</code> yönergesini
@@ -4203,9 +4344,13 @@ gerçekleşmesi için sunucunun geçmesini bekleyeceği süre.</td></tr>
     <p><code class="directive">TimeOut</code> yönergesi Apache httpd’nin aşağıdaki
       durumlarda G/Ç için bekleyeceği süreyi belirler:</p>
 
-    <ol>
-      <li>Veriyi istemciden okurken, okuma tamponu boş olduğu takdirde bir TCP
-        paketinin gelmesini bekleyeceği süre.</li>
+    <ul>
+      <li><p>Veriyi istemciden okurken, okuma tamponu boş olduğu takdirde bir 
+        TCP paketinin gelmesini bekleyeceği süre.</p>
+      <p>Yeni bir bağlantıda ilk veri için, sunucuya yeni bağlantıyı aktaran 
+        bir <code class="directive"><a href="#acceptfilter">AcceptFilter</a></code> yönergesi ile 
+        ilgili yapılandırma ele alınıncaya kadar bu yönerge etkilenmez.</p>
+      </li>
 
       <li>Veriyi istemciye yazarken, gönderme tamponu dolu olduğu takdirde bir
         paket alındısı için beklenecek süre.</li>
@@ -4218,7 +4363,7 @@ gerçekleşmesi için sunucunun geçmesini bekleyeceği süre.</td></tr>
 
       <li><code class="module"><a href="../mod/mod_proxy.html">mod_proxy</a></code> modülünde, <code class="directive"><a href="../mod/mod_proxy.html#proxytimeout">ProxyTimeout</a></code> yönergesi
         yapılandırılmamışsa öntanımlı zaman aşımı değeri.</li>
-    </ol>
+    </ul>
 
 
 </div>
@@ -4272,6 +4417,9 @@ gerçekleşmesi için sunucunun geçmesini bekleyeceği süre.</td></tr>
     <p>Bu yönerge başlatma betiklerinde <code>-D</code> seçeneğinin argümanını
       değiştirmek gerekmeksizin <code class="directive"><a href="#ifdefine">&lt;IfDefine&gt;</a></code> bölümlerinin kullanımını değiştirmek için
       kullanılabilir.</p>
+    <p>Bu yönerge sanal konak bağlamında desteklenirken, kapsanan sanal
+      konaklar haricinde, değişiklikleri kendisinden sonraki tüm yapılandırma
+      yönergelerinde görünür kılar.</p>
 
 </div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
@@ -4528,7 +4676,7 @@ var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/core.html';
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
-<p class="apache">Copyright 2015 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
+<p class="apache">Copyright 2016 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
 <p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();

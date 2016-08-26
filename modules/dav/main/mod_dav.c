@@ -201,6 +201,12 @@ static void *dav_merge_dir_config(apr_pool_t *p, void *base, void *overrides)
     return newconf;
 }
 
+DAV_DECLARE(const char *) dav_get_provider_name(request_rec *r)
+{
+    dav_dir_conf *conf = ap_get_module_config(r->per_dir_config, &dav_module);
+    return conf ? conf->provider_name : NULL;
+}
+
 static const dav_provider *dav_get_provider(request_rec *r)
 {
     dav_dir_conf *conf;
@@ -254,7 +260,7 @@ static const char *dav_cmd_dav(cmd_parms *cmd, void *config, const char *arg1)
         conf->provider = NULL;
     }
     else {
-        conf->provider_name = apr_pstrdup(cmd->pool, arg1);
+        conf->provider_name = arg1;
     }
 
     if (conf->provider_name != NULL) {
@@ -558,6 +564,7 @@ static void dav_log_err(request_rec *r, dav_error *err, int level)
         if (errscan->desc == NULL)
             continue;
 
+        /* Intentional no APLOGNO */
         ap_log_rerror(APLOG_MARK, level, errscan->aprerr, r, "%s  [%d, #%d]",
                       errscan->desc, errscan->status, errscan->error_id);
     }
