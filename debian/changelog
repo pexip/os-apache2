@@ -1,3 +1,11 @@
+apache2 (2.4.16-0pexip2) pexip; urgency=medium
+
+  * Rebuild against libssl1.0.2
+  * debian/patches/no_ssl3.patch:
+    Disable SSLv3 if OpenSSL does not support it.
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 11 Oct 2016 23:41:23 +0100
+
 apache2 (2.4.16-0pexip1) pexip; urgency=medium
 
   * New upstream release
