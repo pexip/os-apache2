@@ -5,4 +5,3 @@ customize_apxs.patch
 build_suexec-custom.patch
 # This patch is applied manually
 #suexec-custom.patch
-no_ssl3.patch

@@ -1,3 +1,11 @@
+apache2 (2.4.25-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+  * debian/patches/no_ssl3.patch:
+    Drop; merged upstream
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 27 Feb 2017 10:54:12 +0000
+
 apache2 (2.4.16-0pexip2) pexip; urgency=medium
 
   * Rebuild against libssl1.0.2
