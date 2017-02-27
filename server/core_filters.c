@@ -48,7 +48,6 @@
 #include "mpm_common.h"
 #include "scoreboard.h"
 #include "mod_core.h"
-#include "mod_proxy.h"
 #include "ap_listen.h"
 
 #include "mod_so.h" /* for ap_find_loaded_module_symbol */
@@ -592,7 +591,6 @@ static void setaside_remaining_output(ap_filter_t *f,
             }
             ap_save_brigade(f, &(ctx->buffered_bb), &bb,
                             ctx->deferred_write_pool);
-            apr_brigade_cleanup(bb);
         }
     }
     else if (ctx->deferred_write_pool) {

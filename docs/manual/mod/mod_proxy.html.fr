@@ -19,7 +19,7 @@
 <div id="page-header">
 <p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
 <p class="apache">Serveur Apache HTTP Version 2.4</p>
-<img alt="" src="../images/feather.gif" /></div>
+<img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
 <a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
@@ -30,8 +30,6 @@
 <a href="../fr/mod/mod_proxy.html" title="Français">&nbsp;fr&nbsp;</a> |
 <a href="../ja/mod/mod_proxy.html" hreflang="ja" rel="alternate" title="Japanese">&nbsp;ja&nbsp;</a></p>
 </div>
-<div class="outofdate">Cette traduction peut être périmée. Vérifiez la version
-            anglaise pour les changements récents.</div>
 <table class="module"><tr><th><a href="module-dict.html#Description">Description:</a></th><td>Serveur mandataire/passerelle multi-protocole</td></tr>
 <tr><th><a href="module-dict.html#Status">Statut:</a></th><td>Extension</td></tr>
 <tr><th><a href="module-dict.html#ModuleIdentifier">Identificateur de Module:</a></th><td>proxy_module</td></tr>
@@ -145,7 +143,7 @@
 <li><img alt="" src="../images/down.gif" /> <a href="#proxytimeout">ProxyTimeout</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#proxyvia">ProxyVia</a></li>
 </ul>
-<h3>Voir aussi</h3>
+<h3>Traitement des bugs</h3><ul class="seealso"><li><a href="https://www.apache.org/dist/httpd/CHANGES_2.4">Journal des modifications de httpd</a></li><li><a href="https://bz.apache.org/bugzilla/buglist.cgi?bug_status=__open__&amp;list_id=144532&amp;product=Apache%20httpd-2&amp;query_format=specific&amp;order=changeddate%20DESC%2Cpriority%2Cbug_severity&amp;component=mod_proxy">Problèmes connus</a></li><li><a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2&amp;component=mod_proxy">Signaler un bug</a></li></ul><h3>Voir aussi</h3>
 <ul class="seealso">
 <li><code class="module"><a href="../mod/mod_cache.html">mod_cache</a></code></li>
 <li><code class="module"><a href="../mod/mod_proxy_ajp.html">mod_proxy_ajp</a></code></li>
@@ -157,7 +155,7 @@
 <li><code class="module"><a href="../mod/mod_proxy_wstunnel.html">mod_proxy_wstunnel</a></code></li>
 <li><code class="module"><a href="../mod/mod_proxy_balancer.html">mod_proxy_balancer</a></code></li>
 <li><code class="module"><a href="../mod/mod_ssl.html">mod_ssl</a></code></li>
-</ul><ul class="seealso"><li><a href="#comments_section">Commentaires</a></li></ul></div>
+<li><a href="#comments_section">Commentaires</a></li></ul></div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="forwardreverse" id="forwardreverse">Mandataires directs et
@@ -171,7 +169,7 @@
       demandé</em>. Pour obtenir un contenu hébergé par
       le serveur demandé, le client envoie une requête au
       mandataire en nommant le serveur demandé comme
-      cible, puis le mandataire extrait le contenu depuis le
+      cible. Le mandataire extrait alors le contenu depuis le
       serveur demandé et le renvoie enfin au client. Le client doit être
       configuré de manière appropriée pour pouvoir utiliser le mandataire
       direct afin d'accéder à d'autres sites.</p>
@@ -283,7 +281,7 @@ ProxyVia On
       
 
       <p>Cette directive va créer un worker associé à l'URL du serveur
-      original <code>http://backend.example.com</code>, et utilisant les
+      original <code>http://backend.example.com</code> qui utilisera les
       valeurs de timeout données. Lorsqu'ils sont utilisés dans le cadre
       d'un mandataire direct, les workers sont en général définis via la
       directive <code class="directive"><a href="#proxyset">ProxySet</a></code>,</p>
@@ -375,6 +373,20 @@ ProxyPass "/examples" "http://backend.example.com/examples" timeout=10</pre>
       répartiteur permet d'identifier de manière unique le worker de
       répartition. La directive <code class="directive"><a href="#balancermember">BalancerMember</a></code> permet d'ajouter des
       membres au répartiteur.</p>
+
+      <div class="note"><h3>Résolution DNS pour les domaines originaux</h3>
+      <p>La résolution DNS s'effectue lorsque le socket vers le
+      domaine original est créé pour la première fois. Lorsque le pooling de
+      connexions est utilisé, chaque domaine d'arrière-plan n'est résolu qu'une
+      seule fois pour chaque processus enfant, et cette résolution est réutilisée
+      pour toutes les connexions ultérieures jusqu'à ce que le processus enfant
+      soit recyclé. Ce comportement doit être pris en considération lorsqu'on
+      planifie des tâches de maintenance du DNS impactant les domaines
+      d'arrière-plan. Veuillez aussi vous reporter aux paramètres de la
+      directive <code class="directive"><a href="#proxypass">ProxyPass</a></code> pour plus de
+      détails à propos de la réutilisation des connexions.
+        </p>
+      </div>
 
     </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
@@ -941,9 +953,9 @@ mandatées</td></tr>
     générer une réponse de redirection vers le même hôte suffixé par le
     <var>Domaine</var> spécifié.</p>
 
-    <div class="example"><h3>Exemple</h3><pre class="prettyprint lang-config">      ProxyRemote  "*"  "http://firewall.example.com:81"<br />
-      NoProxy         ".example.com" "192.168.112.0/21"<br />
-      ProxyDomain     ".example.com"</pre>
+    <div class="example"><h3>Exemple</h3><pre class="prettyprint lang-config">ProxyRemote  "*"  "http://firewall.example.com:81"
+NoProxy         ".example.com" "192.168.112.0/21"
+ProxyDomain     ".example.com"</pre>
 </div>
 
 </div>
@@ -1087,7 +1099,7 @@ l'espace d'URLs du serveur local</td></tr>
 sont supportés à partir de la version 2.4.7 du serveur HTTP Apache</td></tr>
 </table>
     <p>Cette directive permet de référencer des serveurs distants depuis
-    l'espace d'URLs du serveur local ; le serveur
+    l'espace d'URLs du serveur local. Le serveur
     local n'agit pas en tant que mandataire au sens conventionnel, mais
     plutôt comme miroir du serveur distant. Le serveur local est
     souvent nommé <dfn>mandataire inverse</dfn> ou
@@ -1095,8 +1107,9 @@ sont supportés à partir de la version 2.4.7 du serveur HTTP Apache</td></tr>
     chemin virtuel local ; <var>url</var> est une URL partielle pour le
     serveur distant et ne doit pas contenir de chaîne d'arguments.</p>
 
-    <div class="note"><strong>Note : </strong>Cette directive ne peut pas être
-    utilisée dans un contexte de niveau répertoire.</div>
+    <div class="note"><strong>Note : </strong>Cette directive n'est pas supportée au sein
+    des sections <code class="directive"><a href="../mod/core.html#directory">&lt;Directory&gt;</a></code>
+    et <code class="directive"><a href="../mod/core.html#files">&lt;Files&gt;</a></code>.</div>
 
     <div class="warning">En général, la directive <code class="directive"><a href="#proxyrequests">ProxyRequests</a></code> doit être définie à
     <strong>off</strong> lorsqu'on utilise la directive
@@ -1113,6 +1126,15 @@ sont supportés à partir de la version 2.4.7 du serveur HTTP Apache</td></tr>
     <code>unix:</code> tient compte de la directive
     <code class="directive">DefaultRuntimeDir</code>.</div>
 
+    <p>Lorsque cette directive est utilisée dans une section <code class="directive"><a href="../mod/core.html#location">&lt;Location&gt;</a></code>, le premier
+    argument est omis et le répertoire local est obtenu à partir de
+    l'argument de la directive <code class="directive"><a href="../mod/core.html#location">&lt;Location&gt;</a></code>. Il en est de même à l'intérieur
+    d'une section <code class="directive"><a href="../mod/core.html#locationmatch">&lt;LocationMatch&gt;</a></code>, mais le résultat ne sera
+    probablement pas celui attendu car ProxyPassReverse va interpréter
+    l'expression rationnelle littéralement comme un chemin ; si besoin
+    est dans ce cas, définissez la directive ProxyPassReverse en dehors
+    de la section, ou dans une section <code class="directive"><a href="../mod/core.html#location">&lt;Location&gt;</a></code> séparée.</p>
+
     <p>Supposons que le serveur local a pour adresse
     <code>http://example.com/</code> ; alors la ligne</p>
 
@@ -1124,6 +1146,10 @@ sont supportés à partir de la version 2.4.7 du serveur HTTP Apache</td></tr>
     <p>va convertir en interne toute requête pour
     <code>http://example.com/miroir/foo/bar</code> en une requête
     mandatée pour <code>http://backend.example.com/bar</code>.</p>
+
+    <p>Si vous avez besoin d'un configuration de mandataire inverse plus
+    souple, reportez-vous à la documentaion de la directive <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> et son drapeau
+    <code>[P]</code>.</p>
 
     <p>La syntaxe alternative suivante est valide, bien qu'elle puisse
     induire une dégradation des performances lorsqu'elle est
@@ -1180,14 +1206,16 @@ ProxyPass "/mirror/foo" "http://backend.example.com"</pre>
 
     </div> 
 
+    <p><strong>ProxyPass <code>clé=valeur</code> Paramètres</strong></p>
+
     <p>Depuis la version 2.1 du serveur HTTP Apache, mod_proxy supporte
     les groupements de connexions vers un serveur d'arrière-plan. Les
     connexions créées à la demande peuvent être enregistrées dans un
     groupement pour une utilisation ultérieure. La taille du groupe
     ainsi que d'autres caractéristiques peuvent être définies via la
     directive <code class="directive">ProxyPass</code> au moyen de paramètres
-    <code>clé=valeur</code> dont la description fait l'objet du tableau
-    ci-dessous.</p>
+    <code>clé=valeur</code> dont la description fait l'objet des
+    tableaux ci-dessous.</p>
 
     <p>Par défaut, mod_proxy permet et met en réserve le nombre maximum
     de connexions pouvant être utilisées simultanément par le processus
@@ -1281,8 +1309,9 @@ ProxyPass "/mirror/foo" "http://backend.example.com"</pre>
         <td>off</td>
         <td>Permet de définir si le module mandataire doit vider
 	automatiquement le tampon de sortie après chaque tronçon de
-	données. 'off' signifie que le tampon sera vidé si nécessaire,
-	'on' que le tampon sera vidé après chaque envoi d'un
+	données. 'off' signifie que le tampon sera vidé si
+	nécessaire ;
+	'on' signifie que le tampon sera vidé après chaque envoi d'un
 	tronçon de données, et 'auto' que le tampon sera vidé après un
 	délai de 'flushwait' millisecondes si aucune entrée n'est reçue.
 	Actuellement, cette clé n'est supportée que par AJP.
@@ -1416,6 +1445,11 @@ ProxyPass "/mirror/foo" "http://backend.example.com"</pre>
 	limite atteinte, une connexion ne sera pas réutilisée ; elle
 	sera fermée après un délai variable.
     </td></tr>
+    <tr><td>flusher</td>
+        <td>flush</td>
+        <td><p>Nom du fournisseur utilisé par <code class="module"><a href="../mod/mod_proxy_fdpass.html">mod_proxy_fdpass</a></code>.
+	Voir la documentation de ce module pour plus de détails.</p>
+    </td></tr>
 
     </table>
 
@@ -1456,7 +1490,7 @@ ProxyPass "/mirror/foo" "http://backend.example.com"</pre>
         <td>Off</td>
         <td>Si ce paramètre est défini à <code>On</code>, la session va
 	s'interrompre si le serveur cible est dans un état d'erreur ou
-	désactivé. Définissez ce paramètre à On si le serveur
+	désactivé. Définissez ce paramètre à <code>On</code> si le serveur
 	d'arrière-plan ne supporte pas la réplication de session.
     </td></tr>
     <tr><td>stickysession</td>
@@ -1465,7 +1499,7 @@ ProxyPass "/mirror/foo" "http://backend.example.com"</pre>
 	généralement du style <code>JSESSIONID</code> ou
 	<code>PHPSESSIONID</code>, et dépend du serveur d'application
 	d'arrière-plan qui supporte les sessions. Si le serveur
-	d'application d'arrière-plan utilise des noms différents pour
+	d'application d'arrière-plan utilise un nom différent pour
 	les cookies et les identifiants codés d'URL (comme les
 	conteneurs de servlet), séparez-les par le caractère '|'. La
 	première partie contient le cookie et la seconde le chemin.<br />
@@ -1568,6 +1602,8 @@ ProxyPass "/" "balancer://mycluster/" stickysession=JSESSIONID|jsessionid nofail
     ProxySet lbmethod=bytraffic
 &lt;/Proxy&gt;</pre>
 
+
+    <p><strong>Mots-clés additionnels de ProxyPass</strong></p>
 
     <p>Normalement, mod_proxy va mettre sous leur forme canonique les
     URLs traitées par ProxyPass. Mais ceci peut être incompatible avec
@@ -1793,8 +1829,9 @@ par un serveur mandaté en inverse</td></tr>
     </p>
 
     <p><var>chemin</var> est le nom d'un chemin virtuel local.
-    <var>url</var> est une URL partielle pour le serveur distant - ils
-    sont utilisés de la même façon qu'avec la directive <code class="directive"><a href="#proxypass">ProxyPass</a></code>.</p>
+    <var>url</var> est une URL partielle pour le serveur distant. Ces
+    paramètres s'utilisent de la même façon qu'avec la
+    directive <code class="directive"><a href="#proxypass">ProxyPass</a></code>.</p>
 
     <p>Supposons par exemple que le serveur local a pour adresse
     <code>http://example.com/</code> ; alors</p>
@@ -1810,17 +1847,18 @@ ProxyPassReverseCookiePath  "/"  "/mirror/foo/"</pre>
     requête mandatée pour <code>http://backend.example.com/bar</code>
     (la fonctionnalité fournie par <code>ProxyPass</code>). Il va
     aussi s'occuper des redirections que le serveur
-    <code>backend.example.com</code> envoie : lorsque
-    <code>http://backend.example.com/bar</code> est redirigé par
-    celui-ci vers <code>http://backend.example.com/quux</code>, Apache
+    <code>backend.example.com</code> envoie lorsqu'il redirige
+    <code>http://backend.example.com/bar</code> vers
+    <code>http://backend.example.com/quux</code>. Apache
     httpd corrige ceci en <code>http://example.com/miroir/foo/quux</code>
     avant de faire suivre la redirection HTTP au client. Notez que le
     nom d'hôte utilisé pour construire l'URL est choisi en respectant la
     définition de la directive <code class="directive"><a href="../mod/core.html#usecanonicalname">UseCanonicalName</a></code>.</p>
 
     <p>Notez que la directive <code class="directive">ProxyPassReverse</code>
-    peut aussi être utilisée en conjonction avec la fonctionnalité
-    pass-through (<code>RewriteRule ...  [P]</code>) du module
+    peut aussi être utilisée en conjonction avec la
+    fonctionnalité de mandataire
+    (<code>RewriteRule ...  [P]</code>) du module
     <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code>, car elle ne dépend pas d'une directive
     <code class="directive"><a href="#proxypass">ProxyPass</a></code>
     correspondante.</p>
@@ -1912,7 +1950,7 @@ dans un contexte de répertoire depuis la version 2.3.3.</td></tr>
 </table>
     <p>Lorsqu'elle est activée, cette directive va transmettre l'en-tête
     Host: de la requête entrante vers le serveur mandaté, au lieu du nom
-    d'hôte spécifié par la directive <code class="directive">ProxyPass</code>.</p>
+    d'hôte spécifié par la directive <code class="directive"><a href="#proxypass">ProxyPass</a></code>.</p>
 
     <p>Cette directive est habituellement définie à <code>Off</code>.
     Elle est principalement utile dans les configurations particulières
@@ -1983,7 +2021,7 @@ ProxyRemote "ftp" "http://ftpproxy.mydomain:8080"</pre>
     HTTP, vers un autre mandataire capable de les traiter.</p>
 
     <p>Cette directive supporte aussi les configurations de mandataire
-    inverse - un serveur web d'arrière-plan peut être intégré dans
+    inverse ; un serveur web d'arrière-plan peut être intégré dans
     l'espace d'URL d'un serveur virtuel, même si ce serveur est caché
     par un autre mandataire direct.</p>
 
@@ -2215,7 +2253,7 @@ var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_proxy.html';
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
-<p class="apache">Copyright 2015 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+<p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
 <p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();

@@ -196,7 +196,7 @@ static authz_status authz_alias_check_authorization(request_rec *r,
     authz_status ret = AUTHZ_DENIED;
 
     /* Look up the provider alias in the alias list.
-     * Get the the dir_config and call ap_Merge_per_dir_configs()
+     * Get the dir_config and call ap_Merge_per_dir_configs()
      * Call the real provider->check_authorization() function
      * return the result of the above function call
      */
@@ -976,7 +976,7 @@ static const char *all_parse_config(cmd_parms *cmd, const char *require_line,
     /*
      * If the argument to the 'all' provider is 'granted' then just let
      * everybody in. This would be equivalent to the previous syntax of
-     * 'allow from all'. If the argument is 'denied' we reject everbody,
+     * 'allow from all'. If the argument is 'denied' we reject everybody,
      * which is equivalent to 'deny from all'.
      */
     if (strcasecmp(require_line, "granted") == 0) {

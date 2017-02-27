@@ -568,10 +568,9 @@ static void core_opts_merge(const ap_conf_vector_t *sec, core_opts_t *opts)
         opts->override_opts = this_dir->override_opts;
     }
 
-   if (this_dir->override_list != NULL) {
+    if (this_dir->override_list != NULL) {
         opts->override_list = this_dir->override_list;
-   }
-
+    }
 }
 
 
@@ -614,7 +613,7 @@ AP_DECLARE(int) ap_directory_walk(request_rec *r)
         ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(00029)
                       "Module bug?  Request filename is missing for URI %s",
                       r->uri);
-       return OK;
+        return OK;
     }
 
     /* Canonicalize the file path without resolving filename case or aliases
@@ -1006,15 +1005,16 @@ AP_DECLARE(int) ap_directory_walk(request_rec *r)
                 /* No htaccess in an incomplete root path,
                  * nor if it's disabled
                  */
-                if (seg < startseg || (!opts.override && opts.override_list == NULL)) {
+                if (seg < startseg || (!opts.override 
+                    && apr_is_empty_table(opts.override_list)
+                    )) {
                     break;
                 }
 
 
                 res = ap_parse_htaccess(&htaccess_conf, r, opts.override,
                                         opts.override_opts, opts.override_list,
-                                        apr_pstrdup(r->pool, r->filename),
-                                        sconf->access_name);
+                                        r->filename, sconf->access_name);
                 if (res) {
                     return res;
                 }
@@ -1960,6 +1960,8 @@ static request_rec *make_sub_request(const request_rec *r,
 
     /* start with the same set of output filters */
     if (next_filter) {
+        ap_filter_t *scan = next_filter;
+
         /* while there are no input filters for a subrequest, we will
          * try to insert some, so if we don't have valid data, the code
          * will seg fault.
@@ -1968,8 +1970,16 @@ static request_rec *make_sub_request(const request_rec *r,
         rnew->proto_input_filters = r->proto_input_filters;
         rnew->output_filters = next_filter;
         rnew->proto_output_filters = r->proto_output_filters;
-        ap_add_output_filter_handle(ap_subreq_core_filter_handle,
-                                    NULL, rnew, rnew->connection);
+        while (scan && (scan != r->proto_output_filters)) {
+            if (scan->frec == ap_subreq_core_filter_handle) {
+                break;
+            }
+            scan = scan->next;
+        }
+        if (!scan || scan == r->proto_output_filters) {
+            ap_add_output_filter_handle(ap_subreq_core_filter_handle,
+                    NULL, rnew, rnew->connection);
+        }
     }
     else {
         /* If NULL - we are expecting to be internal_fast_redirect'ed
