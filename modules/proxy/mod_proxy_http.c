@@ -644,55 +644,6 @@ static int spool_reqbody_cl(apr_pool_t *p,
     return(ap_proxy_pass_brigade(bucket_alloc, r, p_conn, origin, header_brigade, 1));
 }
 
-/*
- * Transform buckets from one bucket allocator to another one by creating a
- * transient bucket for each data bucket and let it use the data read from
- * the old bucket. Metabuckets are transformed by just recreating them.
- * Attention: Currently only the following bucket types are handled:
- *
- * All data buckets
- * FLUSH
- * EOS
- *
- * If an other bucket type is found its type is logged as a debug message
- * and APR_EGENERAL is returned.
- */
-static apr_status_t proxy_buckets_lifetime_transform(request_rec *r,
-        apr_bucket_brigade *from, apr_bucket_brigade *to)
-{
-    apr_bucket *e;
-    apr_bucket *new;
-    const char *data;
-    apr_size_t bytes;
-    apr_status_t rv = APR_SUCCESS;
-
-    apr_brigade_cleanup(to);
-    for (e = APR_BRIGADE_FIRST(from);
-         e != APR_BRIGADE_SENTINEL(from);
-         e = APR_BUCKET_NEXT(e)) {
-        if (!APR_BUCKET_IS_METADATA(e)) {
-            apr_bucket_read(e, &data, &bytes, APR_BLOCK_READ);
-            new = apr_bucket_transient_create(data, bytes, r->connection->bucket_alloc);
-            APR_BRIGADE_INSERT_TAIL(to, new);
-        }
-        else if (APR_BUCKET_IS_FLUSH(e)) {
-            new = apr_bucket_flush_create(r->connection->bucket_alloc);
-            APR_BRIGADE_INSERT_TAIL(to, new);
-        }
-        else if (APR_BUCKET_IS_EOS(e)) {
-            new = apr_bucket_eos_create(r->connection->bucket_alloc);
-            APR_BRIGADE_INSERT_TAIL(to, new);
-        }
-        else {
-            ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(00964)
-                          "Unhandled bucket type of type %s in"
-                          " proxy_buckets_lifetime_transform", e->type->name);
-            rv = APR_EGENERAL;
-        }
-    }
-    return rv;
-}
-
 static
 int ap_proxy_http_request(apr_pool_t *p, request_rec *r,
                                    proxy_conn_rec *p_conn, proxy_worker *worker,
@@ -759,7 +710,7 @@ int ap_proxy_http_request(apr_pool_t *p, request_rec *r,
 
     /* WE only understand chunked.  Other modules might inject
      * (and therefore, decode) other flavors but we don't know
-     * that the can and have done so unless they they remove
+     * that the can and have done so unless they remove
      * their decoding from the headers_in T-E list.
      * XXX: Make this extensible, but in doing so, presume the
      * encoding has been done by the extensions' handler, and
@@ -951,7 +902,7 @@ skip_body:
         break;
     default:
         /* shouldn't be possible */
-        rv = HTTP_INTERNAL_SERVER_ERROR ;
+        rv = HTTP_INTERNAL_SERVER_ERROR;
         break;
     }
 
@@ -1061,7 +1012,6 @@ static void process_proxy_header(request_rec *r, proxy_dir_conf *c,
        }
     }
     apr_table_add(r->headers_out, key, value);
-    return;
 }
 
 /*
@@ -1117,7 +1067,7 @@ static void ap_proxy_read_headers(request_rec *r, request_rec *rr,
                 if (psc->badopt == bad_error) {
                     /* Nope, it wasn't even an extra HTTP header. Give up. */
                     r->headers_out = NULL;
-                    return ;
+                    return;
                 }
                 else if (psc->badopt == bad_body) {
                     /* if we've already started loading headers_out, then
@@ -1131,12 +1081,13 @@ static void ap_proxy_read_headers(request_rec *r, request_rec *rr,
                                       "in headers returned by %s (%s)",
                                       r->uri, r->method);
                         *pread_len = len;
-                        return ;
-                    } else {
-                         ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(01099)
-                                       "No HTTP headers returned by %s (%s)",
-                                       r->uri, r->method);
-                        return ;
+                        return;
+                    }
+                    else {
+                        ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(01099)
+                                      "No HTTP headers returned by %s (%s)",
+                                      r->uri, r->method);
+                        return;
                     }
                 }
             }
@@ -1156,15 +1107,14 @@ static void ap_proxy_read_headers(request_rec *r, request_rec *rr,
             ++value;            /* Skip to start of value   */
 
         /* should strip trailing whitespace as well */
-        for (end = &value[strlen(value)-1]; end > value && apr_isspace(*end); --
-end)
+        for (end = &value[strlen(value)-1]; end > value && apr_isspace(*end); --end)
             *end = '\0';
 
         /* make sure we add so as not to destroy duplicated headers
          * Modify headers requiring canonicalisation and/or affected
          * by ProxyPassReverse and family with process_proxy_header
          */
-        process_proxy_header(r, dconf, buffer, value) ;
+        process_proxy_header(r, dconf, buffer, value);
         saw_headers = 1;
 
         /* the header was too long; at the least we should skip extra data */
@@ -1238,7 +1188,7 @@ apr_status_t ap_proxy_http_process_response(apr_pool_t * p, request_rec *r,
     const char *buf;
     char keepchar;
     apr_bucket *e;
-    apr_bucket_brigade *bb, *tmp_bb;
+    apr_bucket_brigade *bb;
     apr_bucket_brigade *pass_bb;
     int len, backasswards;
     int interim_response = 0; /* non-zero whilst interim 1xx responses
@@ -1294,16 +1244,17 @@ apr_status_t ap_proxy_http_process_response(apr_pool_t * p, request_rec *r,
     backend->r->proxyreq = PROXYREQ_RESPONSE;
     apr_table_setn(r->notes, "proxy-source-port", apr_psprintf(r->pool, "%hu",
                    origin->local_addr->port));
-    tmp_bb = apr_brigade_create(p, c->bucket_alloc);
     do {
         apr_status_t rc;
 
         apr_brigade_cleanup(bb);
 
-        rc = ap_proxygetline(tmp_bb, buffer, sizeof(buffer), backend->r, 0, &len);
+        rc = ap_proxygetline(backend->tmp_bb, buffer, sizeof(buffer),
+                             backend->r, 0, &len);
         if (len == 0) {
             /* handle one potential stray CRLF */
-            rc = ap_proxygetline(tmp_bb, buffer, sizeof(buffer), backend->r, 0, &len);
+            rc = ap_proxygetline(backend->tmp_bb, buffer, sizeof(buffer),
+                                 backend->r, 0, &len);
         }
         if (len <= 0) {
             ap_log_rerror(APLOG_MARK, APLOG_ERR, rc, r, APLOGNO(01102)
@@ -1780,7 +1731,7 @@ apr_status_t ap_proxy_http_process_response(apr_pool_t * p, request_rec *r,
                     }
 
                     /* Switch the allocator lifetime of the buckets */
-                    proxy_buckets_lifetime_transform(r, bb, pass_bb);
+                    ap_proxy_buckets_lifetime_transform(r, bb, pass_bb);
 
                     /* found the last brigade? */
                     if (APR_BUCKET_IS_EOS(APR_BRIGADE_LAST(pass_bb))) {
@@ -1958,12 +1909,7 @@ static int proxy_http_handler(request_rec *r, proxy_worker *worker,
                                               worker, r->server)) != OK)
         goto cleanup;
 
-
     backend->is_ssl = is_ssl;
-
-    if (is_ssl) {
-        ap_proxy_ssl_connection_cleanup(backend, r);
-    }
 
     /*
      * In the case that we are handling a reverse proxy connection and this
@@ -1989,7 +1935,10 @@ static int proxy_http_handler(request_rec *r, proxy_worker *worker,
             break;
 
         /* Step Two: Make the Connection */
-        if (ap_proxy_connect_backend(proxy_function, backend, worker, r->server)) {
+        if (ap_proxy_check_connection(proxy_function, backend, r->server, 1,
+                                      PROXY_CHECK_CONN_EMPTY)
+                && ap_proxy_connect_backend(proxy_function, backend, worker,
+                                            r->server)) {
             ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01114)
                           "HTTP: failed to make connection to backend: %s",
                           backend->hostname);

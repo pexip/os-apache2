@@ -62,9 +62,9 @@ typedef struct deflate_filter_config_t
     int memlevel;
     int compressionlevel;
     apr_size_t bufferSize;
-    char *note_ratio_name;
-    char *note_input_name;
-    char *note_output_name;
+    const char *note_ratio_name;
+    const char *note_input_name;
+    const char *note_output_name;
 } deflate_filter_config;
 
 typedef struct deflate_dirconf_t {
@@ -261,16 +261,16 @@ static const char *deflate_set_note(cmd_parms *cmd, void *dummy,
                                                     &deflate_module);
 
     if (arg2 == NULL) {
-        c->note_ratio_name = apr_pstrdup(cmd->pool, arg1);
+        c->note_ratio_name = arg1;
     }
     else if (!strcasecmp(arg1, "ratio")) {
-        c->note_ratio_name = apr_pstrdup(cmd->pool, arg2);
+        c->note_ratio_name = arg2;
     }
     else if (!strcasecmp(arg1, "input")) {
-        c->note_input_name = apr_pstrdup(cmd->pool, arg2);
+        c->note_input_name = arg2;
     }
     else if (!strcasecmp(arg1, "output")) {
-        c->note_output_name = apr_pstrdup(cmd->pool, arg2);
+        c->note_output_name = arg2;
     }
     else {
         return apr_psprintf(cmd->pool, "Unknown note type %s", arg1);
@@ -977,7 +977,6 @@ static apr_status_t deflate_out_filter(ap_filter_t *f,
         apr_bucket_delete(e);
     }
 
-    apr_brigade_cleanup(bb);
     return APR_SUCCESS;
 }
 
@@ -1255,7 +1254,10 @@ static apr_status_t deflate_in_filter(ap_filter_t *f,
 
             if (APR_BUCKET_IS_FLUSH(bkt)) {
                 apr_bucket *tmp_b;
+
+                ctx->inflate_total += ctx->stream.avail_out;
                 zRC = inflate(&(ctx->stream), Z_SYNC_FLUSH);
+                ctx->inflate_total -= ctx->stream.avail_out;
                 if (zRC != Z_OK) {
                     inflateEnd(&ctx->stream);
                     ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(01391)
@@ -1263,11 +1265,7 @@ static apr_status_t deflate_in_filter(ap_filter_t *f,
                                   ctx->stream.msg);
                     return APR_EGENERAL;
                 }
-
-                ctx->stream.next_out = ctx->buffer;
-                len = c->bufferSize - ctx->stream.avail_out;
  
-                ctx->inflate_total += len;
                 if (inflate_limit && ctx->inflate_total > inflate_limit) { 
                     inflateEnd(&ctx->stream);
                     ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(02647)
@@ -1287,10 +1285,13 @@ static apr_status_t deflate_in_filter(ap_filter_t *f,
                     return APR_EINVAL;
                 }
 
+                len = c->bufferSize - ctx->stream.avail_out;
                 ctx->crc = crc32(ctx->crc, (const Bytef *)ctx->buffer, len);
                 tmp_b = apr_bucket_heap_create((char *)ctx->buffer, len,
                                                 NULL, f->c->bucket_alloc);
                 APR_BRIGADE_INSERT_TAIL(ctx->proc_bb, tmp_b);
+
+                ctx->stream.next_out = ctx->buffer;
                 ctx->stream.avail_out = c->bufferSize;
 
                 /* Flush everything so far in the returning brigade, but continue
@@ -1351,9 +1352,9 @@ static apr_status_t deflate_in_filter(ap_filter_t *f,
                         ctx->stream.avail_out = c->bufferSize;
                     }
 
-                    len = ctx->stream.avail_out;
+                    ctx->inflate_total += ctx->stream.avail_out;
                     zRC = inflate(&ctx->stream, Z_NO_FLUSH);
-
+                    ctx->inflate_total -= ctx->stream.avail_out;
                     if (zRC != Z_OK && zRC != Z_STREAM_END) {
                         inflateEnd(&ctx->stream);
                         ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(01392)
@@ -1362,7 +1363,6 @@ static apr_status_t deflate_in_filter(ap_filter_t *f,
                         return APR_EGENERAL;
                     }
 
-                    ctx->inflate_total += len - ctx->stream.avail_out;
                     if (inflate_limit && ctx->inflate_total > inflate_limit) { 
                         inflateEnd(&ctx->stream);
                         ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(02648)
@@ -1856,7 +1856,6 @@ static apr_status_t inflate_out_filter(ap_filter_t *f,
         apr_bucket_delete(e);
     }
 
-    apr_brigade_cleanup(bb);
     return APR_SUCCESS;
 }
 
