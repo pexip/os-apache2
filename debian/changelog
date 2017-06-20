@@ -1,3 +1,9 @@
+apache2 (2.4.26-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 20 Jun 2017 15:46:04 +0100
+
 apache2 (2.4.25-0pexip2) pexip; urgency=medium
 
   * debian/control: reinstate Build-Dep on debhelper with 
