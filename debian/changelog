@@ -1,3 +1,9 @@
+apache2 (2.4.27-0pexip2) pexip; urgency=medium
+
+  * Create envvars.d for envvar snippets
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 09 Oct 2017 17:43:52 +0100
+
 apache2 (2.4.27-0pexip1) pexip; urgency=medium
 
   * New upstream release
