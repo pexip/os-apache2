@@ -1,3 +1,9 @@
+apache2 (2.4.27-0pexip3) pexip; urgency=medium
+
+  * Change configuration of mpm_event
+
+ -- Eoin McLeod <eoin@pexip.com>  Mon, 17 Oct 2017 14:39:00 +0100
+
 apache2 (2.4.27-0pexip2) pexip; urgency=medium
 
   * Create envvars.d for envvar snippets
