@@ -1,3 +1,9 @@
+apache2 (2.4.33-0pexip3) pexip; urgency=medium
+
+  * Build-Depend on libssl 1.0.x
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 23 Jul 2018 15:05:13 +0100
+
 apache2 (2.4.33-0pexip2) pexip; urgency=medium
 
   * Correct systemd-sysv-generator behavior by customizing some parameters.
