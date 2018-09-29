@@ -8,7 +8,7 @@
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
 <title>rotatelogs - Rotation des journaux d'Apache par redirection de
-  ces derniers dans un "pipe" - Serveur Apache HTTP Version 2.4</title>
+  ces derniers dans un "pipe" - Serveur HTTP Apache Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -18,7 +18,7 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
 <p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.4</p>
+<p class="apache">Serveur HTTP Apache Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
@@ -50,6 +50,7 @@
      [ -<strong>L</strong> <var>nom-lien</var> ]
      [ -<strong>p</strong> <var>programme</var> ]
      [ -<strong>f</strong> ]
+     [ -<strong>D</strong> ]
      [ -<strong>t</strong> ]
      [ -<strong>v</strong> ]
      [ -<strong>e</strong> ]
@@ -96,6 +97,12 @@ s'écouler un temps substantiel entre le démarrage du serveur et le
 traitement de la première requête, temps pendant lequel le fichier
 journal associé n'"existe" pas, ce qui peut causer des problèmes à
 certains utilitaires de journalisation automatiques).</dd>
+
+<dt><code>-D</code></dt>
+<dd>Crée les répertoires parents du répertoire dans lequel le fichier journal
+sera placé s'ils n'existent pas déjà. Cela permet d'utiliser le formatage
+<code>strftime(3)</code> non seulement dans le nom de fichier mais aussi dans le
+chemin.</dd>
 
 <dt><code>-t</code></dt>
 <dd>Provoque une troncature du fichier journal au lieu d'une rotation.
