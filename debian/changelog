@@ -1,3 +1,9 @@
+apache2 (2.4.35-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Sat, 29 Sep 2018 12:31:16 +0100
+
 apache2 (2.4.33-0pexip3) pexip; urgency=medium
 
   * Build-Depend on libssl 1.0.x

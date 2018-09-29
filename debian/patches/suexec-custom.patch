@@ -73,9 +73,9 @@ Last-Update: 2014-05-29
 -#ifdef AP_HTTPD_USER
 -        fprintf(stderr, " -D AP_HTTPD_USER=\"%s\"\n", AP_HTTPD_USER);
 -#endif
- #ifdef AP_LOG_EXEC
-         fprintf(stderr, " -D AP_LOG_EXEC=\"%s\"\n", AP_LOG_EXEC);
- #endif
+ #if defined(AP_LOG_SYSLOG)
+         fprintf(stderr, " -D AP_LOG_SYSLOG\n");
+ #elif defined(AP_LOG_EXEC)
 @@ -313,9 +335,6 @@ int main(int argc, char *argv[])
  #ifdef AP_UID_MIN
          fprintf(stderr, " -D AP_UID_MIN=%d\n", AP_UID_MIN);
