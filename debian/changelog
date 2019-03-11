@@ -1,3 +1,9 @@
+apache2 (2.4.38-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- Vincent Sanders <vince@pexip.com>  Sun, 10 Mar 2019 09:07:30 +0000
+
 apache2 (2.4.35-0pexip1) pexip; urgency=medium
 
   * New upstream release
