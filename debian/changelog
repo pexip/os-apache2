@@ -1,3 +1,9 @@
+apache2 (2.4.39-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 02 Apr 2019 12:00:55 +0100
+
 apache2 (2.4.38-0pexip1) pexip; urgency=medium
 
   * New upstream release
