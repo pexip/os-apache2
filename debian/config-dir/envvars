@@ -16,7 +16,7 @@ fi
 export APACHE_RUN_USER=www-data
 export APACHE_RUN_GROUP=www-data
 # temporary state file location. This might be changed to /run in Wheezy+1
-export APACHE_PID_FILE=/var/run/apache2/apache2$SUFFIX.pid
+export APACHE_PID_FILE=/var/run/apache2$SUFFIX/apache2.pid
 export APACHE_RUN_DIR=/var/run/apache2$SUFFIX
 export APACHE_LOCK_DIR=/var/lock/apache2$SUFFIX
 # Only /var/log/apache2 is handled by /etc/logrotate.d/apache2.
@@ -45,11 +45,3 @@ export LANG
 ## This will produce a verbose output on package installations of web server modules and web application
 ## installations which interact with Apache
 #export APACHE2_MAINTSCRIPT_DEBUG=1
-
-if [ -d "${APACHE_CONFDIR}/envvars.d" ]; then
-	for i in ${APACHE_CONFDIR}/envvars.d/*.conf; do
-		if [ -r "$i" ]; then
-			. "$i"
-		fi
-	done
-fi

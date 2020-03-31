@@ -50,6 +50,18 @@ if test -z "$APACHE_CONFDIR" ; then
 		APACHE_CONFDIR=/etc/apache2
 	fi
 fi
+
+SUFFIX="${APACHE_CONFDIR##/etc/apache2-}"
+case "$SUFFIX" in
+	/etc/apache2)
+		SUFFIX=""
+		;;
+	*)
+		SUFFIX="@$SUFFIX"
+		;;
+esac
+APACHE_SYSTEMD_SERVICE="apache2$SUFFIX"
+
 # the path to the environment variable file
 test -z "$APACHE_ENVVARS" && APACHE_ENVVARS="$APACHE_CONFDIR/envvars"
 # pick up any necessary environment variables
@@ -135,21 +147,42 @@ mkdir_chown () {
 [ ! -d ${APACHE_RUN_DIR:-/var/run/apache2} ] && mkdir -p ${APACHE_RUN_DIR:-/var/run/apache2}
 [ ! -d ${APACHE_LOCK_DIR:-/var/lock/apache2} ] && mkdir_chown ${APACHE_RUN_USER:-www-data} ${APACHE_LOCK_DIR:-/var/lock/apache2}
 
-case $ARGV in
+case "$ARGV" in
 start)
     # ssl_scache shouldn't be here if we're just starting up.
     # (this is bad if there are several apache2 instances running)
     rm -f ${APACHE_RUN_DIR:-/var/run/apache2}/*ssl_scache*
-    $HTTPD ${APACHE_ARGUMENTS} -k $ARGV
+
+    need_systemd=false
+    if [ -z "$APACHE_STARTED_BY_SYSTEMD" ] ; then
+        case "$(readlink -f /proc/1/exe)" in
+        *systemd*)
+            need_systemd=true
+            ;;
+        *)
+            ;;
+        esac
+    fi
+    if $need_systemd ; then
+        # If running on systemd we should not start httpd without systemd
+        # or systemd will get confused about the status of httpd.
+        echo "Invoking 'systemctl start $APACHE_SYSTEMD_SERVICE'."
+        echo "Use 'systemctl status $APACHE_SYSTEMD_SERVICE' for more info."
+        systemctl start "$APACHE_SYSTEMD_SERVICE"
+    else
+        unset APACHE_STARTED_BY_SYSTEMD
+        $HTTPD ${APACHE_ARGUMENTS} -k "$ARGV"
+    fi
+
     ERROR=$?
     ;;
 stop|graceful-stop)
-    $HTTPD ${APACHE_ARGUMENTS} -k $ARGV
+    $HTTPD ${APACHE_ARGUMENTS} -k "$ARGV"
     ERROR=$?
     ;;
 restart|graceful)
     if $HTTPD ${APACHE_ARGUMENTS} -t 2> /dev/null ; then
-        $HTTPD ${APACHE_ARGUMENTS} -k $ARGV
+        $HTTPD ${APACHE_ARGUMENTS} -k "$ARGV"
     else
         $HTTPD ${APACHE_ARGUMENTS} -t
     fi
@@ -172,7 +205,7 @@ fullstatus)
     get_status
     ;;
 *)
-    $HTTPD ${APACHE_ARGUMENTS} $ARGV
+    $HTTPD ${APACHE_ARGUMENTS} "$@"
     ERROR=$?
 esac
 

@@ -9,11 +9,12 @@ Last-Update: 2012-02-25
  
  install-suexec-binary:
 -	@if test -f $(builddir)/support/suexec; then \
-+	@if test -f $(builddir)/support/suexec-pristine && test -f $(builddir)/support/suexec-custom; then \
-             test -d $(DESTDIR)$(sbindir) || $(MKINSTALLDIRS) $(DESTDIR)$(sbindir); \
+-            test -d $(DESTDIR)$(sbindir) || $(MKINSTALLDIRS) $(DESTDIR)$(sbindir); \
 -            $(INSTALL_PROGRAM) $(top_builddir)/support/suexec $(DESTDIR)$(sbindir); \
-+            $(INSTALL_PROGRAM) $(top_builddir)/support/suexec-pristine $(DESTDIR)$(sbindir); \
-+            $(INSTALL_PROGRAM) $(top_builddir)/support/suexec-custom $(DESTDIR)$(sbindir); \
++	@if test -f $(builddir)/support/suexec-pristine && test -f $(builddir)/support/suexec-custom; then \
++	    test -d $(DESTDIR)$(sbindir) || $(MKINSTALLDIRS) $(DESTDIR)$(sbindir); \
++	    $(INSTALL_PROGRAM) $(top_builddir)/support/suexec-pristine $(DESTDIR)$(sbindir); \
++	    $(INSTALL_PROGRAM) $(top_builddir)/support/suexec-custom $(DESTDIR)$(sbindir); \
  	fi
  
  install-suexec-setuid: install-suexec-binary
@@ -28,8 +29,8 @@ Last-Update: 2012-02-25
 -	@if test -f $(builddir)/support/suexec; then \
 -            setcap 'cap_setuid,cap_setgid+pe' $(DESTDIR)$(sbindir)/suexec; \
 +	@if test -f $(builddir)/support/suexec-pristine && test -f $(builddir)/support/suexec-custom; then \
-+            setcap 'cap_setuid,cap_setgid+pe' $(DESTDIR)$(sbindir)/suexec-pristine; \
-+            setcap 'cap_setuid,cap_setgid+pe' $(DESTDIR)$(sbindir)/suexec-custom; \
++	    setcap 'cap_setuid,cap_setgid+pe' $(DESTDIR)$(sbindir)/suexec-pristine; \
++	    setcap 'cap_setuid,cap_setgid+pe' $(DESTDIR)$(sbindir)/suexec-custom; \
  	fi
  
  suexec:
