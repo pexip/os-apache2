@@ -23,8 +23,27 @@
 
 #include <ctype.h>
 
+/* libxml2 includes unicode/[...].h files which uses C++ comments */
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic warning "-Wcomment"
+#elif defined(__GNUC__)
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wcomment"
+#endif
+#endif
+
 /* libxml2 */
 #include <libxml/encoding.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic pop
+#endif
+#endif
 
 #include "http_protocol.h"
 #include "http_config.h"
@@ -51,7 +70,7 @@ module AP_MODULE_DECLARE_DATA xml2enc_module;
         (((enc)!=XML_CHAR_ENCODING_NONE)&&((enc)!=XML_CHAR_ENCODING_ERROR))
 
 /*
- * XXX: Check all those ap_assert()s ans replace those that should not happen
+ * XXX: Check all those ap_assert()s and replace those that should not happen
  * XXX: with AP_DEBUG_ASSERT and those that may happen with proper error
  * XXX: handling.
  */
@@ -127,7 +146,7 @@ static void fix_skipto(request_rec* r, xml2ctx* ctx)
 {
     apr_status_t rv;
     xml2cfg* cfg = ap_get_module_config(r->per_dir_config, &xml2enc_module);
-    if ((cfg->skipto != NULL) && (ctx->flags | ENC_SKIPTO)) {
+    if ((cfg->skipto != NULL) && (ctx->flags & ENC_SKIPTO)) {
         int found = 0;
         char* p = ap_strchr(ctx->buf, '<');
         tattr* starts = (tattr*) cfg->skipto->elts;
@@ -142,8 +161,7 @@ static void fix_skipto(request_rec* r, xml2ctx* ctx)
                                                &bstart);
                     ap_assert(rv == APR_SUCCESS);
                     while (b = APR_BRIGADE_FIRST(ctx->bbsave), b != bstart) {
-                        APR_BUCKET_REMOVE(b);
-                        apr_bucket_destroy(b);
+                        apr_bucket_delete(b);
                     }
                     ctx->bytes -= (p-ctx->buf);
                     ctx->buf = p ;
@@ -228,8 +246,7 @@ static void sniff_encoding(request_rec* r, xml2ctx* ctx)
         /* cut out the <meta> we're invalidating */
         while (cutb != cute) {
             b = APR_BUCKET_NEXT(cutb);
-            APR_BUCKET_REMOVE(cutb);
-            apr_bucket_destroy(cutb);
+            apr_bucket_delete(cutb);
             cutb = b;
         }
         /* and leave a string */
@@ -305,6 +322,7 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
     apr_bucket* b;
     apr_bucket* bstart;
     apr_size_t insz = 0;
+    int pending_meta = 0;
     char *ctype;
     char *p;
 
@@ -392,20 +410,36 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
     /* move the data back to bb */
     APR_BRIGADE_CONCAT(bb, ctx->bbsave);
 
-    while (b = APR_BRIGADE_FIRST(bb), b != APR_BRIGADE_SENTINEL(bb)) {
+    while (!APR_BRIGADE_EMPTY(bb)) {
+        b = APR_BRIGADE_FIRST(bb);
         ctx->bytes = 0;
         if (APR_BUCKET_IS_METADATA(b)) {
             APR_BUCKET_REMOVE(b);
+            APR_BRIGADE_INSERT_TAIL(ctx->bbnext, b);
+            /* Besides FLUSH, aggregate meta buckets to send them at
+             * once below. This resource filter is over on EOS.
+             */
+            pending_meta = 1;
             if (APR_BUCKET_IS_EOS(b)) {
-                /* send remaining data */
-                APR_BRIGADE_INSERT_TAIL(ctx->bbnext, b);
-                return ap_fflush(f->next, ctx->bbnext);
-            } else if (APR_BUCKET_IS_FLUSH(b)) {
-                ap_fflush(f->next, ctx->bbnext);
+                ap_remove_output_filter(f);
+                APR_BRIGADE_CONCAT(ctx->bbnext, bb);
             }
-            apr_bucket_destroy(b);
+            else if (!APR_BUCKET_IS_FLUSH(b)) {
+                continue;
+            }
         }
-        else {        /* data bucket */
+        if (pending_meta) {
+            pending_meta = 0;
+            /* passing meta bucket down the chain */
+            rv = ap_pass_brigade(f->next, ctx->bbnext);
+            apr_brigade_cleanup(ctx->bbnext);
+            if (rv != APR_SUCCESS) {
+                return rv;
+            }
+            continue;
+        }
+        /* data bucket */
+        {
             char* buf;
             apr_size_t bytes = 0;
             char fixbuf[BUFLEN];
@@ -435,8 +469,7 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
                 /* remove the data we've just read */
                 rv = apr_brigade_partition(bb, bytes, &bstart);
                 while (b = APR_BRIGADE_FIRST(bb), b != bstart) {
-                    APR_BUCKET_REMOVE(b);
-                    apr_bucket_destroy(b);
+                    apr_bucket_delete(b);
                 }
                 ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, f->r, APLOGNO(01438)
                               "xml2enc: consuming %" APR_SIZE_T_FMT
@@ -511,8 +544,7 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
                         if (rv != APR_SUCCESS)
                             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, rv, f->r, APLOGNO(01446)
                                           "ap_fflush failed");
-                        else
-                            rv = ap_pass_brigade(f->next, ctx->bbnext);
+                        apr_brigade_cleanup(ctx->bbnext);
                     }
                 }
             } else {
@@ -525,8 +557,18 @@ static apr_status_t xml2enc_ffunc(ap_filter_t* f, apr_bucket_brigade* bb)
                 return rv;
         }
     }
+    if (pending_meta) {
+        /* passing pending meta bucket down the chain before leaving */
+        rv = ap_pass_brigade(f->next, ctx->bbnext);
+        apr_brigade_cleanup(ctx->bbnext);
+        if (rv != APR_SUCCESS) {
+            return rv;
+        }
+    }
+
     return APR_SUCCESS;
 }
+
 static apr_status_t xml2enc_charset(request_rec* r, xmlCharEncoding* encp,
                                     const char** encoding)
 {

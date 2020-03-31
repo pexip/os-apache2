@@ -82,7 +82,7 @@ argstr_to_table(apr_pool_t *p, char *str, apr_table_t *parms)
         ap_unescape_url(value);
         apr_table_set(parms, key, value);
         /*
-         ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+         ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(03230)
          "Found query arg: %s = %s", key, value);
          */
         key = apr_strtok(NULL, "&", &strtok_state);
@@ -127,7 +127,7 @@ static apr_status_t readfile_heartbeats(const char *path, apr_hash_t *servers,
             hb_server_t *server;
             char buf[4096];
             apr_size_t bsize = sizeof(buf);
-            const char *ip;
+            const char *ip, *val;
 
             apr_brigade_cleanup(tmpbb);
 
@@ -180,20 +180,20 @@ static apr_status_t readfile_heartbeats(const char *path, apr_hash_t *servers,
 
             argstr_to_table(pool, apr_pstrdup(pool, t), hbt);
 
-            if (apr_table_get(hbt, "busy")) {
-                server->busy = atoi(apr_table_get(hbt, "busy"));
+            if ((val = apr_table_get(hbt, "busy"))) {
+                server->busy = atoi(val);
             }
 
-            if (apr_table_get(hbt, "ready")) {
-                server->ready = atoi(apr_table_get(hbt, "ready"));
+            if ((val = apr_table_get(hbt, "ready"))) {
+                server->ready = atoi(val);
             }
 
-            if (apr_table_get(hbt, "lastseen")) {
-                server->seen = atoi(apr_table_get(hbt, "lastseen"));
+            if ((val = apr_table_get(hbt, "lastseen"))) {
+                server->seen = atoi(val);
             }
 
-            if (apr_table_get(hbt, "port")) {
-                server->port = atoi(apr_table_get(hbt, "port"));
+            if ((val = apr_table_get(hbt, "port"))) {
+                server->port = atoi(val);
             }
 
             if (server->busy == 0 && server->ready != 0) {
@@ -273,13 +273,11 @@ static proxy_worker *find_best_hb(proxy_balancer *balancer,
         ap_get_module_config(r->server->module_config,
                              &lbmethod_heartbeat_module);
 
+    ap_proxy_retry_worker_fn =
+            APR_RETRIEVE_OPTIONAL_FN(ap_proxy_retry_worker);
     if (!ap_proxy_retry_worker_fn) {
-        ap_proxy_retry_worker_fn =
-                APR_RETRIEVE_OPTIONAL_FN(ap_proxy_retry_worker);
-        if (!ap_proxy_retry_worker_fn) {
-            /* can only happen if mod_proxy isn't loaded */
-            return NULL;
-        }
+        /* can only happen if mod_proxy isn't loaded */
+        return NULL;
     }
 
     apr_pool_create(&tpool, r->pool);
@@ -300,7 +298,7 @@ static proxy_worker *find_best_hb(proxy_balancer *balancer,
 
     for (i = 0; i < balancer->workers->nelts; i++) {
         worker = &APR_ARRAY_IDX(balancer->workers, i, proxy_worker *);
-        server = apr_hash_get(servers, (*worker)->s->hostname, APR_HASH_KEY_STRING);
+        server = apr_hash_get(servers, (*worker)->s->hostname_ex, APR_HASH_KEY_STRING);
 
         if (!server) {
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, rv, r, APLOGNO(01214)
@@ -342,12 +340,14 @@ static proxy_worker *find_best_hb(proxy_balancer *balancer,
     return mycandidate;
 }
 
-static apr_status_t reset(proxy_balancer *balancer, server_rec *s) {
-        return APR_SUCCESS;
+static apr_status_t reset(proxy_balancer *balancer, server_rec *s)
+{
+    return APR_SUCCESS;
 }
 
-static apr_status_t age(proxy_balancer *balancer, server_rec *s) {
-        return APR_SUCCESS;
+static apr_status_t age(proxy_balancer *balancer, server_rec *s)
+{
+    return APR_SUCCESS;
 }
 
 static const proxy_balancer_method heartbeat =
@@ -356,11 +356,12 @@ static const proxy_balancer_method heartbeat =
     &find_best_hb,
     NULL,
     &reset,
-    &age
+    &age,
+    NULL
 };
 
 static int lb_hb_init(apr_pool_t *p, apr_pool_t *plog,
-                          apr_pool_t *ptemp, server_rec *s)
+                      apr_pool_t *ptemp, server_rec *s)
 {
     apr_size_t size;
     unsigned int num;

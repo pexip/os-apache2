@@ -351,7 +351,7 @@ static const char *filter_protocol(cmd_parms *cmd, void *CFG, const char *fname,
     }
     else {
         /* Find provider */
-        for (provider = filter->providers; provider; provider = provider->next){
+        for (provider = filter->providers; provider; provider = provider->next) {
             if (!strcasecmp(provider->frec->name, pname)) {
                 break;
             }
@@ -362,7 +362,7 @@ static const char *filter_protocol(cmd_parms *cmd, void *CFG, const char *fname,
     }
 
     /* Now set flags from our args */
-    for (arg = apr_strtok(apr_pstrdup(cmd->pool, proto), sep, &tok);
+    for (arg = apr_strtok(apr_pstrdup(cmd->temp_pool, proto), sep, &tok);
          arg; arg = apr_strtok(NULL, sep, &tok)) {
 
         if (!strcasecmp(arg, "change=yes")) {
@@ -444,6 +444,12 @@ static const char *add_filter(cmd_parms *cmd, void *CFG,
     ap_expr_info_t *node;
     const char *err = NULL;
 
+    /* if provider has been registered, we can look it up */
+    provider_frec = ap_get_output_filter_handle(pname);
+    if (!provider_frec) {
+        return apr_psprintf(cmd->pool, "Unknown filter provider %s", pname);
+    }
+
     /* fname has been declared with DeclareFilter, so we can look it up */
     frec = apr_hash_get(cfg->live_filters, fname, APR_HASH_KEY_STRING);
 
@@ -454,17 +460,13 @@ static const char *add_filter(cmd_parms *cmd, void *CFG,
             return c;
         }
         frec = apr_hash_get(cfg->live_filters, fname, APR_HASH_KEY_STRING);
+        frec->ftype = provider_frec->ftype;
     }
 
     if (!frec) {
         return apr_psprintf(cmd->pool, "Undeclared smart filter %s", fname);
     }
 
-    /* if provider has been registered, we can look it up */
-    provider_frec = ap_get_output_filter_handle(pname);
-    if (!provider_frec) {
-        return apr_psprintf(cmd->pool, "Unknown filter provider %s", pname);
-    }
     provider = apr_palloc(cmd->pool, sizeof(ap_filter_provider_t));
     if (expr) {
         node = ap_expr_parse_cmd(cmd, expr, 0, &err, NULL);
@@ -670,8 +672,6 @@ static void filter_insert(request_rec *r)
         }
 #endif
     }
-
-    return;
 }
 
 static void filter_hooks(apr_pool_t *pool)

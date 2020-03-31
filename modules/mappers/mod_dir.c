@@ -262,7 +262,7 @@ static int fixup_dir(request_rec *r)
 
         if (r->args != NULL) {
             ifile = apr_pstrcat(r->pool, ap_escape_uri(r->pool, r->uri),
-                                "/", "?", r->args, NULL);
+                                "/?", r->args, NULL);
         }
         else {
             ifile = apr_pstrcat(r->pool, ap_escape_uri(r->pool, r->uri),
@@ -276,10 +276,18 @@ static int fixup_dir(request_rec *r)
 
     /* we're running between mod_rewrites fixup and its internal redirect handler, step aside */
     if (!strcmp(r->handler, REWRITE_REDIRECT_HANDLER_NAME)) { 
+        /* Prevent DIR_MAGIC_TYPE from leaking out when someone has taken over */
+        if (!strcmp(r->content_type, DIR_MAGIC_TYPE)) { 
+            r->content_type = NULL;
+        }
         return DECLINED;
     }
 
     if (d->checkhandler == MODDIR_ON && strcmp(r->handler, DIR_MAGIC_TYPE)) {
+        /* Prevent DIR_MAGIC_TYPE from leaking out when someone has taken over */
+        if (!strcmp(r->content_type, DIR_MAGIC_TYPE)) { 
+            r->content_type = NULL;
+        }
         return DECLINED;
     }
 
@@ -371,10 +379,10 @@ static int fixup_dir(request_rec *r)
     }
 
     /* record what we tried, mostly for the benefit of mod_autoindex */
-    apr_table_set(r->notes, "dir-index-names",
-                  d->index_names ?
-                  apr_array_pstrcat(r->pool, d->index_names, ','):
-                  AP_DEFAULT_INDEX);
+    apr_table_setn(r->notes, "dir-index-names",
+                   d->index_names ?
+                       apr_array_pstrcat(r->pool, d->index_names, ',') :
+                       AP_DEFAULT_INDEX);
 
     /* nothing for us to do, pass on through */
     return DECLINED;

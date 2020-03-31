@@ -16,7 +16,7 @@ abs_builddir=`pwd`
 
 dnl Ensure that the httpd version is included
 HTTPD_VERSION=`$abs_srcdir/build/get-version.sh all $abs_srcdir/include/ap_release.h AP_SERVER`
-AC_SUBST(HTTPD_VERSION)
+HTTPD_MMN=`$abs_srcdir/build/get-version.sh mmn $abs_srcdir/include/ap_mmn.h MODULE_MAGIC_NUMBER`
 
 dnl #
 dnl # Include our own M4 macros along with those for APR and libtool
@@ -332,7 +332,7 @@ case $host in
       dnl solaris 8 and above don't have a thundering herd
       dnl not sure about rev's before this one.
       case `uname -r` in
-        5.[567]*)
+        5.[[567]]*)
             ;;
         * )
             APR_SETVAR(SINGLE_LISTEN_UNSERIALIZED_ACCEPT, [1])
@@ -504,6 +504,8 @@ if test "$ac_cv_struct_tm_gmtoff" = "yes"; then
     AC_DEFINE(HAVE_GMTOFF, 1, [Define if struct tm has a tm_gmtoff field])
 fi
 
+APACHE_CHECK_SYSTEMD
+
 dnl ## Set up any appropriate OS-specific environment variables for apachectl
 
 case $host in
@@ -593,16 +595,21 @@ AC_ARG_ENABLE(load-all-modules,APACHE_HELP_STRING(--enable-load-all-modules,Load
 AC_ARG_ENABLE(maintainer-mode,APACHE_HELP_STRING(--enable-maintainer-mode,Turn on debugging and compile time warnings and load all compiled modules),
 [
   if test "$enableval" = "yes"; then
-    APR_ADDTO(CPPFLAGS, -DAP_DEBUG)
+    APR_ADDTO(NOTEST_CPPFLAGS, -DAP_DEBUG)
     if test "$GCC" = "yes"; then
-      APR_ADDTO(CFLAGS,[-Wall -Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations -Wpointer-arith])
+      APACHE_ADD_GCC_CFLAG([-std=c89])
+      APACHE_ADD_GCC_CFLAG([-Werror])
+      APACHE_ADD_GCC_CFLAG([-Wall])
+      APACHE_ADD_GCC_CFLAG([-Wstrict-prototypes])
+      APACHE_ADD_GCC_CFLAG([-Wmissing-prototypes])
+      APACHE_ADD_GCC_CFLAG([-Wmissing-declarations])
       APACHE_ADD_GCC_CFLAG([-Wdeclaration-after-statement])
-      APACHE_ADD_GCC_CFLAG([-Werror=declaration-after-statement])
+      APACHE_ADD_GCC_CFLAG([-Wpointer-arith])
       APACHE_ADD_GCC_CFLAG([-Wformat])
       APACHE_ADD_GCC_CFLAG([-Wformat-security])
-      APACHE_ADD_GCC_CFLAG([-Werror=format-security])
+      APACHE_ADD_GCC_CFLAG([-Wunused])
     elif test "$AIX_XLC" = "yes"; then
-      APR_ADDTO(CFLAGS,-qfullpath -qinitauto=FE -qcheck=all -qinfo=pro)
+      APR_ADDTO(NOTEST_CFLAGS,-qfullpath -qinitauto=FE -qcheck=all -qinfo=pro)
     fi
     if test "x$enable_load_all_modules" = "x"; then
       LOAD_ALL_MODULES=yes
@@ -618,16 +625,21 @@ AC_ARG_ENABLE(maintainer-mode,APACHE_HELP_STRING(--enable-maintainer-mode,Turn o
 AC_ARG_ENABLE(debugger-mode,APACHE_HELP_STRING(--enable-debugger-mode,Turn on debugging and compile time warnings and turn off optimization),
 [
   if test "$enableval" = "yes"; then
-    APR_ADDTO(CPPFLAGS, -DAP_DEBUG)
+    APR_ADDTO(NOTEST_CPPFLAGS, -DAP_DEBUG)
     if test "$GCC" = "yes"; then
-      APR_ADDTO(CFLAGS,[-Wall -Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations -Wpointer-arith -O0])
+      APACHE_ADD_GCC_CFLAG([-O0])
+      APACHE_ADD_GCC_CFLAG([-Wall])
+      APACHE_ADD_GCC_CFLAG([-Wstrict-prototypes])
+      APACHE_ADD_GCC_CFLAG([-Wmissing-prototypes])
+      APACHE_ADD_GCC_CFLAG([-Wmissing-declarations])
       APACHE_ADD_GCC_CFLAG([-Wdeclaration-after-statement])
       APACHE_ADD_GCC_CFLAG([-Werror=declaration-after-statement])
+      APACHE_ADD_GCC_CFLAG([-Wpointer-arith])
       APACHE_ADD_GCC_CFLAG([-Wformat])
       APACHE_ADD_GCC_CFLAG([-Wformat-security])
       APACHE_ADD_GCC_CFLAG([-Werror=format-security])
     elif test "$AIX_XLC" = "yes"; then
-      APR_ADDTO(CFLAGS,-qfullpath -qinitauto=FE -qcheck=all -qinfo=pro)
+      APR_ADDTO(NOTEST_CFLAGS,-qfullpath -qinitauto=FE -qcheck=all -qinfo=pro)
     fi
   fi
 ])dnl
@@ -734,7 +746,26 @@ APACHE_HELP_STRING(--with-suexec-gidmin,Minimal allowed GID),[
 
 AC_ARG_WITH(suexec-logfile,
 APACHE_HELP_STRING(--with-suexec-logfile,Set the logfile),[
-  AC_DEFINE_UNQUOTED(AP_LOG_EXEC, "$withval", [SuExec log file] ) ] )
+  if test "x$withval" = "xyes"; then
+    AC_MSG_ERROR([log filename required for --with-suexec-logfile option])
+  elif test "x$withval" != "xno"; then
+    AC_DEFINE_UNQUOTED(AP_LOG_EXEC, "$withval", [SuExec log file])
+  fi
+])
+
+AC_ARG_WITH(suexec-syslog,
+APACHE_HELP_STRING(--with-suexec-syslog,Use syslog for suexec logging),[
+  if test $withval = "yes"; then
+    if test "x${with_suexec_logfile}" != "xno"; then
+      AC_MSG_NOTICE([hint: use "--without-suexec-logfile --with-suexec-syslog"])
+      AC_MSG_ERROR([suexec does not support both logging to file and syslog])
+    fi
+    AC_CHECK_FUNCS([vsyslog], [], [
+       AC_MSG_ERROR([cannot support syslog from suexec without vsyslog()])])
+    AC_DEFINE(AP_LOG_SYSLOG, 1, [SuExec log to syslog])
+  fi    
+])
+
 
 AC_ARG_WITH(suexec-safepath,
 APACHE_HELP_STRING(--with-suexec-safepath,Set the safepath),[
@@ -743,6 +774,15 @@ APACHE_HELP_STRING(--with-suexec-safepath,Set the safepath),[
 AC_ARG_WITH(suexec-umask,
 APACHE_HELP_STRING(--with-suexec-umask,umask for suexec'd process),[
   AC_DEFINE_UNQUOTED(AP_SUEXEC_UMASK, 0$withval, [umask for suexec'd process] ) ] )
+
+INSTALL_SUEXEC=setuid
+AC_ARG_ENABLE([suexec-capabilities], 
+APACHE_HELP_STRING(--enable-suexec-capabilities,Use Linux capability bits not setuid root suexec), [
+INSTALL_SUEXEC=caps
+AC_DEFINE(AP_SUEXEC_CAPABILITIES, 1, 
+          [Enable if suexec is installed with Linux capabilities, not setuid])
+])
+APACHE_SUBST(INSTALL_SUEXEC)
 
 dnl APR should go after the other libs, so the right symbols can be picked up
 if test x${apu_found} != xobsolete; then
@@ -774,7 +814,7 @@ AC_ARG_ENABLE(v4-mapped,APACHE_HELP_STRING(--enable-v4-mapped,Allow IPv6 sockets
 ],
 [
     case $host in
-    *freebsd[1234].*)
+    *freebsd[[1234]].*)
         v4mapped=yes
         ;;
     *freebsd*|*netbsd*|*openbsd*)
@@ -807,6 +847,13 @@ dnl ## Finalize the variables
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([Restore user-defined environment settings...])
 AC_MSG_NOTICE([])
+
+APACHE_CONF_SEL_CC=${CC}
+APACHE_CONF_SEL_CFLAGS="${CFLAGS} ${EXTRA_CFLAGS} ${NOTEST_CFLAGS}"
+APACHE_CONF_SEL_CPPFLAGS="${CPPFLAGS} ${EXTRA_CPPFLAGS} ${NOTEST_CPPFLAGS}"
+APACHE_CONF_SEL_LDFLAGS="${LDFLAGS} ${EXTRA_LDFLAGS} ${NOTEST_LDFLAGS}"
+APACHE_CONF_SEL_LIBS="${LIBS} ${EXTRA_LIBS} ${NOTEST_LIBS}"
+APACHE_CONF_SEL_CPP=${CPP}
 
 APR_RESTORE_THE_ENVIRONMENT(CPPFLAGS, EXTRA_)
 APR_RESTORE_THE_ENVIRONMENT(CFLAGS, EXTRA_)
@@ -862,6 +909,17 @@ AC_SUBST(ap_make_delimiter)
 dnl Ensure that docs/conf is created.
 test -d docs/conf||$mkdir_p docs/conf
 
-AC_OUTPUT($APACHE_OUTPUT_FILES docs/conf/httpd.conf docs/conf/extra/httpd-autoindex.conf docs/conf/extra/httpd-dav.conf docs/conf/extra/httpd-default.conf docs/conf/extra/httpd-info.conf docs/conf/extra/httpd-languages.conf docs/conf/extra/httpd-manual.conf docs/conf/extra/httpd-mpm.conf docs/conf/extra/httpd-multilang-errordoc.conf docs/conf/extra/httpd-ssl.conf docs/conf/extra/httpd-userdir.conf docs/conf/extra/httpd-vhosts.conf docs/conf/extra/proxy-html.conf include/ap_config_layout.h support/apxs support/apachectl support/dbmmanage support/envvars-std support/log_server_status support/logresolve.pl support/phf_abuse_log.cgi support/split-logfile build/rules.mk build/pkg/pkginfo build/config_vars.sh,[true],[
-  APACHE_GEN_MAKEFILES
+AC_CONFIG_FILES(docs/conf/httpd.conf docs/conf/extra/httpd-autoindex.conf docs/conf/extra/httpd-dav.conf docs/conf/extra/httpd-default.conf docs/conf/extra/httpd-info.conf docs/conf/extra/httpd-languages.conf docs/conf/extra/httpd-manual.conf docs/conf/extra/httpd-mpm.conf docs/conf/extra/httpd-multilang-errordoc.conf docs/conf/extra/httpd-ssl.conf docs/conf/extra/httpd-userdir.conf docs/conf/extra/httpd-vhosts.conf docs/conf/extra/proxy-html.conf include/ap_config_layout.h support/apxs support/apachectl support/dbmmanage support/envvars-std support/log_server_status support/logresolve.pl support/phf_abuse_log.cgi support/split-logfile build/rules.mk build/pkg/pkginfo build/config_vars.sh)
+AC_CONFIG_COMMANDS([default], [true], [APACHE_GEN_MAKEFILES])
+AC_OUTPUT
+AC_MSG_NOTICE([summary of build options:
+
+    Server Version: ${HTTPD_VERSION}
+    Install prefix: ${prefix}
+    C compiler:     ${APACHE_CONF_SEL_CC}
+    CFLAGS:         ${APACHE_CONF_SEL_CFLAGS}
+    CPPFLAGS:       ${APACHE_CONF_SEL_CPPFLAGS}
+    LDFLAGS:        ${APACHE_CONF_SEL_LDFLAGS}
+    LIBS:           ${APACHE_CONF_SEL_LIBS}
+    C preprocessor: ${APACHE_CONF_SEL_CPP}
 ])

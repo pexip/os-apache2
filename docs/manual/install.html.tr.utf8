@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="tr" xml:lang="tr"><head><!--
+<html xmlns="http://www.w3.org/1999/xhtml" lang="tr" xml:lang="tr"><head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+<!--
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -16,7 +18,7 @@
 <body id="manual-page"><div id="page-header">
 <p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p>
 <p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
-<img alt="" src="./images/feather.gif" /></div>
+<img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
 <a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="./">Sürüm 2.4</a></div><div id="page-content"><div id="preamble"><h1>Derleme ve Kurulum</h1>
@@ -29,6 +31,7 @@
 <a href="./ko/install.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
 <a href="./tr/install.html" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div>
+<div class="outofdate">Bu çeviri güncel olmayabilir. Son değişiklikler için İngilizce sürüm geçerlidir.</div>
 
 
     <p>Bu belge Apache HTTP Sunucusunun sadece Unix ve Unix benzeri
@@ -43,12 +46,12 @@
       Kaynak Kodlu projenin yaptığı gibi <code>libtool</code> ve
       <code>autoconf</code> kullanır.</p>
 
-    <p>Eğer sadece sürüm yükseltiyorsanız (2.2.50’den 2.2.51’e yükseltmek
+    <p>Eğer sadece sürüm yükseltiyorsanız (2.4.9’dan 2.4.10’a yükseltmek
       gibi) lütfen doğrudan <a href="#upgrading">Yükseltme</a> bölümüne
       atlayınız.</p>
 
 </div>
-<div id="quickview"><ul id="toc"><li><img alt="" src="./images/down.gif" /> <a href="#overview">Tez canlılar için genel bir bakış</a></li>
+<div id="quickview"><a href="https://www.apache.org/foundation/contributing.html" class="badge"><img src="https://www.apache.org/images/SupportApache-small.png" alt="Support Apache!" /></a><ul id="toc"><li><img alt="" src="./images/down.gif" /> <a href="#overview">Tez canlılar için genel bir bakış</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#requirements">Gereksinimler</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#download">İndirme</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#extract">Paketi açma</a></li>
@@ -59,17 +62,45 @@
 <li><img alt="" src="./images/down.gif" /> <a href="#test">Deneme</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#upgrading">Yükseltme</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#thirdp">Üçüncü parti paketler</a></li>
-</ul><h3>Ayrıca bakınız:</h3><ul class="seealso"><li><a href="programs/configure.html">Kaynak ağacının yapılandırılması</a></li><li><a href="invoking.html">Apache httpd’nin başlatılması</a></li><li><a href="stopping.html">Durdurma ve yeniden başlatma</a></li></ul><ul class="seealso"><li><a href="#comments_section">Yorum</a></li></ul></div>
+</ul><h3>Ayrıca bakınız:</h3><ul class="seealso"><li><a href="programs/configure.html">Kaynak ağacının yapılandırılması</a></li><li><a href="invoking.html">Apache httpd’nin başlatılması</a></li><li><a href="stopping.html">Durdurma ve yeniden başlatma</a></li><li><a href="#comments_section">Yorumlar</a></li></ul></div>
 <div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="overview" id="overview">Tez canlılar için genel bir bakış</a></h2>
+    <dl>
+    <dt>Fedora/CentOS/Red Hat Enterprise Linux üzerinde kurulum</dt>
+    <dd>
+    <pre class="prettyprint lang-">sudo yum install httpd
+sudo systemctl enable httpd
+sudo systemctl start httpd</pre>
 
+
+    <div class="warning">Bu dağıtımların yeni sürümlerinde <code>yum</code> 
+    yerine <code>dnf</code> kullanılmaktadır.<code>yum</code>. Daha ayrıntılı 
+    bilgi için <a href="https://fedoraproject.org/wiki/Apache_HTTP_Server">Fedora projesinin 
+    belgelerine</a> bakınız.</div>
+    </dd>
+
+    <dt>Ubuntu/Debian üzerinde kurulum</dt>
+    <dd>
+<pre class="prettyprint lang-">sudo apt install apache2
+sudo service apache2 start</pre>
+
+
+    <div class="warning">Daha ayrıntılı bilgi için <a href="https://help.ubuntu.com/lts/serverguide/httpd.html">Ubuntu 
+    belgelerine</a> bakınız.</div>
+
+    </dd>
+
+    <dt>Kaynak koddan kurulum</dt>
+    <dd>
     <table>
       
       <tr>
         <td><a href="#download">İndirme</a></td>
 
-        <td><code>$ lynx http://httpd.apache.org/download.cgi</code>
+        <td><a href="http://httpd.apache.org/download.cgi#apache24">http://httpd.apache.org/download.cgi</a> adresinden en son 
+          dağıtımı indirin.
+
         </td>
       </tr>
 
@@ -122,6 +153,12 @@
     <p>Derleme ve kurulum işleminin her aşaması, Apache HTTPd Sunucusunun
       derlenmesi ve kurulması için gerekenler başta olmak üzere aşağıda
       ayrıntılı olarak açıklanmıştır.</p>
+    </dd>
+    </dl>
+
+    <div class="warning">Kullandığınız platformu burada göremiyor musunuz?
+    <a href="http://httpd.apache.org/docs-project/">Bu belgeleri geliştirmek 
+     için gelin bize yardımcı olun.</a></div>
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="requirements" id="requirements">Gereksinimler</a></h2>
@@ -134,10 +171,12 @@
         değilse veya sisteminizce sağlanmış sürümlerini kullanmak
         istemiyorsanız APR ve APR-Util'in ikisini birden <a href="http://apr.apache.org/">Apache APR</a>'den indirin ve onları
         Apache httpd dağıtımını açtığınız dizinin altında
-        <code>./srclib/apr</code> ve <code>./srclib/apr-util</code> dizinlerine
+        <code>/httpd_kaynakkod_kök_dizini/srclib/apr</code> ve
+        <code>/httpd_kaynakkod_kök_dizini/srclib/apr-util</code> dizinlerine
         açın (Dizin isimlerinin sürüm numarası içermemesine dikkat edin,
-        örneğin, APR dağıtımı ./srclib/apr/ altında olsun.) ve
-        <code>./configure</code> betiğinin <code>--with-included-apr</code>
+        örneğin, APR dağıtımı
+        <code>/httpd_kaynakkod_kök_dizini/srclib/apr/</code> altında olsun.)
+        ve <code>./configure</code> betiğinin <code>--with-included-apr</code>
         seçeneğini kullanın. Bazı platformlarda, httpd'nin, kurulu APR ve
         APR-Util kopyanıza karşın derlenmesini sağlamak için ilgili
         <code>-dev</code> paketlerini kurmanız gerekebilir.</dd>
@@ -180,12 +219,8 @@
       <dd>Perl ile yazılmış <code class="program"><a href="./programs/apxs.html">apxs</a></code> veya
         <code class="program"><a href="./programs/dbmmanage.html">dbmmanage</a></code> gibi bazı betikleri desteklemek için
         Perl 5 yorumlayıcısı gerekir (5.003 veya daha yeni sürümleri
-        yeterlidir). Eğer sisteminizde birden fazla Perl yorumlayıcı
-        kuruluysa (örneğin, sistem geneli için Perl 4, kendi kullanımızı için
-        Perl 5 kurulu olabilir), doğru sürümün kullanılacağından emin olmak
-        bunu <code class="program"><a href="./programs/configure.html">configure</a></code> betiğine <code>--with-perl</code>
-        seçeneğini kullanarak belirtmeniz önerilir. Eğer
-        <code class="program"><a href="./programs/configure.html">configure</a></code> betiği sisteminizde Perl 5 yorumlayıcısı
+        yeterlidir). Eğer <code class="program"><a href="./programs/configure.html">configure</a></code> betiği sisteminizde
+        Perl 5 yorumlayıcısı
         bulamazsa bu betikleri kullanamazsınız. Ancak, bu durum Apache
         HTTPd’nin derlenip kurulmasına engel değildir.</dd>
     </dl>
@@ -436,7 +471,7 @@
 <a href="./ja/install.html" hreflang="ja" rel="alternate" title="Japanese">&nbsp;ja&nbsp;</a> |
 <a href="./ko/install.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
 <a href="./tr/install.html" title="Türkçe">&nbsp;tr&nbsp;</a></p>
-</div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorum</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
+</div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorumlar</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="https://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
 var comments_identifier = 'http://httpd.apache.org/docs/2.4/install.html';
@@ -454,7 +489,7 @@ var comments_identifier = 'http://httpd.apache.org/docs/2.4/install.html';
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
-<p class="apache">Copyright 2014 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
+<p class="apache">Copyright 2020 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
 <p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();

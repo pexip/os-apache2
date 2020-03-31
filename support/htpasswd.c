@@ -75,15 +75,20 @@ static int mkrecord(struct passwd_ctx *ctx, char *user)
 {
     char hash_str[MAX_STRING_LEN];
     int ret;
+
     ctx->out = hash_str;
     ctx->out_len = sizeof(hash_str);
 
     ret = mkhash(ctx);
-    if (ret)
+    if (ret) {
+        ctx->out = NULL;
+        ctx->out_len = 0;
         return ret;
+    }
 
     ctx->out = apr_pstrcat(ctx->pool, user, ":", hash_str, NL, NULL);
-    if (strlen(ctx->out) >= MAX_STRING_LEN) {
+    ctx->out_len = strlen(ctx->out);
+    if (ctx->out_len >= MAX_STRING_LEN) {
         ctx->errstr = "resultant record too long";
         return ERR_OVERFLOW;
     }
@@ -106,7 +111,7 @@ static void usage(void)
         " -m  Force MD5 encryption of the password (default)." NL
         " -B  Force bcrypt encryption of the password (very secure)." NL
         " -C  Set the computing time used for the bcrypt algorithm" NL
-        "     (higher is more secure but slower, default: %d, valid: 4 to 31)." NL
+        "     (higher is more secure but slower, default: %d, valid: 4 to 17)." NL
         " -d  Force CRYPT encryption of the password (8 chars max, insecure)." NL
         " -s  Force SHA encryption of the password (insecure)." NL
         " -p  Do not encrypt the password (plaintext, insecure)." NL
@@ -324,13 +329,23 @@ int main(int argc, const char * const argv[])
      */
     if (!(mask & APHTP_NOFILE)) {
         existing_file = exists(pwfilename, pool);
-        if (existing_file) {
+        if (existing_file && (mask & APHTP_VERIFY) == 0) {
             /*
              * Check that this existing file is readable and writable.
              */
             if (!accessible(pool, pwfilename, APR_FOPEN_READ|APR_FOPEN_WRITE)) {
                 apr_file_printf(errfile, "%s: cannot open file %s for "
                                 "read/write access" NL, argv[0], pwfilename);
+                exit(ERR_FILEPERM);
+            }
+        }
+        else if (existing_file && (mask & APHTP_VERIFY) != 0) {
+            /*
+             * Check that this existing file is readable.
+             */
+            if (!accessible(pool, pwfilename, APR_FOPEN_READ)) {
+                apr_file_printf(errfile, "%s: cannot open file %s for "
+                                "read access" NL, argv[0], pwfilename);
                 exit(ERR_FILEPERM);
             }
         }
@@ -498,7 +513,7 @@ int main(int argc, const char * const argv[])
 
     /* The temporary file has all the data, just copy it to the new location.
      */
-    if (apr_file_copy(dirname, pwfilename, APR_FILE_SOURCE_PERMS, pool) !=
+    if (apr_file_copy(dirname, pwfilename, APR_OS_DEFAULT, pool) !=
         APR_SUCCESS) {
         apr_file_printf(errfile, "%s: unable to update file %s" NL,
                         argv[0], pwfilename);

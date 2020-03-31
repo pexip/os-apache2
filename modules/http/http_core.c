@@ -52,7 +52,7 @@ static const char *set_keep_alive_timeout(cmd_parms *cmd, void *dummy,
                                           const char *arg)
 {
     apr_interval_time_t timeout;
-    const char *err = ap_check_cmd_context(cmd, NOT_IN_DIR_LOC_FILE);
+    const char *err = ap_check_cmd_context(cmd, NOT_IN_DIR_CONTEXT);
     if (err != NULL) {
         return err;
     }
@@ -61,13 +61,24 @@ static const char *set_keep_alive_timeout(cmd_parms *cmd, void *dummy,
     if (ap_timeout_parameter_parse(arg, &timeout, "s") != APR_SUCCESS)
         return "KeepAliveTimeout has wrong format";
     cmd->server->keep_alive_timeout = timeout;
+
+    /* We don't want to take into account whether or not KeepAliveTimeout is
+     * set for the main server, because if no http_module directive is used
+     * for a vhost, it will inherit the http_srv_cfg from the main server.
+     * However keep_alive_timeout_set helps determine whether the vhost should
+     * use its own configured timeout or the one from the vhost declared first
+     * on the same IP:port (ie. c->base_server, and the legacy behaviour).
+     */
+    if (cmd->server->is_virtual) {
+        cmd->server->keep_alive_timeout_set = 1;
+    }
     return NULL;
 }
 
 static const char *set_keep_alive(cmd_parms *cmd, void *dummy,
                                   int arg)
 {
-    const char *err = ap_check_cmd_context(cmd, NOT_IN_DIR_LOC_FILE);
+    const char *err = ap_check_cmd_context(cmd, NOT_IN_DIR_CONTEXT);
     if (err != NULL) {
         return err;
     }
@@ -79,7 +90,7 @@ static const char *set_keep_alive(cmd_parms *cmd, void *dummy,
 static const char *set_keep_alive_max(cmd_parms *cmd, void *dummy,
                                       const char *arg)
 {
-    const char *err = ap_check_cmd_context(cmd, NOT_IN_DIR_LOC_FILE);
+    const char *err = ap_check_cmd_context(cmd, NOT_IN_DIR_CONTEXT);
     if (err != NULL) {
         return err;
     }
@@ -123,23 +134,27 @@ static apr_port_t http_port(const request_rec *r)
 
 static int ap_process_http_async_connection(conn_rec *c)
 {
-    request_rec *r;
+    request_rec *r = NULL;
     conn_state_t *cs = c->cs;
 
     AP_DEBUG_ASSERT(cs != NULL);
     AP_DEBUG_ASSERT(cs->state == CONN_STATE_READ_REQUEST_LINE);
 
-    while (cs->state == CONN_STATE_READ_REQUEST_LINE) {
+    if (cs->state == CONN_STATE_READ_REQUEST_LINE) {
         ap_update_child_status_from_conn(c->sbh, SERVER_BUSY_READ, c);
-
+        if (ap_extended_status) {
+            ap_set_conn_count(c->sbh, r, c->keepalives);
+        }
         if ((r = ap_read_request(c))) {
-
             c->keepalive = AP_CONN_UNKNOWN;
             /* process the request if it was read without error */
 
-            ap_update_child_status(c->sbh, SERVER_BUSY_WRITE, r);
             if (r->status == HTTP_OK) {
                 cs->state = CONN_STATE_HANDLER;
+                if (ap_extended_status) {
+                    ap_set_conn_count(c->sbh, r, c->keepalives + 1);
+                }
+                ap_update_child_status(c->sbh, SERVER_BUSY_WRITE, r);
                 ap_process_async_request(r);
                 /* After the call to ap_process_request, the
                  * request pool may have been deleted.  We set
@@ -179,14 +194,23 @@ static int ap_process_http_sync_connection(conn_rec *c)
 
     ap_update_child_status_from_conn(c->sbh, SERVER_BUSY_READ, c);
     while ((r = ap_read_request(c)) != NULL) {
+        apr_interval_time_t keep_alive_timeout = r->server->keep_alive_timeout;
+
+        /* To preserve legacy behaviour, use the keepalive timeout from the
+         * base server (first on this IP:port) when none is explicitly
+         * configured on this server.
+         */
+        if (!r->server->keep_alive_timeout_set) {
+            keep_alive_timeout = c->base_server->keep_alive_timeout;
+        }
 
         c->keepalive = AP_CONN_UNKNOWN;
         /* process the request if it was read without error */
 
-        ap_update_child_status(c->sbh, SERVER_BUSY_WRITE, r);
         if (r->status == HTTP_OK) {
             if (cs)
                 cs->state = CONN_STATE_HANDLER;
+            ap_update_child_status(c->sbh, SERVER_BUSY_WRITE, r);
             ap_process_request(r);
             /* After the call to ap_process_request, the
              * request pool will have been deleted.  We set
@@ -215,7 +239,7 @@ static int ap_process_http_sync_connection(conn_rec *c)
             csd = ap_get_conn_socket(c);
         }
         apr_socket_opt_set(csd, APR_INCOMPLETE_READ, 1);
-        apr_socket_timeout_set(csd, c->base_server->keep_alive_timeout);
+        apr_socket_timeout_set(csd, keep_alive_timeout);
         /* Go straight to select() to wait for the next request */
     }
 

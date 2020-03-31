@@ -41,23 +41,80 @@
 
 char *ssl_util_vhostid(apr_pool_t *p, server_rec *s)
 {
-    char *id;
     SSLSrvConfigRec *sc;
-    char *host;
     apr_port_t port;
 
-    host = s->server_hostname;
     if (s->port != 0)
         port = s->port;
     else {
         sc = mySrvConfig(s);
-        if (sc->enabled == TRUE)
-            port = DEFAULT_HTTPS_PORT;
-        else
-            port = DEFAULT_HTTP_PORT;
+        port = sc->enabled == TRUE ? DEFAULT_HTTPS_PORT : DEFAULT_HTTP_PORT;
     }
-    id = apr_psprintf(p, "%s:%lu", host, (unsigned long)port);
-    return id;
+
+    return apr_psprintf(p, "%s:%lu", s->server_hostname, (unsigned long)port);
+}
+
+/*
+ * Return TRUE iff the given servername matches the server record when
+ * selecting virtual hosts.
+ */
+BOOL ssl_util_vhost_matches(const char *servername, server_rec *s)
+{
+    apr_array_header_t *names;
+    int i;
+    
+    /* check ServerName */
+    if (!strcasecmp(servername, s->server_hostname)) {
+        return TRUE;
+    }
+    
+    /*
+     * if not matched yet, check ServerAlias entries
+     * (adapted from vhost.c:matches_aliases())
+     */
+    names = s->names;
+    if (names) {
+        char **name = (char **)names->elts;
+        for (i = 0; i < names->nelts; ++i) {
+            if (!name[i])
+                continue;
+            if (!strcasecmp(servername, name[i])) {
+                return TRUE;
+            }
+        }
+    }
+    
+    /* if still no match, check ServerAlias entries with wildcards */
+    names = s->wild_names;
+    if (names) {
+        char **name = (char **)names->elts;
+        for (i = 0; i < names->nelts; ++i) {
+            if (!name[i])
+                continue;
+            if (!ap_strcasecmp_match(servername, name[i])) {
+                return TRUE;
+            }
+        }
+    }
+    
+    return FALSE;
+}
+
+int modssl_request_is_tls(const request_rec *r, SSLConnRec **scout)
+{
+    SSLConnRec *sslconn = myConnConfig(r->connection);
+    SSLSrvConfigRec *sc = mySrvConfig(r->server);
+
+    if (!(sslconn && sslconn->ssl) && r->connection->master) {
+        sslconn = myConnConfig(r->connection->master);
+    }
+
+    if (sc->enabled == SSL_ENABLED_FALSE || !sslconn || !sslconn->ssl)
+        return 0;
+    
+    if (scout) *scout = sslconn;
+
+    return 1;
 }
 
 apr_file_t *ssl_util_ppopen(server_rec *s, apr_pool_t *p, const char *cmd,
@@ -135,45 +192,37 @@ BOOL ssl_util_path_check(ssl_pathcheck_t pcm, const char *path, apr_pool_t *p)
     return TRUE;
 }
 
-/*
- * certain key data needs to survive restarts,
- * which are stored in the user data table of s->process->pool.
- * to prevent "leaking" of this data, we use malloc/free
- * rather than apr_palloc and these wrappers to help make sure
- * we do not leak the malloc-ed data.
- */
-unsigned char *ssl_asn1_table_set(apr_hash_t *table,
-                                  const char *key,
-                                  long int length)
+/* Decrypted private keys are cached to survive restarts.  The cached
+ * data must have lifetime of the process (hence malloc/free rather
+ * than pools), and uses raw DER since the EVP_PKEY structure
+ * internals may not survive across a module reload. */
+ssl_asn1_t *ssl_asn1_table_set(apr_hash_t *table, const char *key,
+                               EVP_PKEY *pkey)
 {
     apr_ssize_t klen = strlen(key);
     ssl_asn1_t *asn1 = apr_hash_get(table, key, klen);
+    apr_size_t length = i2d_PrivateKey(pkey, NULL);
+    unsigned char *p;
 
-    /*
-     * if a value for this key already exists,
-     * reuse as much of the already malloc-ed data
-     * as possible.
-     */
+    /* Re-use structure if cached previously. */
     if (asn1) {
         if (asn1->nData != length) {
-            free(asn1->cpData); /* XXX: realloc? */
-            asn1->cpData = NULL;
+            asn1->cpData = ap_realloc(asn1->cpData, length);
         }
     }
     else {
         asn1 = ap_malloc(sizeof(*asn1));
         asn1->source_mtime = 0; /* used as a note for encrypted private keys */
-        asn1->cpData = NULL;
+        asn1->cpData = ap_malloc(length);
+
+        apr_hash_set(table, key, klen, asn1);
     }
 
     asn1->nData = length;
-    if (!asn1->cpData) {
-        asn1->cpData = ap_malloc(length);
-    }
+    p = asn1->cpData;
+    i2d_PrivateKey(pkey, &p); /* increases p by length */
 
-    apr_hash_set(table, key, klen, asn1);
-
-    return asn1->cpData; /* caller will assign a value to this */
+    return asn1;
 }
 
 ssl_asn1_t *ssl_asn1_table_get(apr_hash_t *table,
@@ -200,7 +249,8 @@ void ssl_asn1_table_unset(apr_hash_t *table,
     apr_hash_set(table, key, klen, NULL);
 }
 
-#if APR_HAS_THREADS
+#if APR_HAS_THREADS && MODSSL_USE_OPENSSL_PRE_1_1_API
+
 /*
  * To ensure thread-safetyness in OpenSSL - work in progress
  */
@@ -316,6 +366,34 @@ static void ssl_dyn_destroy_function(struct CRYPTO_dynlock_value *l,
     apr_pool_destroy(l->pool);
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+
+static void ssl_util_thr_id(CRYPTO_THREADID *id)
+{
+    /* OpenSSL needs this to return an unsigned long.  On OS/390, the pthread
+     * id is a structure twice that big.  Use the TCB pointer instead as a
+     * unique unsigned long.
+     */
+#ifdef __MVS__
+    struct PSA {
+        char unmapped[540]; /* PSATOLD is at offset 540 in the PSA */
+        unsigned long PSATOLD;
+    } *psaptr = 0; /* PSA is at address 0 */
+
+    CRYPTO_THREADID_set_numeric(id, psaptr->PSATOLD);
+#else
+    CRYPTO_THREADID_set_numeric(id, (unsigned long) apr_os_thread_current());
+#endif
+}
+
+static apr_status_t ssl_util_thr_id_cleanup(void *old)
+{
+    CRYPTO_THREADID_set_callback(old);
+    return APR_SUCCESS;
+}
+
+#else
+
 static unsigned long ssl_util_thr_id(void)
 {
     /* OpenSSL needs this to return an unsigned long.  On OS/390, the pthread
@@ -334,10 +412,17 @@ static unsigned long ssl_util_thr_id(void)
 #endif
 }
 
+static apr_status_t ssl_util_thr_id_cleanup(void *old)
+{
+    CRYPTO_set_id_callback(old);
+    return APR_SUCCESS;
+}
+
+#endif
+
 static apr_status_t ssl_util_thread_cleanup(void *data)
 {
     CRYPTO_set_locking_callback(NULL);
-    CRYPTO_set_id_callback(NULL);
 
     CRYPTO_set_dynlock_create_callback(NULL);
     CRYPTO_set_dynlock_lock_callback(NULL);
@@ -361,8 +446,6 @@ void ssl_util_thread_setup(apr_pool_t *p)
         apr_thread_mutex_create(&(lock_cs[i]), APR_THREAD_MUTEX_DEFAULT, p);
     }
 
-    CRYPTO_set_id_callback(ssl_util_thr_id);
-
     CRYPTO_set_locking_callback(ssl_util_thr_lock);
 
     /* Set up dynamic locking scaffolding for OpenSSL to use at its
@@ -376,4 +459,26 @@ void ssl_util_thread_setup(apr_pool_t *p)
     apr_pool_cleanup_register(p, NULL, ssl_util_thread_cleanup,
                                        apr_pool_cleanup_null);
 }
+
+void ssl_util_thread_id_setup(apr_pool_t *p)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+    CRYPTO_THREADID_set_callback(ssl_util_thr_id);
+#else
+    CRYPTO_set_id_callback(ssl_util_thr_id);
 #endif
+    apr_pool_cleanup_register(p, NULL, ssl_util_thr_id_cleanup,
+                                       apr_pool_cleanup_null);
+}
+
+#endif /* #if APR_HAS_THREADS && MODSSL_USE_OPENSSL_PRE_1_1_API */
+
+int modssl_is_engine_id(const char *name)
+{
+#if defined(HAVE_OPENSSL_ENGINE_H) && defined(HAVE_ENGINE_INIT)
+    /* ### Can handle any other special ENGINE key names here? */
+    return strncmp(name, "pkcs11:", 7) == 0;
+#else
+    return 0;
+#endif
+}

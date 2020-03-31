@@ -41,7 +41,7 @@
  * done. If the value matches the string or regular expression, the
  * environment variables listed as var ... are set. Each var can
  * be in one of three formats: var, which sets the named variable
- * (the value value "1"); var=value, which sets the variable to
+ * (the value "1"); var=value, which sets the variable to
  * the given value; or !var, which unsets the variable is it has
  * been previously set.
  *
@@ -531,8 +531,7 @@ static int match_headers(request_rec *r)
                     val = r->connection->local_ip;
                     break;
                 case SPECIAL_REMOTE_HOST:
-                    val =  ap_get_remote_host(r->connection, r->per_dir_config,
-                                              REMOTE_NAME, NULL);
+                    val = ap_get_useragent_host(r, REMOTE_NAME, NULL);
                     break;
                 case SPECIAL_REQUEST_URI:
                     val = r->uri;
@@ -598,7 +597,17 @@ static int match_headers(request_rec *r)
                     apr_table_unset(r->subprocess_env, elts[j].key);
                 }
                 else {
-                    if (!b->pattern) {
+                    /*
+                     * Do regex replacement, if we did not use a pattern, so
+                     * either a regex or an expression and if we have a val
+                     * or at least we did not use an expression.
+                     * Background: We can have expressions that become true
+                     * if a regex pattern in the expression does NOT match.
+                     * In this case val is NULL and we should just set the
+                     * value for the environment variable like in the pattern
+                     * case.
+                     */
+                    if (!b->pattern && (val || !b->expr)) {
                         char *replaced = ap_pregsub(r->pool, elts[j].val, val,
                                                     AP_MAX_REG_MATCH, regm);
                         if (replaced) {

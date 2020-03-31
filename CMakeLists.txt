@@ -26,6 +26,7 @@ FIND_PACKAGE(LibXml2)
 FIND_PACKAGE(Lua51)
 FIND_PACKAGE(OpenSSL)
 FIND_PACKAGE(ZLIB)
+FIND_PACKAGE(CURL)
 
 # Options for support libraries not supported by cmake-bundled FindFOO
 
@@ -52,12 +53,36 @@ ELSE()
   SET(default_pcre_libraries ${CMAKE_INSTALL_PREFIX}/lib/pcre.lib)
 ENDIF()
 
+IF(EXISTS "${CMAKE_INSTALL_PREFIX}/lib/nghttp2d.lib")
+  SET(default_nghttp2_libraries "${CMAKE_INSTALL_PREFIX}/lib/nghttp2d.lib")
+ELSE()
+  SET(default_nghttp2_libraries "${CMAKE_INSTALL_PREFIX}/lib/nghttp2.lib")
+ENDIF()
+
+IF(EXISTS "${CMAKE_INSTALL_PREFIX}/lib/brotlienc.lib")
+  SET(default_brotli_libraries "${CMAKE_INSTALL_PREFIX}/lib/brotlienc.lib" "${CMAKE_INSTALL_PREFIX}/lib/brotlicommon.lib")
+ELSE()
+  SET(default_brotli_libraries)
+ENDIF()
+
+IF(EXISTS "${CMAKE_INSTALL_PREFIX}/lib/jansson.lib")
+  SET(default_jansson_libraries "${CMAKE_INSTALL_PREFIX}/lib/jansson.lib")
+ELSE()
+  SET(default_jansson_libraries)
+ENDIF()
+
 SET(APR_INCLUDE_DIR       "${CMAKE_INSTALL_PREFIX}/include" CACHE STRING "Directory with APR[-Util] include files")
 SET(APR_LIBRARIES         ${default_apr_libraries}       CACHE STRING "APR libraries to link with")
+SET(NGHTTP2_INCLUDE_DIR   "${CMAKE_INSTALL_PREFIX}/include" CACHE STRING "Directory with NGHTTP2 include files within nghttp2 subdirectory")
+SET(NGHTTP2_LIBRARIES     ${default_nghttp2_libraries}   CACHE STRING "NGHTTP2 libraries to link with")
 SET(PCRE_INCLUDE_DIR      "${CMAKE_INSTALL_PREFIX}/include" CACHE STRING "Directory with PCRE include files")
 SET(PCRE_LIBRARIES        ${default_pcre_libraries}      CACHE STRING "PCRE libraries to link with")
 SET(LIBXML2_ICONV_INCLUDE_DIR     ""                     CACHE STRING "Directory with iconv include files for libxml2")
 SET(LIBXML2_ICONV_LIBRARIES       ""                     CACHE STRING "iconv libraries to link with for libxml2")
+SET(BROTLI_INCLUDE_DIR    "${CMAKE_INSTALL_PREFIX}/include" CACHE STRING "Directory with include files for Brotli")
+SET(BROTLI_LIBRARIES      ${default_brotli_libraries}    CACHE STRING "Brotli libraries to link with")
+SET(JANSSON_INCLUDE_DIR   "${CMAKE_INSTALL_PREFIX}/include" CACHE STRING "Directory with include files for jansson")
+SET(JANSSON_LIBRARIES     "${default_jansson_libraries}" CACHE STRING "Jansson libraries to link with")
 # end support library configuration
 
 # Misc. options
@@ -80,11 +105,11 @@ FOREACH(onelib ${APR_LIBRARIES})
 ENDFOREACH()
 
 MACRO(DEFINE_WITH_BLANKS output_definition input_symbol input_value)
-  IF(MSVC_IDE)
+  IF(MSVC_IDE OR ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION} VERSION_GREATER 2.8.11)
     SET(${output_definition} "-D${input_symbol}=\"${input_value}\"")
   ELSE()
-    # assume command-line tool, where extra quotes must be added and escaped to
-    # survive
+    # command-line tool + older cmake, where extra quotes must be added and
+    # escaped to survive
     SET(${output_definition} "-D${input_symbol}=\"\\\"${input_value}\\\"\"")
   ENDIF()
 ENDMACRO()
@@ -117,7 +142,8 @@ GET_MOD_ENABLE_RANK("ENABLE_MODULES setting" ${ENABLE_MODULES} enable_modules_ra
 # not defined to either 1 or 0)
 
 MACRO(CHECK_APR_FEATURE which_define)
-  CHECK_SYMBOL_EXISTS(${which_define} "${APR_INCLUDE_DIR}/apr.h;${APR_INCLUDE_DIR}/apu.h" tmp_${which_define})
+  SET(CMAKE_REQUIRED_INCLUDES "${APR_INCLUDE_DIR}")
+  CHECK_SYMBOL_EXISTS(${which_define} "apr.h;apu.h" tmp_${which_define})
   IF(${tmp_${which_define}})
     CHECK_C_SOURCE_COMPILES("#include \"${APR_INCLUDE_DIR}/apr.h\"
       #include \"${APR_INCLUDE_DIR}/apu.h\"
@@ -158,13 +184,54 @@ ELSE()
   SET(APR_HAS_LDAP FALSE)
 ENDIF()
 
+# See if nghttp2 exists in a configured or defaulted location
+SET(NGHTTP2_FOUND TRUE)
+IF(EXISTS "${NGHTTP2_INCLUDE_DIR}/nghttp2/nghttp2.h")
+  FOREACH(onelib ${NGHTTP2_LIBRARIES})
+    IF(NOT EXISTS ${onelib})
+      SET(NGHTTP2_FOUND FALSE)
+    ENDIF()
+  ENDFOREACH()
+ELSE()
+  SET(NGHTTP2_FOUND FALSE)
+ENDIF()
+
+# See if we have Brotli
+SET(BROTLI_FOUND TRUE)
+IF(EXISTS "${BROTLI_INCLUDE_DIR}/brotli/encode.h")
+  FOREACH(onelib ${BROTLI_LIBRARIES})
+    IF(NOT EXISTS ${onelib})
+      SET(BROTLI_FOUND FALSE)
+    ENDIF()
+  ENDFOREACH()
+ELSE()
+  SET(BROTLI_FOUND FALSE)
+ENDIF()
+
+# See if we have Jansson
+SET(JANSSON_FOUND TRUE)
+IF(EXISTS "${JANSSON_INCLUDE_DIR}/jansson.h")
+  FOREACH(onelib ${JANSSON_LIBRARIES})
+    IF(NOT EXISTS ${onelib})
+      SET(JANSSON_FOUND FALSE)
+    ENDIF()
+  ENDFOREACH()
+ELSE()
+  SET(JANSSON_FOUND FALSE)
+ENDIF()
+
+
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Summary of feature detection:")
 MESSAGE(STATUS "")
 MESSAGE(STATUS "LIBXML2_FOUND ............ : ${LIBXML2_FOUND}")
 MESSAGE(STATUS "LUA51_FOUND .............. : ${LUA51_FOUND}")
+MESSAGE(STATUS "NGHTTP2_FOUND ............ : ${NGHTTP2_FOUND}")
 MESSAGE(STATUS "OPENSSL_FOUND ............ : ${OPENSSL_FOUND}")
 MESSAGE(STATUS "ZLIB_FOUND ............... : ${ZLIB_FOUND}")
+MESSAGE(STATUS "BROTLI_FOUND ............. : ${BROTLI_FOUND}")
+MESSAGE(STATUS "CURL_FOUND ............... : ${CURL_FOUND}")
+MESSAGE(STATUS "JANSSON_FOUND ............ : ${JANSSON_FOUND}")
 MESSAGE(STATUS "APR_HAS_LDAP ............. : ${APR_HAS_LDAP}")
 MESSAGE(STATUS "APR_HAS_XLATE ............ : ${APR_HAS_XLATE}")
 MESSAGE(STATUS "APU_HAVE_CRYPTO .......... : ${APU_HAVE_CRYPTO}")
@@ -221,6 +288,7 @@ SET(MODULE_LIST
   "modules/cache/mod_socache_dc+O+distcache small object cache provider"
   "modules/cache/mod_socache_memcache+I+memcache small object cache provider"
   "modules/cache/mod_socache_shmcb+I+ shmcb small object cache provider"
+  "modules/cache/mod_socache_redis+I+redis small object cache provider"
   "modules/cluster/mod_heartbeat+I+Generates Heartbeats"
   "modules/cluster/mod_heartmonitor+I+Collects Heartbeats"
   "modules/core/mod_macro+I+Define and use macros in configuration files"
@@ -236,6 +304,7 @@ SET(MODULE_LIST
   "modules/examples/mod_case_filter_in+O+Example uppercase conversion input filter"
   "modules/examples/mod_example_hooks+O+Example hook callback handler module"
   "modules/examples/mod_example_ipc+O+Example of shared memory and mutex usage"
+  "modules/filters/mod_brotli+i+Brotli compression support"
   "modules/filters/mod_buffer+I+Filter Buffering"
   "modules/filters/mod_charset_lite+i+character set translation"
   "modules/filters/mod_data+O+RFC2397 data encoder"
@@ -257,12 +326,14 @@ SET(MODULE_LIST
   "modules/generators/mod_info+I+server information"
   "modules/generators/mod_status+I+process/thread monitoring"
   "modules/http/mod_mime+A+mapping of file-extension to MIME.  Disabling this module is normally not recommended."
+  "modules/http2/mod_http2+i+HTTP/2 protocol support"
   "modules/ldap/mod_ldap+i+LDAP caching and connection pooling services"
   "modules/loggers/mod_log_config+A+logging configuration.  You won't be able to log requests to the server without this module."
   "modules/loggers/mod_log_debug+I+configurable debug logging"
   "modules/loggers/mod_log_forensic+I+forensic logging"
   "modules/loggers/mod_logio+I+input and output logging"
   "modules/lua/mod_lua+i+Apache Lua Framework"
+  "modules/md/mod_md+i+Apache Managed Domains (Certificates)"
   "modules/mappers/mod_actions+I+Action triggering on requests"
   "modules/mappers/mod_alias+A+mapping of requests to different filesystem parts"
   "modules/mappers/mod_dir+A+directory request handling"
@@ -295,8 +366,10 @@ SET(MODULE_LIST
   "modules/proxy/mod_proxy_fcgi+I+Apache proxy FastCGI module.  Requires and is enabled by --enable-proxy."
   "modules/proxy/mod_proxy_ftp+I+Apache proxy FTP module.  Requires and is enabled by --enable-proxy."
   "modules/proxy/mod_proxy_http+I+Apache proxy HTTP module.  Requires and is enabled by --enable-proxy."
+  "modules/proxy/mod_proxy_hcheck+I+Apache proxy health check module.  Requires and is enabled by --enable-proxy."
   "modules/proxy/mod_proxy_scgi+I+Apache proxy SCGI module.  Requires and is enabled by --enable-proxy."
   "modules/proxy/mod_proxy_wstunnel+I+Apache proxy Websocket Tunnel module.  Requires and is enabled by --enable-proxy."
+  "modules/http2/mod_proxy_http2+i+Apache proxy HTTP/2 module.  Requires --enable-proxy."
   "modules/session/mod_session+I+session module"
   "modules/session/mod_session_cookie+I+session cookie module"
   "modules/session/mod_session_crypto+i+session crypto module"
@@ -351,8 +424,31 @@ IF(ZLIB_FOUND)
   SET(mod_deflate_extra_includes       ${ZLIB_INCLUDE_DIR})
   SET(mod_deflate_extra_libs           ${ZLIB_LIBRARIES})
 ENDIF()
+SET(mod_brotli_requires              BROTLI_FOUND)
+IF(BROTLI_FOUND)
+  SET(mod_brotli_extra_includes        ${BROTLI_INCLUDE_DIR})
+  SET(mod_brotli_extra_libs            ${BROTLI_LIBRARIES})
+ENDIF()
 SET(mod_firehose_requires            SOMEONE_TO_MAKE_IT_COMPILE_ON_WINDOWS)
 SET(mod_heartbeat_extra_libs         mod_watchdog)
+SET(mod_http2_requires               NGHTTP2_FOUND)
+SET(mod_http2_extra_defines          ssize_t=long)
+SET(mod_http2_extra_includes         ${NGHTTP2_INCLUDE_DIR})
+SET(mod_http2_extra_libs             ${NGHTTP2_LIBRARIES})
+SET(mod_http2_extra_sources
+  modules/http2/h2_alt_svc.c
+  modules/http2/h2_bucket_eos.c      modules/http2/h2_config.c
+  modules/http2/h2_conn.c            modules/http2/h2_conn_io.c
+  modules/http2/h2_ctx.c             modules/http2/h2_filter.c
+  modules/http2/h2_from_h1.c         modules/http2/h2_h2.c
+  modules/http2/h2_bucket_beam.c
+  modules/http2/h2_mplx.c            modules/http2/h2_push.c
+  modules/http2/h2_request.c         modules/http2/h2_headers.c
+  modules/http2/h2_session.c         modules/http2/h2_stream.c 
+  modules/http2/h2_switch.c
+  modules/http2/h2_task.c            modules/http2/h2_util.c
+  modules/http2/h2_workers.c
+)
 SET(mod_ldap_extra_defines           LDAP_DECLARE_EXPORT)
 SET(mod_ldap_extra_libs              wldap32)
 SET(mod_ldap_extra_sources
@@ -369,6 +465,25 @@ SET(mod_lua_extra_sources
   modules/lua/lua_vmprep.c           modules/lua/lua_dbd.c
 )
 SET(mod_lua_requires                 LUA51_FOUND)
+SET(mod_md_requires                  OPENSSL_FOUND CURL_FOUND JANSSON_FOUND)
+SET(mod_md_extra_includes            ${OPENSSL_INCLUDE_DIR} ${CURL_INCLUDE_DIR} ${JANSSON_INCLUDE_DIR})
+SET(mod_md_extra_libs                ${OPENSSL_LIBRARIES} ${CURL_LIBRARIES} ${JANSSON_LIBRARIES} mod_watchdog)
+SET(mod_md_extra_sources
+  modules/md/md_acme.c               modules/md/md_acme_acct.c
+  modules/md/md_acme_authz.c         modules/md/md_acme_drive.c
+  modules/md/md_acmev1_drive.c       modules/md/md_acmev2_drive.c
+  modules/md/md_acme_order.c         modules/md/md_core.c
+  modules/md/md_curl.c               modules/md/md_crypt.c
+  modules/md/md_http.c               modules/md/md_json.c
+  modules/md/md_jws.c                modules/md/md_log.c
+  modules/md/md_result.c             modules/md/md_reg.c
+  modules/md/md_status.c             modules/md/md_store.c
+  modules/md/md_store_fs.c           modules/md/md_time.c
+  modules/md/md_ocsp.c               modules/md/md_util.c               
+  modules/md/mod_md_config.c         modules/md/mod_md_drive.c
+  modules/md/mod_md_os.c             modules/md/mod_md_status.c
+  modules/md/mod_md_ocsp.c
+)
 SET(mod_optional_hook_export_extra_defines AP_DECLARE_EXPORT) # bogus reuse of core API prefix
 SET(mod_proxy_extra_defines          PROXY_DECLARE_EXPORT)
 SET(mod_proxy_extra_sources          modules/proxy/proxy_util.c)
@@ -383,6 +498,7 @@ SET(mod_proxy_connect_extra_libs     mod_proxy)
 SET(mod_proxy_express_extra_libs     mod_proxy)
 SET(mod_proxy_fcgi_extra_libs        mod_proxy)
 SET(mod_proxy_ftp_extra_libs         mod_proxy)
+SET(mod_proxy_hcheck_extra_libs      mod_proxy)
 SET(mod_proxy_http_extra_libs        mod_proxy)
 SET(mod_proxy_html_requires          LIBXML2_FOUND)
 IF(LIBXML2_FOUND)
@@ -391,6 +507,13 @@ IF(LIBXML2_FOUND)
 ENDIF()
 SET(mod_proxy_scgi_extra_libs        mod_proxy)
 SET(mod_proxy_wstunnel_extra_libs    mod_proxy)
+SET(mod_proxy_http2_requires               NGHTTP2_FOUND)
+SET(mod_proxy_http2_extra_defines          ssize_t=long)
+SET(mod_proxy_http2_extra_includes         ${NGHTTP2_INCLUDE_DIR})
+SET(mod_proxy_http2_extra_libs             ${NGHTTP2_LIBRARIES} mod_proxy)
+SET(mod_proxy_http2_extra_sources
+  modules/http2/h2_proxy_session.c   modules/http2/h2_proxy_util.c
+)
 SET(mod_ratelimit_extra_defines      AP_RL_DECLARE_EXPORT)
 SET(mod_sed_extra_sources
   modules/filters/regexp.c           modules/filters/sed0.c
@@ -404,6 +527,7 @@ SET(mod_session_crypto_requires      APU_HAVE_CRYPTO)
 SET(mod_session_crypto_extra_libs    mod_session)
 SET(mod_session_dbd_extra_libs       mod_session)
 SET(mod_socache_dc_requires          AN_UNIMPLEMENTED_SUPPORT_LIBRARY_REQUIREMENT)
+SET(mod_ssl_extra_defines            SSL_DECLARE_EXPORT)
 SET(mod_ssl_requires                 OPENSSL_FOUND)
 IF(OPENSSL_FOUND)
   SET(mod_ssl_extra_includes           ${OPENSSL_INCLUDE_DIR})
@@ -541,6 +665,7 @@ SET(LIBHTTPD_SOURCES
   server/util.c
   server/util_cfgtree.c
   server/util_cookies.c
+  server/util_debug.c
   server/util_expr_eval.c
   server/util_expr_parse.c
   server/util_fcgi.c
@@ -570,10 +695,13 @@ SET(HTTPD_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/dav/main
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/filters
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/generators
+  ${CMAKE_CURRENT_SOURCE_DIR}/modules/http2
+  ${CMAKE_CURRENT_SOURCE_DIR}/modules/md
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/proxy
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/session
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/ssl
   ${CMAKE_CURRENT_SOURCE_DIR}/server
+  ${CMAKE_CURRENT_SOURCE_DIR}/server/mpm/winnt
   ${APR_INCLUDE_DIR}
   ${PCRE_INCLUDE_DIR}
 )
@@ -593,11 +721,13 @@ SET(other_installed_h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/filters/mod_xml2enc.h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/generators/mod_cgi.h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/generators/mod_status.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/modules/http2/mod_http2.h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/loggers/mod_log_config.h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/mappers/mod_rewrite.h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/proxy/mod_proxy.h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/session/mod_session.h
   ${CMAKE_CURRENT_SOURCE_DIR}/modules/ssl/mod_ssl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/modules/ssl/mod_ssl_openssl.h
 )
 # When mod_serf is buildable, don't forget to copy modules/proxy/mod_serf.h
 
@@ -634,15 +764,17 @@ FOREACH (mod ${MODULE_PATHS})
   IF(NOT ${enable_mod_val} STREQUAL "O") # build of module is desired
     SET(mod_requires "${mod_name}_requires")
     STRING(TOUPPER ${enable_mod_val} enable_mod_val_upper)
-    IF(NOT ${${mod_requires}} STREQUAL "") # module has some prerequisite
-      IF(NOT ${${mod_requires}}) # prerequisite doesn't exist
-        IF(NOT ${enable_mod_val} STREQUAL ${enable_mod_val_upper}) # lower case, so optional based on prereq
-          MESSAGE(STATUS "${mod_name} was requested but couldn't be built due to a missing prerequisite (${${mod_requires}})")
-          SET(enable_mod_val_upper "O") # skip due to missing prerequisite
-        ELSE() # must be upper case "A" or "I" (or coding error above)
-          MESSAGE(FATAL_ERROR "${mod_name} was requested but couldn't be built due to a missing prerequisite (${${mod_requires}})")
+    IF(NOT "${${mod_requires}}" STREQUAL "") # module has some prerequisite
+      FOREACH (required ${${mod_requires}})
+        IF(NOT ${required}) # prerequisite doesn't exist
+          IF(NOT ${enable_mod_val} STREQUAL ${enable_mod_val_upper}) # lower case, so optional based on prereq
+            MESSAGE(STATUS "${mod_name} was requested but couldn't be built due to a missing prerequisite (${required})")
+            SET(enable_mod_val_upper "O") # skip due to missing prerequisite
+          ELSE() # must be upper case "A" or "I" (or coding error above)
+            MESSAGE(FATAL_ERROR "${mod_name} was requested but couldn't be built due to a missing prerequisite (${required})")
+          ENDIF()
         ENDIF()
-      ENDIF()
+      ENDFOREACH()
     ENDIF()
     # map a->A, i->I, O->O for remaining logic since prereq checking is over
     SET(enable_mod_val ${enable_mod_val_upper})
@@ -675,12 +807,12 @@ FOREACH (mod ${MODULE_PATHS})
     SET(all_mod_sources ${tmp_mod_main_source} ${${mod_extra_sources}})
     ADD_LIBRARY(${mod_name} SHARED ${all_mod_sources} build/win32/httpd.rc)
     SET(install_modules ${install_modules} ${mod_name})
-    SET(install_modules_pdb ${install_modules_pdb} "${PROJECT_BINARY_DIR}/${mod_name}.pdb")
+    SET(install_modules_pdb ${install_modules_pdb} "$<TARGET_PDB_FILE:${mod_name}>")
     IF("${${mod_name}_install_lib}")
       SET(installed_mod_libs_exps
           ${installed_mod_libs_exps}
-          "${PROJECT_BINARY_DIR}/${mod_name}.lib"
-          "${PROJECT_BINARY_DIR}/${mod_name}.exp"
+          "$<TARGET_LINKER_FILE:${mod_name}>"
+          "$<TARGET_LINKER_FILE_DIR:${mod_name}>/${mod_name}.exp"
       )
     ENDIF()
     SET(mod_extra_libs "${mod_name}_extra_libs")
@@ -715,7 +847,7 @@ SET_TARGET_PROPERTIES(libhttpd PROPERTIES
   LINK_FLAGS /base:@${PROJECT_BINARY_DIR}/BaseAddr.ref,libhttpd.dll
 )
 SET(install_targets ${install_targets} libhttpd)
-SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/libhttpd.pdb)
+SET(install_bin_pdb ${install_bin_pdb} $<TARGET_PDB_FILE:libhttpd>)
 TARGET_LINK_LIBRARIES(libhttpd ${EXTRA_LIBS} ${APR_LIBRARIES} ${PCRE_LIBRARIES} ${HTTPD_SYSTEM_LIBS})
 DEFINE_WITH_BLANKS(define_long_name "LONG_NAME" "Apache HTTP Server Core")
 SET_TARGET_PROPERTIES(libhttpd PROPERTIES COMPILE_FLAGS "-DAP_DECLARE_EXPORT ${define_long_name} -DBIN_NAME=libhttpd.dll ${EXTRA_COMPILE_FLAGS}")
@@ -724,7 +856,7 @@ ADD_DEPENDENCIES(libhttpd test_char_header)
 ###########   HTTPD EXECUTABLES   ##########
 ADD_EXECUTABLE(httpd server/main.c build/win32/httpd.rc)
 SET(install_targets ${install_targets} httpd)
-SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/httpd.pdb)
+SET(install_bin_pdb ${install_bin_pdb} $<TARGET_PDB_FILE:httpd>)
 DEFINE_WITH_BLANKS(define_long_name "LONG_NAME" "Apache HTTP Server")
 SET_TARGET_PROPERTIES(httpd PROPERTIES COMPILE_FLAGS "-DAPP_FILE ${define_long_name} -DBIN_NAME=httpd.exe -DICON_FILE=${CMAKE_SOURCE_DIR}/build/win32/apache.ico ${EXTRA_COMPILE_FLAGS}")
 TARGET_LINK_LIBRARIES(httpd libhttpd ${EXTRA_LIBS})
@@ -747,7 +879,7 @@ FOREACH(pgm ${standard_support})
   SET(extra_sources ${pgm}_extra_sources)
   ADD_EXECUTABLE(${pgm} support/${pgm}.c ${${extra_sources}} build/win32/httpd.rc)
   SET(install_targets ${install_targets} ${pgm})
-  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/${pgm}.pdb)
+  SET(install_bin_pdb ${install_bin_pdb} $<TARGET_PDB_FILE:${pgm}>)
   DEFINE_WITH_BLANKS(define_long_name "LONG_NAME" "Apache HTTP Server ${pgm} program")
   SET_TARGET_PROPERTIES(${pgm} PROPERTIES COMPILE_FLAGS "-DAPP_FILE ${define_long_name} -DBIN_NAME=${pgm}.exe ${EXTRA_COMPILE_FLAGS}")
   TARGET_LINK_LIBRARIES(${pgm} ${EXTRA_LIBS} ${APR_LIBRARIES})
@@ -756,7 +888,7 @@ ENDFOREACH()
 IF(OPENSSL_FOUND)
   ADD_EXECUTABLE(abs support/ab.c build/win32/httpd.rc)
   SET(install_targets ${install_targets} abs)
-  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/abs.pdb)
+  SET(install_bin_pdb ${install_bin_pdb} $<TARGET_PDB_FILE:abs>)
   SET_TARGET_PROPERTIES(abs PROPERTIES COMPILE_DEFINITIONS HAVE_OPENSSL)
   SET(tmp_includes ${HTTPD_INCLUDE_DIRECTORIES} ${OPENSSL_INCLUDE_DIR})
   SET_TARGET_PROPERTIES(abs PROPERTIES INCLUDE_DIRECTORIES "${tmp_includes}")
@@ -769,7 +901,7 @@ GET_PROPERTY(tmp_includes TARGET ab PROPERTY INCLUDE_DIRECTORIES)
 # getting duplicate manifest error with ApacheMonitor
 # ADD_EXECUTABLE(ApacheMonitor support/win32/ApacheMonitor.c support/win32/ApacheMonitor.rc)
 # SET(install_targets ${install_targets} ApacheMonitor)
-# SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/ApacheMonitor.pdb)
+# SET(install_bin_pdb ${install_bin_pdb} $<TARGET_PDB_FILE:ApacheMonitor>)
 # SET_TARGET_PROPERTIES(ApacheMonitor PROPERTIES WIN32_EXECUTABLE TRUE)
 # SET_TARGET_PROPERTIES(ApacheMonitor PROPERTIES COMPILE_FLAGS "-DAPP_FILE -DLONG_NAME=ApacheMonitor -DBIN_NAME=ApacheMonitor.exe ${EXTRA_COMPILE_FLAGS}")
 # TARGET_LINK_LIBRARIES(ApacheMonitor ${EXTRA_LIBS} ${HTTPD_SYSTEM_LIBS} comctl32 wtsapi32)
@@ -826,7 +958,7 @@ INSTALL(DIRECTORY include/ DESTINATION include
 )
 INSTALL(FILES ${other_installed_h} DESTINATION include)
 INSTALL(FILES ${installed_mod_libs_exps} DESTINATION lib)
-INSTALL(FILES "${CMAKE_BINARY_DIR}/libhttpd.exp" DESTINATION LIB)
+INSTALL(FILES "$<TARGET_LINKER_FILE_DIR:libhttpd>/libhttpd.exp" DESTINATION LIB)
 
 IF(INSTALL_MANUAL) # Silly?  This takes a while, and a dev doesn't need it.
   INSTALL(DIRECTORY docs/manual/ DESTINATION manual)
@@ -835,22 +967,22 @@ ENDIF()
 INSTALL(DIRECTORY DESTINATION logs)
 INSTALL(DIRECTORY DESTINATION cgi-bin)
 
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl ${CMAKE_CURRENT_SOURCE_DIR}/docs/error ${CMAKE_INSTALL_PREFIX}/error ifdestmissing)")
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_CURRENT_SOURCE_DIR}/docs/error\" \"${CMAKE_INSTALL_PREFIX}/error\" ifdestmissing)")
 
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl ${CMAKE_CURRENT_SOURCE_DIR}/docs/docroot ${CMAKE_INSTALL_PREFIX}/htdocs ifdestmissing)")
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_CURRENT_SOURCE_DIR}/docs/docroot\" \"${CMAKE_INSTALL_PREFIX}/htdocs\" ifdestmissing)")
 
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl ${CMAKE_CURRENT_SOURCE_DIR}/docs/icons ${CMAKE_INSTALL_PREFIX}/icons ifdestmissing)")
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_CURRENT_SOURCE_DIR}/docs/icons\" \"${CMAKE_INSTALL_PREFIX}/icons\" ifdestmissing)")
 
 # Copy generated .conf files from the build directory to the install,
 # without overwriting stuff already there.
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl ${CMAKE_BINARY_DIR}/conf ${CMAKE_INSTALL_PREFIX}/conf)")
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND perl \"${CMAKE_CURRENT_SOURCE_DIR}/build/cpR_noreplace.pl\" \"${CMAKE_BINARY_DIR}/conf\" \"${CMAKE_INSTALL_PREFIX}/conf\")")
 # But conf/original is supposed to be overwritten.
 # Note: FILE(TO_NATIVE_PATH ...) leaves the backslashes unescaped, which
 #       generates warnings.  Just do it manually since this build only supports
 #       Windows anyway.
 STRING(REPLACE "/" "\\\\" native_src ${CMAKE_BINARY_DIR}/conf/original)
 STRING(REPLACE "/" "\\\\" native_dest ${CMAKE_INSTALL_PREFIX}/conf/original)
-INSTALL(CODE "EXECUTE_PROCESS(COMMAND xcopy ${native_src} ${native_dest} /Q /S /Y)")
+INSTALL(CODE "EXECUTE_PROCESS(COMMAND xcopy \"${native_src}\" \"${native_dest}\" /Q /S /Y)")
 
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" buildtype)
 MESSAGE(STATUS "")
@@ -870,6 +1002,10 @@ MESSAGE(STATUS "  PCRE include directory .......... : ${PCRE_INCLUDE_DIR}")
 MESSAGE(STATUS "  PCRE libraries .................. : ${PCRE_LIBRARIES}")
 MESSAGE(STATUS "  libxml2 iconv prereq include dir. : ${LIBXML2_ICONV_INCLUDE_DIR}")
 MESSAGE(STATUS "  libxml2 iconv prereq libraries .. : ${LIBXML2_ICONV_LIBRARIES}")
+MESSAGE(STATUS "  Brotli include directory......... : ${BROTLI_INCLUDE_DIR}")
+MESSAGE(STATUS "  Brotli libraries ................ : ${BROTLI_LIBRARIES}")
+MESSAGE(STATUS "  Curl include directory........... : ${CURL_INCLUDE_DIR}")
+MESSAGE(STATUS "  Jansson libraries ............... : ${JANSSON_LIBRARIES}")
 MESSAGE(STATUS "  Extra include directories ....... : ${EXTRA_INCLUDES}")
 MESSAGE(STATUS "  Extra compile flags ............. : ${EXTRA_COMPILE_FLAGS}")
 MESSAGE(STATUS "  Extra libraries ................. : ${EXTRA_LIBS}")

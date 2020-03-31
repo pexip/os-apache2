@@ -60,7 +60,7 @@
 
 APLOG_USE_MODULE(http);
 
-/* New Apache routine to map status codes into array indicies
+/* New Apache routine to map status codes into array indices
  *  e.g.  100 -> 0,  101 -> 1,  200 -> 2 ...
  * The number of status lines must equal the value of
  * RESPONSE_CODES (httpd.h) and must be listed in order.
@@ -135,7 +135,7 @@ static const char * const status_lines[RESPONSE_CODES] =
     NULL, /* 418 */
     NULL, /* 419 */
     NULL, /* 420 */
-    NULL, /* 421 */
+    "421 Misdirected Request",
     "422 Unprocessable Entity",
     "423 Locked",
     "424 Failed Dependency",
@@ -146,7 +146,27 @@ static const char * const status_lines[RESPONSE_CODES] =
     "429 Too Many Requests",
     NULL, /* 430 */
     "431 Request Header Fields Too Large",
-#define LEVEL_500 71
+    NULL, /* 432 */
+    NULL, /* 433 */
+    NULL, /* 434 */
+    NULL, /* 435 */
+    NULL, /* 436 */
+    NULL, /* 437 */
+    NULL, /* 438 */
+    NULL, /* 439 */
+    NULL, /* 440 */
+    NULL, /* 441 */
+    NULL, /* 442 */
+    NULL, /* 443 */
+    NULL, /* 444 */
+    NULL, /* 445 */
+    NULL, /* 446 */
+    NULL, /* 447 */
+    NULL, /* 448 */
+    NULL, /* 449 */
+    NULL, /* 450 */
+    "451 Unavailable For Legal Reasons",
+#define LEVEL_500 91
     "500 Internal Server Error",
     "501 Not Implemented",
     "502 Bad Gateway",
@@ -234,14 +254,12 @@ AP_DECLARE(int) ap_set_keepalive(request_rec *r)
      */
     if ((r->connection->keepalive != AP_CONN_CLOSE)
         && !r->expecting_100
-        && ((r->status == HTTP_NOT_MODIFIED)
-            || (r->status == HTTP_NO_CONTENT)
-            || r->header_only
+        && (r->header_only
+            || AP_STATUS_IS_HEADER_ONLY(r->status)
             || apr_table_get(r->headers_out, "Content-Length")
-            || ap_find_last_token(r->pool,
+            || ap_is_chunked(r->pool,
                                   apr_table_get(r->headers_out,
-                                                "Transfer-Encoding"),
-                                  "chunked")
+                                                "Transfer-Encoding"))
             || ((r->proto_num >= HTTP_VERSION(1,1))
                 && (r->chunked = 1))) /* THIS CODE IS CORRECT, see above. */
         && r->server->keep_alive
@@ -316,8 +334,8 @@ AP_DECLARE(ap_condition_e) ap_condition_if_match(request_rec *r,
      */
     if ((if_match = apr_table_get(r->headers_in, "If-Match")) != NULL) {
         if (if_match[0] == '*'
-                || ((etag = apr_table_get(headers, "ETag")) == NULL
-                        && !ap_find_etag_strong(r->pool, if_match, etag))) {
+                || ((etag = apr_table_get(headers, "ETag")) != NULL
+                        && ap_find_etag_strong(r->pool, if_match, etag))) {
             return AP_CONDITION_STRONG;
         }
         else {
@@ -552,9 +570,6 @@ AP_DECLARE(int) ap_meets_conditions(request_rec *r)
      */
     cond = ap_condition_if_match(r, r->headers_out);
     if (AP_CONDITION_NOMATCH == cond) {
-        not_modified = 0;
-    }
-    else if (cond >= AP_CONDITION_WEAK) {
         return HTTP_PRECONDITION_FAILED;
     }
 
@@ -671,8 +686,11 @@ AP_DECLARE(void) ap_method_registry_init(apr_pool_t *p)
                               apr_pool_cleanup_null);
 
     /* put all the standard methods into the registry hash to ease the
-       mapping operations between name and number */
+     * mapping operations between name and number
+     * HEAD is a special-instance of the GET method and shares the same ID
+     */
     register_one_method(p, "GET", M_GET);
+    register_one_method(p, "HEAD", M_GET);
     register_one_method(p, "PUT", M_PUT);
     register_one_method(p, "POST", M_POST);
     register_one_method(p, "DELETE", M_DELETE);
@@ -1017,11 +1035,7 @@ static char *make_allow(request_rec *r)
 
         apr_hash_this(hi, &key, NULL, &val);
         if ((mask & (AP_METHOD_BIT << *(int *)val)) != 0) {
-            *(const char **)apr_array_push(allow) = key;
-
-            /* the M_GET method actually refers to two methods */
-            if (*(int *)val == M_GET)
-                *(const char **)apr_array_push(allow) = "HEAD";
+            APR_ARRAY_PUSH(allow, const char *) = key;
         }
     }
 
@@ -1117,13 +1131,10 @@ static const char *get_canned_error_string(int status,
                            "\">here</a>.</p>\n",
                            NULL));
     case HTTP_USE_PROXY:
-        return(apr_pstrcat(p,
-                           "<p>This resource is only accessible "
-                           "through the proxy\n",
-                           ap_escape_html(r->pool, location),
-                           "<br />\nYou will need to configure "
-                           "your client to use that proxy.</p>\n",
-                           NULL));
+        return("<p>This resource is only accessible "
+               "through the proxy\n"
+               "<br />\nYou will need to configure "
+               "your client to use that proxy.</p>\n");
     case HTTP_PROXY_AUTHENTICATION_REQUIRED:
     case HTTP_UNAUTHORIZED:
         return("<p>This server could not verify that you\n"
@@ -1139,34 +1150,20 @@ static const char *get_canned_error_string(int status,
                                   "error-notes",
                                   "</p>\n"));
     case HTTP_FORBIDDEN:
-        s1 = apr_pstrcat(p,
-                         "<p>You don't have permission to access ",
-                         ap_escape_html(r->pool, r->uri),
-                         "\non this server.<br />\n",
-                         NULL);
-        return(add_optional_notes(r, s1, "error-notes", "</p>\n"));
+        return(add_optional_notes(r, "<p>You don't have permission to access this resource.", "error-notes", "</p>\n"));
     case HTTP_NOT_FOUND:
-        return(apr_pstrcat(p,
-                           "<p>The requested URL ",
-                           ap_escape_html(r->pool, r->uri),
-                           " was not found on this server.</p>\n",
-                           NULL));
+        return("<p>The requested URL was not found on this server.</p>\n");
     case HTTP_METHOD_NOT_ALLOWED:
         return(apr_pstrcat(p,
                            "<p>The requested method ",
                            ap_escape_html(r->pool, r->method),
-                           " is not allowed for the URL ",
-                           ap_escape_html(r->pool, r->uri),
-                           ".</p>\n",
+                           " is not allowed for this URL.</p>\n",
                            NULL));
     case HTTP_NOT_ACCEPTABLE:
-        s1 = apr_pstrcat(p,
-                         "<p>An appropriate representation of the "
-                         "requested resource ",
-                         ap_escape_html(r->pool, r->uri),
-                         " could not be found on this server.</p>\n",
-                         NULL);
-        return(add_optional_notes(r, s1, "variant-list", ""));
+        return(add_optional_notes(r, 
+            "<p>An appropriate representation of the requested resource "
+            "could not be found on this server.</p>\n",
+            "variant-list", ""));
     case HTTP_MULTIPLE_CHOICES:
         return(add_optional_notes(r, "", "variant-list", ""));
     case HTTP_LENGTH_REQUIRED:
@@ -1177,18 +1174,13 @@ static const char *get_canned_error_string(int status,
                          NULL);
         return(add_optional_notes(r, s1, "error-notes", "</p>\n"));
     case HTTP_PRECONDITION_FAILED:
-        return(apr_pstrcat(p,
-                           "<p>The precondition on the request "
-                           "for the URL ",
-                           ap_escape_html(r->pool, r->uri),
-                           " evaluated to false.</p>\n",
-                           NULL));
+        return("<p>The precondition on the request "
+               "for this URL evaluated to false.</p>\n");
     case HTTP_NOT_IMPLEMENTED:
         s1 = apr_pstrcat(p,
                          "<p>",
-                         ap_escape_html(r->pool, r->method), " to ",
-                         ap_escape_html(r->pool, r->uri),
-                         " not supported.<br />\n",
+                         ap_escape_html(r->pool, r->method), " ",
+                         " not supported for current URL.<br />\n",
                          NULL);
         return(add_optional_notes(r, s1, "error-notes", "</p>\n"));
     case HTTP_BAD_GATEWAY:
@@ -1196,29 +1188,19 @@ static const char *get_canned_error_string(int status,
             "response from an upstream server.<br />" CRLF;
         return(add_optional_notes(r, s1, "error-notes", "</p>\n"));
     case HTTP_VARIANT_ALSO_VARIES:
-        return(apr_pstrcat(p,
-                           "<p>A variant for the requested "
-                           "resource\n<pre>\n",
-                           ap_escape_html(r->pool, r->uri),
-                           "\n</pre>\nis itself a negotiable resource. "
-                           "This indicates a configuration error.</p>\n",
-                           NULL));
+        return("<p>A variant for the requested "
+               "resource\n<pre>\n"
+               "\n</pre>\nis itself a negotiable resource. "
+               "This indicates a configuration error.</p>\n");
     case HTTP_REQUEST_TIME_OUT:
         return("<p>Server timeout waiting for the HTTP request from the client.</p>\n");
     case HTTP_GONE:
-        return(apr_pstrcat(p,
-                           "<p>The requested resource<br />",
-                           ap_escape_html(r->pool, r->uri),
-                           "<br />\nis no longer available on this server "
-                           "and there is no forwarding address.\n"
-                           "Please remove all references to this "
-                           "resource.</p>\n",
-                           NULL));
+        return("<p>The requested resource is no longer available on this server"
+               " and there is no forwarding address.\n"
+               "Please remove all references to this resource.</p>\n");
     case HTTP_REQUEST_ENTITY_TOO_LARGE:
         return(apr_pstrcat(p,
-                           "The requested resource<br />",
-                           ap_escape_html(r->pool, r->uri), "<br />\n",
-                           "does not allow request data with ",
+                           "The requested resource does not allow request data with ",
                            ap_escape_html(r->pool, r->method),
                            " requests, or the amount of data provided in\n"
                            "the request exceeds the capacity limit.\n",
@@ -1296,6 +1278,15 @@ static const char *get_canned_error_string(int status,
     case HTTP_NETWORK_AUTHENTICATION_REQUIRED:
         return("<p>The client needs to authenticate to gain\n"
                "network access.</p>\n");
+    case HTTP_MISDIRECTED_REQUEST:
+        return("<p>The client needs a new connection for this\n"
+               "request as the requested host name does not match\n"
+               "the Server Name Indication (SNI) in use for this\n"
+               "connection.</p>\n");
+    case HTTP_UNAVAILABLE_FOR_LEGAL_REASONS:
+        return(add_optional_notes(r, 
+               "<p>Access to this URL has been denied for legal reasons.<br />\n",
+               "error-notes", "</p>\n"));
     default:                    /* HTTP_INTERNAL_SERVER_ERROR */
         /*
          * This comparison to expose error-notes could be modified to
@@ -1375,6 +1366,15 @@ AP_DECLARE(void) ap_send_error_response(request_rec *r, int recursive_error)
 
     ap_run_insert_error_filter(r);
 
+    /* We need to special-case the handling of 204 and 304 responses,
+     * since they have specific HTTP requirements and do not include a
+     * message body.  Note that being assbackwards here is not an option.
+     */
+    if (AP_STATUS_IS_HEADER_ONLY(status)) {
+        ap_finalize_request_protocol(r);
+        return;
+    }
+
     /*
      * It's possible that the Location field might be in r->err_headers_out
      * instead of r->headers_out; use the latter if possible, else the
@@ -1382,19 +1382,6 @@ AP_DECLARE(void) ap_send_error_response(request_rec *r, int recursive_error)
      */
     if (location == NULL) {
         location = apr_table_get(r->err_headers_out, "Location");
-    }
-    /* We need to special-case the handling of 204 and 304 responses,
-     * since they have specific HTTP requirements and do not include a
-     * message body.  Note that being assbackwards here is not an option.
-     */
-    if (status == HTTP_NOT_MODIFIED) {
-        ap_finalize_request_protocol(r);
-        return;
-    }
-
-    if (status == HTTP_NO_CONTENT) {
-        ap_finalize_request_protocol(r);
-        return;
     }
 
     if (!r->assbackwards) {
@@ -1567,8 +1554,6 @@ AP_DECLARE(void) ap_copy_method_list(ap_method_list_t *dest,
 AP_DECLARE(int) ap_method_in_list(ap_method_list_t *l, const char *method)
 {
     int methnum;
-    int i;
-    char **methods;
 
     /*
      * If it's one of our known methods, use the shortcut and check the
@@ -1579,18 +1564,13 @@ AP_DECLARE(int) ap_method_in_list(ap_method_list_t *l, const char *method)
         return !!(l->method_mask & (AP_METHOD_BIT << methnum));
     }
     /*
-     * Otherwise, see if the method name is in the array or string names
+     * Otherwise, see if the method name is in the array of string names.
      */
     if ((l->method_list == NULL) || (l->method_list->nelts == 0)) {
         return 0;
     }
-    methods = (char **)l->method_list->elts;
-    for (i = 0; i < l->method_list->nelts; ++i) {
-        if (strcmp(method, methods[i]) == 0) {
-            return 1;
-        }
-    }
-    return 0;
+
+    return ap_array_str_contains(l->method_list, method);
 }
 
 /*
@@ -1599,30 +1579,24 @@ AP_DECLARE(int) ap_method_in_list(ap_method_list_t *l, const char *method)
 AP_DECLARE(void) ap_method_list_add(ap_method_list_t *l, const char *method)
 {
     int methnum;
-    int i;
     const char **xmethod;
-    char **methods;
 
     /*
      * If it's one of our known methods, use the shortcut and use the
      * bitmask.
      */
     methnum = ap_method_number_of(method);
-    l->method_mask |= (AP_METHOD_BIT << methnum);
     if (methnum != M_INVALID) {
+        l->method_mask |= (AP_METHOD_BIT << methnum);
         return;
     }
     /*
      * Otherwise, see if the method name is in the array of string names.
      */
-    if (l->method_list->nelts != 0) {
-        methods = (char **)l->method_list->elts;
-        for (i = 0; i < l->method_list->nelts; ++i) {
-            if (strcmp(method, methods[i]) == 0) {
-                return;
-            }
-        }
+    if (ap_array_str_contains(l->method_list, method)) {
+        return;
     }
+
     xmethod = (const char **) apr_array_push(l->method_list);
     *xmethod = method;
 }
@@ -1641,15 +1615,15 @@ AP_DECLARE(void) ap_method_list_remove(ap_method_list_t *l,
      * by a module, use the bitmask.
      */
     methnum = ap_method_number_of(method);
-    l->method_mask |= ~(AP_METHOD_BIT << methnum);
     if (methnum != M_INVALID) {
+        l->method_mask &= ~(AP_METHOD_BIT << methnum);
         return;
     }
     /*
      * Otherwise, see if the method name is in the array of string names.
      */
     if (l->method_list->nelts != 0) {
-        register int i, j, k;
+        int i, j, k;
         methods = (char **)l->method_list->elts;
         for (i = 0; i < l->method_list->nelts; ) {
             if (strcmp(method, methods[i]) == 0) {

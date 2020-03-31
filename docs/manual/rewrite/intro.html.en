@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head><!--
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
+<!--
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -16,7 +18,7 @@
 <body id="manual-page"><div id="page-header">
 <p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
 <p class="apache">Apache HTTP Server Version 2.4</p>
-<img alt="" src="../images/feather.gif" /></div>
+<img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
 <a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Rewrite</a></div><div id="page-content"><div id="preamble"><h1>Apache mod_rewrite Introduction</h1>
@@ -32,14 +34,14 @@ describes the basic concepts necessary for use of
 but this doc should help the beginner get their feet wet.
 </p>
 </div>
-<div id="quickview"><ul id="toc"><li><img alt="" src="../images/down.gif" /> <a href="#introduction">Introduction</a></li>
+<div id="quickview"><a href="https://www.apache.org/foundation/contributing.html" class="badge"><img src="https://www.apache.org/images/SupportApache-small.png" alt="Support Apache!" /></a><ul id="toc"><li><img alt="" src="../images/down.gif" /> <a href="#introduction">Introduction</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#regex">Regular Expressions</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#rewriterule">RewriteRule Basics</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#flags">Rewrite Flags</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#rewritecond">Rewrite Conditions</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#rewritemap">Rewrite maps</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#htaccess">.htaccess files</a></li>
-</ul><h3>See also</h3><ul class="seealso"><li><a href="../mod/mod_rewrite.html">Module documentation</a></li><li><a href="remapping.html">Redirection and remapping</a></li><li><a href="access.html">Controlling access</a></li><li><a href="vhosts.html">Virtual hosts</a></li><li><a href="proxy.html">Proxying</a></li><li><a href="rewritemap.html">Using RewriteMap</a></li><li><a href="advanced.html">Advanced techniques</a></li><li><a href="avoid.html">When not to use mod_rewrite</a></li></ul><ul class="seealso"><li><a href="#comments_section">Comments</a></li></ul></div>
+</ul><h3>See also</h3><ul class="seealso"><li><a href="../mod/mod_rewrite.html">Module documentation</a></li><li><a href="remapping.html">Redirection and remapping</a></li><li><a href="access.html">Controlling access</a></li><li><a href="vhosts.html">Virtual hosts</a></li><li><a href="proxy.html">Proxying</a></li><li><a href="rewritemap.html">Using RewriteMap</a></li><li><a href="advanced.html">Advanced techniques</a></li><li><a href="avoid.html">When not to use mod_rewrite</a></li><li><a href="#comments_section">Comments</a></li></ul></div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="introduction" id="introduction">Introduction</a></h2>
@@ -71,7 +73,7 @@ it will tell you exactly how each rule is processed.</p>
 <div class="section">
 <h2><a name="regex" id="regex">Regular Expressions</a></h2>
 
-<p>mod_rewrite uses the <a href="http://pcre.org/">Perl Compatible
+<p><code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> uses the <a href="http://pcre.org/">Perl Compatible
 Regular Expression</a> vocabulary. In this document, we do not attempt
 to provide a detailed reference to regular expressions. For that, we
 recommend the <a href="http://pcre.org/pcre.txt">PCRE man pages</a>, the
@@ -99,32 +101,65 @@ well as write your own.</p>
 <th>Example</th>
 </tr>
 
-<tr><td><code>.</code></td><td>Matches any single
-character</td><td><code>c.t</code> will match <code>cat</code>,
-<code>cot</code>, <code>cut</code>, etc.</td></tr>
-<tr><td><code>+</code></td><td>Repeats the previous match one or more
-times</td><td><code>a+</code> matches <code>a</code>, <code>aa</code>,
-<code>aaa</code>, etc</td></tr>
-<tr><td><code>*</code></td><td>Repeats the previous match zero or more
-times.</td><td><code>a*</code> matches all the same things
-<code>a+</code> matches, but will also match an empty string.</td></tr>
-<tr><td><code>?</code></td><td>Makes the match optional.</td><td>
-<code>colou?r</code> will match <code>color</code> and <code>colour</code>.</td>
+<tr>
+    <td><code>.</code></td>
+    <td>Matches any single character</td>
+    <td><code>c.t</code> will match <code>cat</code>, <code>cot</code>,
+      <code>cut</code>, etc</td>
 </tr>
-<tr><td><code>^</code></td><td>Called an anchor, matches the beginning
-of the string</td><td><code>^a</code> matches a string that begins with
-<code>a</code></td></tr>
-<tr><td><code>$</code></td><td>The other anchor, this matches the end of
-the string.</td><td><code>a$</code> matches a string that ends with
-<code>a</code>.</td></tr>
-<tr><td><code>( )</code></td><td>Groups several characters into a single
-unit, and captures a match for use in a backreference.</td><td><code>(ab)+</code>
-matches <code>ababab</code> - that is, the <code>+</code> applies to the group.
-For more on backreferences see <a href="#InternalBackRefs">below</a>.</td></tr>
-<tr><td><code>[ ]</code></td><td>A character class - matches one of the
-characters</td><td><code>c[uoa]t</code> matches <code>cut</code>,
-<code>cot</code> or <code>cat</code>.</td></tr>
-<tr><td><code>[^ ]</code></td><td>Negative character class - matches any character not specified</td><td><code>c[^/]t</code> matches <code>cat</code> or <code>c=t</code> but not <code>c/t</code></td></tr>
+<tr>
+    <td><code>+</code></td>
+    <td>Repeats the previous match one or more times</td>
+    <td><code>a+</code> matches <code>a</code>, <code>aa</code>,
+      <code>aaa</code>, etc</td>
+</tr>
+<tr>
+    <td><code>*</code></td>
+    <td>Repeats the previous match zero or more times</td>
+    <td><code>a*</code> matches all the same things <code>a+</code> matches,
+      but will also match an empty string</td>
+</tr>
+<tr>
+    <td><code>?</code></td>
+    <td>Makes the match optional</td>
+    <td><code>colou?r</code> will match <code>color</code> and
+    <code>colour</code></td>
+</tr>
+<tr>
+    <td><code>\</code></td>
+    <td>Escape the next character</td>
+    <td><code>\.</code> will match <code>.</code> (dot) and not <em>any single
+    character</em> as explain above</td>
+</tr>
+<tr>
+    <td><code>^</code></td>
+    <td>Called an anchor, matches the beginning of the string</td>
+    <td><code>^a</code> matches a string that begins with <code>a</code></td>
+</tr>
+<tr>
+    <td><code>$</code></td>
+    <td>The other anchor, this matches the end of the string</td>
+    <td><code>a$</code> matches a string that ends with <code>a</code></td>
+</tr>
+<tr>
+    <td><code>( )</code></td>
+    <td>Groups several characters into a single unit, and captures a match
+      for use in a backreference</td>
+    <td><code>(ab)+</code> matches <code>ababab</code> - that is, the
+      <code>+</code> applies to the group. For more on backreferences see
+      <a href="#InternalBackRefs">below</a></td>
+</tr>
+<tr>
+    <td><code>[ ]</code></td>
+    <td>A character class - matches one of the characters</td>
+    <td><code>c[uoa]t</code> matches <code>cut</code>, <code>cot</code> or
+      <code>cat</code></td>
+</tr>
+<tr>
+    <td><code>[^ ]</code></td>
+    <td>Negative character class - matches any character not specified</td>
+    <td><code>c[^/]t</code> matches <code>cat</code> or <code>c=t</code> but
+      not <code>c/t</code></td></tr>
 </table>
 
 <p>In <code class="module"><a href="../mod/mod_rewrite.html">mod_rewrite</a></code> the <code>!</code> character can be
@@ -141,12 +176,21 @@ the expression.</p>
       <em>CondPattern</em>, back-references are internally created
       which can be used with the strings <code>$N</code> and
       <code>%N</code> (see below). These are available for creating
-      the strings <em>Substitution</em> and <em>TestString</em> as 
-      outlined in the following chapters. Figure 1 shows to which 
-      locations the back-references are transferred for expansion as 
-      well as illustrating the flow of the RewriteRule, RewriteCond 
-      matching. In the next chapters, we will be exploring how to use 
-      these back-references, so do not fret if it seems a bit alien 
+      the <em>Substitution</em> parameter of a
+      <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> or
+      the <em>TestString</em> parameter of a
+      <code class="directive"><a href="../mod/mod_rewrite.html#rewritecond">RewriteCond</a></code>.</p>
+      <p>  Captures in the <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> patterns are (counterintuitively) available to
+       all preceding
+      <code class="directive"><a href="../mod/mod_rewrite.html#rewritecond">RewriteCond</a></code> directives,
+      because the <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code>
+      expression is evaluated before the individual conditions.</p>
+
+      <p>Figure 1 shows to which
+      locations the back-references are transferred for expansion as
+      well as illustrating the flow of the RewriteRule, RewriteCond
+      matching. In the next chapters, we will be exploring how to use
+      these back-references, so do not fret if it seems a bit alien
       to you at first.
       </p>
 
@@ -168,12 +212,12 @@ of three arguments separated by spaces. The arguments are</p>
 <li><var>[flags]</var>: options affecting the rewritten request.</li>
 </ol>
 
-<p>The <var>Pattern</var> is a <a href="#regex">regular expression</a>. 
-It is initially (for the first rewrite rule or until a substitution occurs) 
-matched against the URL-path of the incoming request (the part after the 
-hostname but before any question mark indicating the beginning of a query 
-string) or, in per-directory context, against the request's path relative 
-to the directory for which the rule is defined. Once a substitution has 
+<p>The <var>Pattern</var> is a <a href="#regex">regular expression</a>.
+It is initially (for the first rewrite rule or until a substitution occurs)
+matched against the URL-path of the incoming request (the part after the
+hostname but before any question mark indicating the beginning of a query
+string) or, in per-directory context, against the request's path relative
+to the directory for which the rule is defined. Once a substitution has
 occurred, the rules that follow are matched against the substituted
 value.
 </p>
@@ -189,7 +233,7 @@ value.
 <dl>
 <dt>A full filesystem path to a resource</dt>
 <dd>
-<pre class="prettyprint lang-config">RewriteRule ^/games /usr/local/games/web</pre>
+<pre class="prettyprint lang-config">RewriteRule "^/games" "/usr/local/games/web"</pre>
 
 <p>This maps a request to an arbitrary location on your filesystem, much
 like the <code class="directive"><a href="../mod/mod_alias.html#alias">Alias</a></code> directive.</p>
@@ -197,7 +241,7 @@ like the <code class="directive"><a href="../mod/mod_alias.html#alias">Alias</a>
 
 <dt>A web-path to a resource</dt>
 <dd>
-<pre class="prettyprint lang-config">RewriteRule ^/foo$ /bar</pre>
+<pre class="prettyprint lang-config">RewriteRule "^/foo$" "/bar"</pre>
 
 <p>If <code class="directive"><a href="../mod/core.html#documentroot">DocumentRoot</a></code> is set
 to <code>/usr/local/apache2/htdocs</code>, then this directive would
@@ -207,7 +251,7 @@ path <code>/usr/local/apache2/htdocs/bar</code>.</p>
 
 <dt>An absolute URL</dt>
 <dd>
-<pre class="prettyprint lang-config">RewriteRule ^/product/view$ http://site2.example.com/seeproduct.html [R]</pre>
+<pre class="prettyprint lang-config">RewriteRule "^/product/view$" "http://site2.example.com/seeproduct.html" [R]</pre>
 
 <p>This tells the client to make a new request for the specified URL.</p>
 </dd>
@@ -216,7 +260,7 @@ path <code>/usr/local/apache2/htdocs/bar</code>.</p>
 <p>The <var>Substitution</var> can also
 contain <em>back-references</em> to parts of the incoming URL-path
 matched by the <var>Pattern</var>. Consider the following:</p>
-<pre class="prettyprint lang-config">RewriteRule ^/product/(.*)/view$ /var/web/productdb/$1</pre>
+<pre class="prettyprint lang-config">RewriteRule "^/product/(.*)/view$" "/var/web/productdb/$1"</pre>
 
 <p>The variable <code>$1</code> will be replaced with whatever text
 was matched by the expression inside the parenthesis in
@@ -238,7 +282,7 @@ application of one or more flags to the end of the rule. For example, the
 matching behavior of a rule can be made case-insensitive by the
 application of the <code>[NC]</code> flag:
 </p>
-<pre class="prettyprint lang-config">RewriteRule ^puppy.html smalldog.html [NC]</pre>
+<pre class="prettyprint lang-config">RewriteRule "^puppy.html" "smalldog.html" [NC]</pre>
 
 
 <p>For more details on the available flags, their meanings, and
@@ -263,8 +307,8 @@ argument is a list of flags that modify how the match is evaluated.</p>
 
 <p>For example, to send all requests from a particular IP range to a
 different server, you could use:</p>
-<pre class="prettyprint lang-config">RewriteCond %{REMOTE_ADDR} ^10\.2\.
-RewriteRule (.*) http://intranet.example.com$1</pre>
+<pre class="prettyprint lang-config">RewriteCond "%{REMOTE_ADDR}" "^10\.2\."
+RewriteRule "(.*)"           "http://intranet.example.com$1"</pre>
 
 
 <p>When more than
@@ -274,9 +318,9 @@ the <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">Rewrit
 applied. For example, to deny requests that contain the word "hack" in
 their query string, unless they also contain a cookie containing
 the word "go", you could use:</p>
-<pre class="prettyprint lang-config">RewriteCond %{QUERY_STRING} hack
-RewriteCond %{HTTP_COOKIE} !go
-RewriteRule . - [F]</pre>
+<pre class="prettyprint lang-config">RewriteCond "%{QUERY_STRING}" "hack"
+RewriteCond "%{HTTP_COOKIE}"  !go
+RewriteRule "."               "-"   [F]</pre>
 
 <p>Notice that the exclamation mark specifies a negative match, so the rule is only applied if the cookie does not contain "go".</p>
 
@@ -287,8 +331,8 @@ the <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">Rewrit
 variables <code>%1</code>, <code>%2</code>, etc. For example, this
 will direct the request to a different directory depending on the
 hostname used to access the site:</p>
-<pre class="prettyprint lang-config">RewriteCond %{HTTP_HOST} (.*)
-RewriteRule ^/(.*) /sites/%1/$1</pre>
+<pre class="prettyprint lang-config">RewriteCond "%{HTTP_HOST}" "(.*)"
+RewriteRule "^/(.*)"       "/sites/%1/$1"</pre>
 
 <p>If the request was for <code>http://example.com/foo/bar</code>,
 then <code>%1</code> would contain <code>example.com</code>
@@ -326,7 +370,7 @@ the <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">Rewrit
 <div class="bottomlang">
 <p><span>Available Languages: </span><a href="../en/rewrite/intro.html" title="English">&nbsp;en&nbsp;</a> |
 <a href="../fr/rewrite/intro.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a></p>
-</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
+</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="https://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
 var comments_identifier = 'http://httpd.apache.org/docs/2.4/rewrite/intro.html';
@@ -344,7 +388,7 @@ var comments_identifier = 'http://httpd.apache.org/docs/2.4/rewrite/intro.html';
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
-<p class="apache">Copyright 2014 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+<p class="apache">Copyright 2020 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
 <p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();

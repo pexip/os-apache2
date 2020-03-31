@@ -256,7 +256,7 @@ static void destroy_and_exit_process(process_rec *process,
      * Sleep for TASK_SWITCH_SLEEP micro seconds to cause a task switch on
      * OS layer and thus give possibly started piped loggers a chance to
      * process their input. Otherwise it is possible that they get killed
-     * by us before they can do so. In this case maybe valueable log messages
+     * by us before they can do so. In this case maybe valuable log messages
      * might get lost.
      */
     apr_sleep(TASK_SWITCH_SLEEP);
@@ -271,6 +271,31 @@ static int abort_on_oom(int retcode)
 {
     ap_abort_on_oom();
     return retcode; /* unreachable, hopefully. */
+}
+
+/* Deregister all hooks when clearing pconf (pre_cleanup).
+ * TODO: have a hook to deregister and run them from here?
+ *       ap_clear_auth_internal() is already a candidate.
+ */
+static apr_status_t deregister_all_hooks(void *unused)
+{
+    (void)unused;
+    ap_clear_auth_internal();
+    apr_hook_deregister_all();
+    return APR_SUCCESS;
+}
+
+static void reset_process_pconf(process_rec *process)
+{
+    if (process->pconf) {
+        apr_pool_clear(process->pconf);
+        ap_server_conf = NULL;
+    }
+    else {
+        apr_pool_create(&process->pconf, process->pool);
+        apr_pool_tag(process->pconf, "pconf");
+    }
+    apr_pool_pre_cleanup_register(process->pconf, NULL, deregister_all_hooks);
 }
 
 static process_rec *init_process(int *argc, const char * const * *argv)
@@ -317,8 +342,9 @@ static process_rec *init_process(int *argc, const char * const * *argv)
     process = apr_palloc(cntx, sizeof(process_rec));
     process->pool = cntx;
 
-    apr_pool_create(&process->pconf, process->pool);
-    apr_pool_tag(process->pconf, "pconf");
+    process->pconf = NULL;
+    reset_process_pconf(process);
+
     process->argc = *argc;
     process->argv = *argv;
     process->short_name = apr_filepath_name_get((*argv)[0]);
@@ -426,6 +452,8 @@ static void usage(process_rec *process)
     ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                  "  -M                 : a synonym for -t -D DUMP_MODULES");
     ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
+                 "  -t -D DUMP_INCLUDES: show all included configuration files");
+    ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                  "  -t                 : run syntax check for config files");
     ap_log_error(APLOG_MARK, APLOG_STARTUP, 0, NULL,
                  "  -T                 : start without DocumentRoot(s) check");
@@ -453,6 +481,7 @@ int main(int argc, const char * const argv[])
     module **mod;
     const char *opt_arg;
     APR_OPTIONAL_FN_TYPE(ap_signal_server) *signal_server;
+    int rc = OK;
 
     AP_MONCONTROL(0); /* turn off profiling of startup */
 
@@ -474,9 +503,12 @@ int main(int argc, const char * const argv[])
 
     apr_pool_create(&pcommands, ap_pglobal);
     apr_pool_tag(pcommands, "pcommands");
-    ap_server_pre_read_config  = apr_array_make(pcommands, 1, sizeof(char *));
-    ap_server_post_read_config = apr_array_make(pcommands, 1, sizeof(char *));
-    ap_server_config_defines   = apr_array_make(pcommands, 1, sizeof(char *));
+    ap_server_pre_read_config  = apr_array_make(pcommands, 1,
+                                                sizeof(const char *));
+    ap_server_post_read_config = apr_array_make(pcommands, 1,
+                                                sizeof(const char *));
+    ap_server_config_defines   = apr_array_make(pcommands, 1,
+                                                sizeof(const char *));
 
     error = ap_setup_prelinked_modules(process);
     if (error) {
@@ -494,16 +526,16 @@ int main(int argc, const char * const argv[])
 
     while ((rv = apr_getopt(opt, AP_SERVER_BASEARGS, &c, &opt_arg))
             == APR_SUCCESS) {
-        char **new;
+        const char **new;
 
         switch (c) {
         case 'c':
-            new = (char **)apr_array_push(ap_server_post_read_config);
+            new = (const char **)apr_array_push(ap_server_post_read_config);
             *new = apr_pstrdup(pcommands, opt_arg);
             break;
 
         case 'C':
-            new = (char **)apr_array_push(ap_server_pre_read_config);
+            new = (const char **)apr_array_push(ap_server_pre_read_config);
             *new = apr_pstrdup(pcommands, opt_arg);
             break;
 
@@ -512,7 +544,7 @@ int main(int argc, const char * const argv[])
             break;
 
         case 'D':
-            new = (char **)apr_array_push(ap_server_config_defines);
+            new = (const char **)apr_array_push(ap_server_config_defines);
             *new = apr_pstrdup(pcommands, opt_arg);
             /* Setting -D DUMP_VHOSTS should work like setting -S */
             if (strcmp(opt_arg, "DUMP_VHOSTS") == 0)
@@ -522,6 +554,9 @@ int main(int argc, const char * const argv[])
                 ap_run_mode = AP_SQ_RM_CONFIG_DUMP;
             /* Setting -D DUMP_MODULES is equivalent to setting -M */
             else if (strcmp(opt_arg, "DUMP_MODULES") == 0)
+                ap_run_mode = AP_SQ_RM_CONFIG_DUMP;
+            /* Setting -D DUMP_INCLUDES is a type of configuration dump */
+            else if (strcmp(opt_arg, "DUMP_INCLUDES") == 0)
                 ap_run_mode = AP_SQ_RM_CONFIG_DUMP;
             break;
 
@@ -535,7 +570,7 @@ int main(int argc, const char * const argv[])
             break;
 
         case 'X':
-            new = (char **)apr_array_push(ap_server_config_defines);
+            new = (const char **)apr_array_push(ap_server_config_defines);
             *new = "DEBUG";
             break;
 
@@ -568,15 +603,15 @@ int main(int argc, const char * const argv[])
 
         case 'S':
             ap_run_mode = AP_SQ_RM_CONFIG_DUMP;
-            new = (char **)apr_array_push(ap_server_config_defines);
+            new = (const char **)apr_array_push(ap_server_config_defines);
             *new = "DUMP_VHOSTS";
-            new = (char **)apr_array_push(ap_server_config_defines);
+            new = (const char **)apr_array_push(ap_server_config_defines);
             *new = "DUMP_RUN_CFG";
             break;
 
         case 'M':
             ap_run_mode = AP_SQ_RM_CONFIG_DUMP;
-            new = (char **)apr_array_push(ap_server_config_defines);
+            new = (const char **)apr_array_push(ap_server_config_defines);
             *new = "DUMP_MODULES";
             break;
 
@@ -623,10 +658,22 @@ int main(int argc, const char * const argv[])
     }
     ap_server_conf = ap_read_config(process, ptemp, confname, &ap_conftree);
     if (!ap_server_conf) {
+        if (showcompile) {
+            /* Well, we tried. Show as much as we can, but exit nonzero to
+             * indicate that something's not right. The cause should have
+             * already been logged. */
+            show_compile_settings();
+        }
         destroy_and_exit_process(process, 1);
     }
     apr_pool_cleanup_register(pconf, &ap_server_conf, ap_pool_cleanup_set_null,
                               apr_pool_cleanup_null);
+
+    if (showcompile) { /* deferred due to dynamically loaded MPM */
+        show_compile_settings();
+        destroy_and_exit_process(process, 0);
+    }
+
     /* sort hooks here to make sure pre_config hooks are sorted properly */
     apr_hook_sort_all();
 
@@ -655,10 +702,7 @@ int main(int argc, const char * const argv[])
         }
 
         if (ap_run_mode != AP_SQ_RM_NORMAL) {
-            if (showcompile) { /* deferred due to dynamically loaded MPM */
-                show_compile_settings();
-            }
-            else if (showdirectives) { /* deferred in case of DSOs */
+            if (showdirectives) { /* deferred in case of DSOs */
                 ap_show_directives();
                 destroy_and_exit_process(process, 0);
             }
@@ -701,11 +745,9 @@ int main(int argc, const char * const argv[])
 
     apr_pool_destroy(ptemp);
 
-    for (;;) {
+    do {
         ap_main_state = AP_SQ_MS_DESTROY_CONFIG;
-        apr_hook_deregister_all();
-        apr_pool_clear(pconf);
-        ap_clear_auth_internal();
+        reset_process_pconf(process);
 
         ap_main_state = AP_SQ_MS_CREATE_CONFIG;
         ap_config_generation++;
@@ -774,16 +816,23 @@ int main(int argc, const char * const argv[])
         ap_run_optional_fn_retrieve();
 
         ap_main_state = AP_SQ_MS_RUN_MPM;
-        if (ap_run_mpm(pconf, plog, ap_server_conf) != OK)
-            break;
+        rc = ap_run_mpm(pconf, plog, ap_server_conf);
 
         apr_pool_lock(pconf, 0);
+
+    } while (rc == OK);
+
+    if (rc == DONE) {
+        rc = OK;
     }
+    else if (rc != OK) {
+        ap_log_error(APLOG_MARK, APLOG_EMERG, 0, NULL, APLOGNO(02818)
+                     "MPM run failed, exiting");
+    }
+    destroy_and_exit_process(process, rc);
 
-    apr_pool_lock(pconf, 0);
-    destroy_and_exit_process(process, 0);
-
-    return 0; /* Termination 'ok' */
+    /* NOTREACHED */
+    return !OK;
 }
 
 #ifdef AP_USING_AUTOCONF

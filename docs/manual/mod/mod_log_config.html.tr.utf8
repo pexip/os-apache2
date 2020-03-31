@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="tr" xml:lang="tr"><head><!--
+<html xmlns="http://www.w3.org/1999/xhtml" lang="tr" xml:lang="tr"><head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+<!--
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -17,7 +19,7 @@
 <div id="page-header">
 <p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p>
 <p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
-<img alt="" src="../images/feather.gif" /></div>
+<img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
 <a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="../">Sürüm 2.4</a> &gt; <a href="./">Modüller</a></div>
@@ -51,21 +53,22 @@
       her sunucu için birden fazla  <code class="directive">TransferLog</code> ve
       <code class="directive">CustomLog</code> yönergesi belirtilebilir.</p>
 </div>
-<div id="quickview"><h3 class="directives">Yönergeler</h3>
-<ul id="toc">
-<li><img alt="" src="../images/down.gif" /> <a href="#bufferedlogs">BufferedLogs</a></li>
-<li><img alt="" src="../images/down.gif" /> <a href="#customlog">CustomLog</a></li>
-<li><img alt="" src="../images/down.gif" /> <a href="#logformat">LogFormat</a></li>
-<li><img alt="" src="../images/down.gif" /> <a href="#transferlog">TransferLog</a></li>
-</ul>
-<h3>Konular</h3>
+<div id="quickview"><a href="https://www.apache.org/foundation/contributing.html" class="badge"><img src="https://www.apache.org/images/SupportApache-small.png" alt="Support Apache!" /></a><h3>Konular</h3>
 <ul id="topics">
 <li><img alt="" src="../images/down.gif" /> <a href="#formats">Günlük Girdilerinin Kişiselleştirilmesi</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#security">Güvenlik Kaygıları</a></li>
-</ul><h3>Ayrıca bakınız:</h3>
+</ul><h3 class="directives">Yönergeler</h3>
+<ul id="toc">
+<li><img alt="" src="../images/down.gif" /> <a href="#bufferedlogs">BufferedLogs</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#customlog">CustomLog</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#globallog">GlobalLog</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#logformat">LogFormat</a></li>
+<li><img alt="" src="../images/down.gif" /> <a href="#transferlog">TransferLog</a></li>
+</ul>
+<h3>Bulunan hatalar</h3><ul class="seealso"><li><a href="https://www.apache.org/dist/httpd/CHANGES_2.4">httpd günlüğü</a></li><li><a href="https://bz.apache.org/bugzilla/buglist.cgi?bug_status=__open__&amp;list_id=144532&amp;product=Apache%20httpd-2&amp;query_format=specific&amp;order=changeddate%20DESC%2Cpriority%2Cbug_severity&amp;component=mod_log_config">Bilinenler</a></li><li><a href="https://bz.apache.org/bugzilla/enter_bug.cgi?product=Apache%20httpd-2&amp;component=mod_log_config">Hata bildir</a></li></ul><h3>Ayrıca bakınız:</h3>
 <ul class="seealso">
 <li><a href="../logs.html">Apache Günlük Dosyaları</a></li>
-</ul><ul class="seealso"><li><a href="#comments_section">Yorum</a></li></ul></div>
+<li><a href="#comments_section">Yorumlar</a></li></ul></div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="formats" id="formats">Günlük Girdilerinin Kişiselleştirilmesi</a></h2>
@@ -113,9 +116,13 @@
           <code>Off</code> değeri atanmışsa, IP adresi günlüğe kaydedilir. Bir
           kaç konak için konak ismi de günlüğe kaydoluyorsa muhtemelen onların
           isimlerini içeren erişim denetim yönergelerine sahipsinizdir. Bak: <a href="mod_authz_host.html#reqhost">Require host</a>.</td></tr>
-<tr class="odd"><td><code>%H</code></td>
+<tr class="odd"><td><code>%{c}h</code></td>
+        <td><code>%h</code> gibi, ancak her zaman, temel TCP bağlantısının 
+        konak adı kaydedilir, ancak <code class="module"><a href="../mod/mod_remoteip.html">mod_remoteip</a></code> gibi modüller 
+        tarafından uzak konak adında yapılan değişiklikler kaydedilmez.</td></tr>
+<tr><td><code>%H</code></td>
         <td>İstek Protokolü.</td></tr>
-<tr><td><code>%{<var>DEĞİŞKEN</var>}i</code></td>
+<tr class="odd"><td><code>%{<var>DEĞİŞKEN</var>}i</code></td>
         <td>İstekle birlikte sunucuya gönderilen
           <code><var>DEĞİŞKEN</var>:</code> başlık satır(lar)ının
           içeriği. Diğer modüllerde (örn. <code class="module"><a href="../mod/mod_headers.html">mod_headers</a></code>)
@@ -125,56 +132,56 @@
           <code class="module"><a href="../mod/mod_setenvif.html">mod_setenvif</a></code> modülünü kullanın ve yukarıda
           açıklandığı gibi bu değeri <code>%{<var>DEĞİŞKEN</var>}e</code> ile
           günlüğe kaydedin.</td></tr>
-<tr class="odd"><td><code>%k</code></td>
+<tr><td><code>%k</code></td>
         <td>Bu bağlantıda işlenen isteklerin sayısı; yani örneğin,
     	  '1' değeri bağlantı kurulduktan sonraki ilk kalıcı bağlantıyı,
     	  '2', ikinci bağlantıyı, ..., vb. gösterir;
           <code class="directive"><a href="../mod/core.html#keepalive">KeepAlive</a></code> kullanılmışsa
           değer anlamlıdır; aksi takdirde değer daima 0’dır.</td></tr>
-<tr><td><code>%l</code></td>
+<tr class="odd"><td><code>%l</code></td>
         <td>Uzak kullanıcı kimliği (sağlanmışsa, identd üzerinden).
           <code class="module"><a href="../mod/mod_ident.html">mod_ident</a></code> modülü mevcut ve <code class="directive"><a href="../mod/mod_ident.html#identitycheck">IdentityCheck</a></code> yönergesine değer
           olarak <code>On</code> atanmış olmadıkça bu belirteç için günlüğe
           tire imi yazılır.</td></tr>
-<tr class="odd"><td><code>%L</code></td>
+<tr><td><code>%L</code></td>
         <td>Hata günlüğündeki istek günlük kimliği (veya bu istek için hata
           günlüğüne hiçbir şey kaydedilmemise '-'). Bu hataya neyin sebep
           olduğunu öğrenmek için ilgili hata günlüğü satırına bakın.</td></tr>
-<tr><td><code>%m</code></td>
+<tr class="odd"><td><code>%m</code></td>
         <td>İstek yöntemi.</td></tr>
-<tr class="odd"><td><code>%{<var>DEĞİŞKEN</var>}n</code></td>
+<tr><td><code>%{<var>DEĞİŞKEN</var>}n</code></td>
         <td>Diğer modüldeki <var>DEĞİŞKEN</var> bilgisinin içeriği.</td></tr>
-<tr><td><code>%{<var>DEĞİŞKEN</var>}o</code></td>
+<tr class="odd"><td><code>%{<var>DEĞİŞKEN</var>}o</code></td>
         <td>Yanıttaki <code><var>DEĞİŞKEN</var>:</code> başlık satır(lar)ının
           içeriği.</td></tr>
-<tr class="odd"><td><code>%p</code></td>
+<tr><td><code>%p</code></td>
         <td>Sunucunun isteği sunduğu meşru port.</td></tr>
-<tr><td><code>%{<var>biçem</var>}p</code></td>
+<tr class="odd"><td><code>%{<var>biçem</var>}p</code></td>
         <td>Sunucunun veya istemcinin gerçek portu veya sunucunun isteği
           sunduğu meşru port. Geçerli biçemler: <code>canonical</code>,
           <code>local</code> ve <code>remote</code> (anlamları sırasıyla:
           meşru, yerel ve uzak).</td></tr>
-<tr class="odd"><td><code>%P</code></td>
+<tr><td><code>%P</code></td>
         <td>İsteği sunan çocuk sürecin süreç kimliği.</td></tr>
-<tr><td><code>%{<var>biçem</var>}P</code></td>
+<tr class="odd"><td><code>%{<var>biçem</var>}P</code></td>
         <td>İsteği sunan çocuk sürecin süreç kimliği (<code>pid</code>) veya
           evre kimliği (<code>tid</code>). Geçerli biçemler: <code>pid</code>,
           <code>tid</code>, <code>hextid</code>. <code>hextid</code> için APR
           1.2.0 veya üstü gerekir.</td></tr>
-<tr class="odd"><td><code>%q</code></td>
+<tr><td><code>%q</code></td>
         <td>Sorgu dizgesi (bir sorgu dizgesi mevcutsa önüne bir <code>?</code>
           eklenir yoksa hiçbir şey eklenmez).</td></tr>
-<tr><td><code>%r</code></td>
+<tr class="odd"><td><code>%r</code></td>
         <td>İsteğin ilk satırı.</td></tr>
-<tr class="odd"><td><code>%s</code></td>
+<tr><td><code>%s</code></td>
         <td>Durum. Dahili olarak yönlendirilmiş istekler için isteğin
           <em>özgün</em>  durumudur. İsteğin son durumu için
           <code>%&gt;s</code> kullanınız.</td></tr>
-<tr><td><code>%t</code></td>
+<tr class="odd"><td><code>%t</code></td>
         <td><code>[18/Sep/2011:19:18:28 -0400]</code> biçeminde isteğin
           alındığı tarih ve saat. Sondaki sayı zaman diliminin GMT'ye
           uzaklığıdır.</td></tr>
-<tr class="odd"><td><code>%{<var>biçem</var>}t</code></td>
+<tr><td><code>%{<var>biçem</var>}t</code></td>
         <td>İsteğin alındığı tarih ve saat; <var>biçem</var>
           uzatılmış <code>strftime(3)</code> biçeminde belirtilmelidir (genelde
           yerelleştirme amaçlı). <code>begin:</code> (öntanımlı) ile başlayan
@@ -197,8 +204,16 @@
           <code>strftime(3)</code> biçemlemesiyle birlikte yer alamazlar fakat
           çok sayıda  <code>%{<var>biçem</var>}t</code> kullanılabilir.
         </td></tr>
-<tr><td><code>%T</code></td>
+<tr class="odd"><td><code>%T</code></td>
         <td>Saniye cinsinden, isteği sunmak için harcanan zaman.</td></tr>
+<tr><td><code>%{<var>BİRİM</var>}T</code></td>
+        <td><var>BİRİM</var> ile belirtilen zaman birimi cinsinden, isteği
+          sunmak için harcanan zaman. Geçerli birimler: milisaniye için
+          <code>ms</code>, mikrosaniye için <code>us</code>, saniye için
+          <code>s</code>. <code>s</code> kullanımı birimsiz <code>%T</code> ile
+          aynı sonucu verir; <code>us</code> kullanımı <code>%D</code> ile aynı
+          sonucu verir. Birimli <code>%T</code> kullanımı 2.4.13 ve sonrasında
+          geçerlidir.</td></tr>
 <tr class="odd"><td><code>%u</code></td>
         <td>Uzak kullanıcı (kimlik doğrulaması istenmişse vardır; durum kodu
           (<code>%s</code>) 401 ise yanlış olabilir).</td></tr>
@@ -225,12 +240,20 @@
         <td>İstek ve başlıklar dahil alınan bayt sayısı. Sıfır olamaz. Bunu
           kullanmak için <code class="module"><a href="../mod/mod_logio.html">mod_logio</a></code> etkin olmalıdır.</td></tr>
 <tr class="odd"><td><code>%O</code></td>
-        <td>Başlıklar dahil gönderilen bayt sayısı. Sıfır olamaz. Bunu
-          kullanmak için <code class="module"><a href="../mod/mod_logio.html">mod_logio</a></code> etkin olmalıdır.</td></tr>
+        <td>Başlıklar dahil gönderilen bayt sayısı. Bir yanıtın
+          gönderilmesinden önce istekten vazgeçilmesi gibi nadir durumlarda
+          sıfır olabilir. Bunu kullanmak için <code class="module"><a href="../mod/mod_logio.html">mod_logio</a></code> etkin
+          olmalıdır.</td></tr>
 <tr><td><code>%S</code></td>
         <td>Aktarılan bayt sayısı (alınan ve gönderilen), istekler ve başlıklar
           dahil; sıfır olamaz. %I ve %O'nun birleşimidir. Bunu kullanmak için
           <code class="module"><a href="../mod/mod_logio.html">mod_logio</a></code> etkinleştirilmelidir.</td></tr>
+<tr class="odd"><td><code>%{<var>ALANADI</var>}^ti</code></td>
+        <td>Sunucuya gönderilen istekteki <code><var>ALANADI</var>:</code>
+          Trailer satır(lar)ının içeriği.</td></tr>
+<tr><td><code>%{<var>VARNAME</var>}^to</code></td>
+        <td>Sunucudan gönderilen yanıttaki <code><var>ALANADI</var>:</code>
+          Trailer satır(lar)ının içeriği.</td></tr>
 </table>
 
     <h3><a name="modifiers" id="modifiers">Değiştiriciler</a></h3>
@@ -408,10 +431,10 @@ expr=<var>ifade</var>]</code></td></tr>
 
     <pre class="prettyprint lang-config"># Biçem dizgesi yerine takma ad içeren CustomLog
 LogFormat "%h %l %u %t \"%r\" %&gt;s %b" common
-CustomLog logs/access_log common
+CustomLog "logs/access_log" common
 
 # Biçem dizgesinin kendisini içeren CustomLog
-CustomLog logs/access_log "%h %l %u %t \"%r\" %&gt;s %b"</pre>
+CustomLog "logs/access_log" "%h %l %u %t \"%r\" %&gt;s %b"</pre>
 
 
     <p>Üçüncü argüman isteğe bağlı olup,belli bir isteğin günlüğe kaydedilip
@@ -429,16 +452,45 @@ CustomLog logs/access_log "%h %l %u %t \"%r\" %&gt;s %b"</pre>
       isterseniz:</p>
 
     <pre class="prettyprint lang-config">SetEnvIf Request_URI \.gif$ gif-image
-CustomLog gif-requests.log common env=gif-image
-CustomLog nongif-requests.log common env=!gif-image</pre>
+CustomLog "gif-requests.log" common env=gif-image
+CustomLog "nongif-requests.log" common env=!gif-image</pre>
 
 
     <p>Veya eski <code>RefererIgnore</code> yönergesinin davranışını taklit
       etmek isterseniz:</p>
 
     <pre class="prettyprint lang-config">SetEnvIf Referer example\.com localreferer
-CustomLog referer.log referer env=!localreferer</pre>
+CustomLog "referer.log" referer env=!localreferer</pre>
 
+
+</div>
+<div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="directive-section"><h2><a name="GlobalLog" id="GlobalLog">GlobalLog</a> <a name="globallog" id="globallog">Yönergesi</a></h2>
+<table class="directive">
+<tr><th><a href="directive-dict.html#Description">Açıklama:</a></th><td>Günlük dosyasının ismini ve biçemini belirler</td></tr>
+<tr><th><a href="directive-dict.html#Syntax">Sözdizimi:</a></th><td><code>GlobalLog  <var>dosya</var>|<var>boru</var>|<var>sağlayıcı</var>
+<var>biçem</var>|<var>takma_ad</var>
+[env=[!]<var>ortam_değişkeni</var>|
+expr=<var>ifade</var>]</code></td></tr>
+<tr><th><a href="directive-dict.html#Context">Bağlam:</a></th><td>sunucu geneli</td></tr>
+<tr><th><a href="directive-dict.html#Status">Durum:</a></th><td>Temel</td></tr>
+<tr><th><a href="directive-dict.html#Module">Modül:</a></th><td>mod_log_config</td></tr>
+<tr><th><a href="directive-dict.html#Compatibility">Uyumluluk:</a></th><td>Apache HTTP Sunucusunun 2.4.19 ve sonraki sürümlerinde kullanılabilir.</td></tr>
+</table>
+
+    <p><code class="directive">GlobalLog</code> yönergesi ana sunucu yapılandırması ve
+       tüm tanımlı sanal konaklarca paylaşılan bir günlük tanımlar.</p>
+
+    <p><code class="directive">GlobalLog</code> yönergesi aşağıdaki farklar dışında
+       <code class="directive">CustomLog</code> yönergesine eşdeğerdir:</p>
+    <ul>
+       <li><code class="directive">GlobalLog</code> sanal konak bağlamında belirtilirse
+         geçersizdir.</li>
+       <li>Sanal konaklar küresel bağlamda belirtilmiş bir
+         <code class="directive">CustomLog</code> yönergesinin tersine
+         <code class="directive">GlobalLog</code> yönergesini kendi
+         <code class="directive">CustomLog</code> yönergesiymiş gibi kullanır.</li>
+    </ul>
 
 </div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
@@ -497,7 +549,7 @@ CustomLog referer.log referer env=!localreferer</pre>
       belirtilmedikçe Ortak Günlük Biçemi öntanımlıdır.</p>
 
     <pre class="prettyprint lang-config">LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-agent}i\""
-TransferLog logs/access_log</pre>
+TransferLog "logs/access_log"</pre>
 
 
 </div>
@@ -508,7 +560,7 @@ TransferLog logs/access_log</pre>
 <a href="../ja/mod/mod_log_config.html" hreflang="ja" rel="alternate" title="Japanese">&nbsp;ja&nbsp;</a> |
 <a href="../ko/mod/mod_log_config.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
 <a href="../tr/mod/mod_log_config.html" title="Türkçe">&nbsp;tr&nbsp;</a></p>
-</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorum</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
+</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorumlar</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="https://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
 var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_log_config.html';
@@ -526,7 +578,7 @@ var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_log_config.h
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
-<p class="apache">Copyright 2014 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
+<p class="apache">Copyright 2020 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
 <p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();

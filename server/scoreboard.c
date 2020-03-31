@@ -32,6 +32,7 @@
 #include "http_main.h"
 #include "http_core.h"
 #include "http_config.h"
+#include "http_protocol.h"
 #include "ap_mpm.h"
 
 #include "scoreboard.h"
@@ -129,16 +130,19 @@ static apr_status_t ap_cleanup_shared_mem(void *d)
     return APR_SUCCESS;
 }
 
+#define SIZE_OF_scoreboard    APR_ALIGN_DEFAULT(sizeof(scoreboard))
+#define SIZE_OF_global_score  APR_ALIGN_DEFAULT(sizeof(global_score))
+#define SIZE_OF_process_score APR_ALIGN_DEFAULT(sizeof(process_score))
+#define SIZE_OF_worker_score  APR_ALIGN_DEFAULT(sizeof(worker_score))
+
 AP_DECLARE(int) ap_calc_scoreboard_size(void)
 {
     ap_mpm_query(AP_MPMQ_HARD_LIMIT_THREADS, &thread_limit);
     ap_mpm_query(AP_MPMQ_HARD_LIMIT_DAEMONS, &server_limit);
 
-    scoreboard_size = sizeof(global_score);
-    scoreboard_size += sizeof(process_score) * server_limit;
-    scoreboard_size += sizeof(worker_score) * server_limit * thread_limit;
-
-    pfn_ap_logio_get_last_bytes = APR_RETRIEVE_OPTIONAL_FN(ap_logio_get_last_bytes);
+    scoreboard_size  = SIZE_OF_global_score;
+    scoreboard_size += SIZE_OF_process_score * server_limit;
+    scoreboard_size += SIZE_OF_worker_score * server_limit * thread_limit;
 
     return scoreboard_size;
 }
@@ -148,19 +152,24 @@ AP_DECLARE(void) ap_init_scoreboard(void *shared_score)
     char *more_storage;
     int i;
 
+    pfn_ap_logio_get_last_bytes = APR_RETRIEVE_OPTIONAL_FN(ap_logio_get_last_bytes);
+    if (!shared_score) {
+        return;
+    }
+    
     ap_calc_scoreboard_size();
     ap_scoreboard_image =
-        ap_calloc(1, sizeof(scoreboard) + server_limit * sizeof(worker_score *));
+        ap_calloc(1, SIZE_OF_scoreboard + server_limit * sizeof(worker_score *));
     more_storage = shared_score;
     ap_scoreboard_image->global = (global_score *)more_storage;
-    more_storage += sizeof(global_score);
+    more_storage += SIZE_OF_global_score;
     ap_scoreboard_image->parent = (process_score *)more_storage;
-    more_storage += sizeof(process_score) * server_limit;
+    more_storage += SIZE_OF_process_score * server_limit;
     ap_scoreboard_image->servers =
-        (worker_score **)((char*)ap_scoreboard_image + sizeof(scoreboard));
+        (worker_score **)((char*)ap_scoreboard_image + SIZE_OF_scoreboard);
     for (i = 0; i < server_limit; i++) {
         ap_scoreboard_image->servers[i] = (worker_score *)more_storage;
-        more_storage += thread_limit * sizeof(worker_score);
+        more_storage += thread_limit * SIZE_OF_worker_score;
     }
     ap_assert(more_storage == (char*)shared_score + scoreboard_size);
     ap_scoreboard_image->global->server_limit = server_limit;
@@ -299,16 +308,15 @@ int ap_create_scoreboard(apr_pool_t *p, ap_scoreboard_e sb_type)
     apr_status_t rv;
 #endif
 
-    pfn_ap_logio_get_last_bytes = APR_RETRIEVE_OPTIONAL_FN(ap_logio_get_last_bytes);
-
     if (ap_scoreboard_image) {
         ap_scoreboard_image->global->restart_time = apr_time_now();
         memset(ap_scoreboard_image->parent, 0,
-               sizeof(process_score) * server_limit);
+               SIZE_OF_process_score * server_limit);
         for (i = 0; i < server_limit; i++) {
             memset(ap_scoreboard_image->servers[i], 0,
-                   sizeof(worker_score) * thread_limit);
+                   SIZE_OF_worker_score * thread_limit);
         }
+        ap_init_scoreboard(NULL);
         return OK;
     }
 
@@ -356,6 +364,18 @@ AP_DECLARE(int) ap_exists_scoreboard_image(void)
     return (ap_scoreboard_image ? 1 : 0);
 }
 
+AP_DECLARE(void) ap_set_conn_count(ap_sb_handle_t *sb, request_rec *r, 
+                                   unsigned short conn_count)
+{
+    worker_score *ws;
+
+    if (!sb)
+        return;
+
+    ws = &ap_scoreboard_image->servers[sb->child_num][sb->thread_num];
+    ws->conn_count = conn_count;
+}
+
 AP_DECLARE(void) ap_increment_counts(ap_sb_handle_t *sb, request_rec *r)
 {
     worker_score *ws;
@@ -391,7 +411,7 @@ AP_DECLARE(int) ap_find_child_by_pid(apr_proc_t *pid)
     int i;
     int max_daemons_limit = 0;
 
-    ap_mpm_query(AP_MPMQ_MAX_DAEMONS, &max_daemons_limit);
+    ap_mpm_query(AP_MPMQ_MAX_DAEMON_USED, &max_daemons_limit);
 
     for (i = 0; i < max_daemons_limit; ++i) {
         if (ap_scoreboard_image->parent[i].pid == pid->pid) {
@@ -402,12 +422,18 @@ AP_DECLARE(int) ap_find_child_by_pid(apr_proc_t *pid)
     return -1;
 }
 
+AP_DECLARE(void) ap_update_sb_handle(ap_sb_handle_t *sbh,
+                                     int child_num, int thread_num)
+{
+    sbh->child_num = child_num;
+    sbh->thread_num = thread_num;
+}
+
 AP_DECLARE(void) ap_create_sb_handle(ap_sb_handle_t **new_sbh, apr_pool_t *p,
                                      int child_num, int thread_num)
 {
     *new_sbh = (ap_sb_handle_t *)apr_palloc(p, sizeof(ap_sb_handle_t));
-    (*new_sbh)->child_num = child_num;
-    (*new_sbh)->thread_num = thread_num;
+    ap_update_sb_handle(*new_sbh, child_num, thread_num);
 }
 
 static void copy_request(char *rbuf, apr_size_t rbuflen, request_rec *r)
@@ -450,28 +476,29 @@ static int update_child_status_internal(int child_num,
                                         int thread_num,
                                         int status,
                                         conn_rec *c,
-                                        request_rec *r)
+                                        server_rec *s,
+                                        request_rec *r,
+                                        const char *descr)
 {
     int old_status;
     worker_score *ws;
-    process_score *ps;
     int mpm_generation;
 
     ws = &ap_scoreboard_image->servers[child_num][thread_num];
     old_status = ws->status;
     ws->status = status;
-
-    ps = &ap_scoreboard_image->parent[child_num];
-
+    
     if (status == SERVER_READY
         && old_status == SERVER_STARTING) {
+        process_score *ps = &ap_scoreboard_image->parent[child_num];
         ws->thread_num = child_num * thread_limit + thread_num;
         ap_mpm_query(AP_MPMQ_GENERATION, &mpm_generation);
         ps->generation = mpm_generation;
     }
 
     if (ap_extended_status) {
-        ws->last_used = apr_time_now();
+        const char *val;
+        
         if (status == SERVER_READY || status == SERVER_DEAD) {
             /*
              * Reset individual counters
@@ -479,25 +506,66 @@ static int update_child_status_internal(int child_num,
             if (status == SERVER_DEAD) {
                 ws->my_access_count = 0L;
                 ws->my_bytes_served = 0L;
+#ifdef HAVE_TIMES
+                ws->times.tms_utime = 0;
+                ws->times.tms_stime = 0;
+                ws->times.tms_cutime = 0;
+                ws->times.tms_cstime = 0;
+#endif
             }
             ws->conn_count = 0;
             ws->conn_bytes = 0;
+            ws->last_used = apr_time_now();
         }
-        if (r) {
-            apr_cpystrn(ws->client, ap_get_remote_host(c, r->per_dir_config,
-                        REMOTE_NOLOOKUP, NULL), sizeof(ws->client));
+
+        if (descr) {
+            apr_cpystrn(ws->request, descr, sizeof(ws->request));
+        }
+        else if (r) {
             copy_request(ws->request, sizeof(ws->request), r);
-            if (r->server) {
-                apr_snprintf(ws->vhost, sizeof(ws->vhost), "%s:%d",
-                             r->server->server_hostname,
-                             r->connection->local_addr->port);
+        }
+        else if (c) {
+            ws->request[0]='\0';
+        }
+
+        if (r && r->useragent_ip) {
+            if (!(val = ap_get_useragent_host(r, REMOTE_NOLOOKUP, NULL))) {
+                apr_cpystrn(ws->client, r->useragent_ip, sizeof(ws->client)); /* DEPRECATE */
+                apr_cpystrn(ws->client64, r->useragent_ip, sizeof(ws->client64));
+            }
+            else {
+                apr_cpystrn(ws->client, val, sizeof(ws->client)); /* DEPRECATE */
+                apr_cpystrn(ws->client64, val, sizeof(ws->client64));
             }
         }
         else if (c) {
-            apr_cpystrn(ws->client, ap_get_remote_host(c, NULL,
-                        REMOTE_NOLOOKUP, NULL), sizeof(ws->client));
-            ws->request[0]='\0';
+            if (!(val = ap_get_remote_host(c, c->base_server->lookup_defaults,
+                                           REMOTE_NOLOOKUP, NULL))) {
+                apr_cpystrn(ws->client, c->client_ip, sizeof(ws->client)); /* DEPRECATE */
+                apr_cpystrn(ws->client64, c->client_ip, sizeof(ws->client64));
+            }
+            else {
+                apr_cpystrn(ws->client, val, sizeof(ws->client)); /* DEPRECATE */
+                apr_cpystrn(ws->client64, val, sizeof(ws->client64));
+            }
+        }
+
+        if (s) {
+            if (c) {
+                apr_snprintf(ws->vhost, sizeof(ws->vhost), "%s:%d",
+                             s->server_hostname, c->local_addr->port);
+            }
+            else {
+                apr_cpystrn(ws->vhost, s->server_hostname, sizeof(ws->vhost));
+            }
+        }
+        else if (c) {
             ws->vhost[0]='\0';
+        }
+
+        if (c) {
+            val = ap_get_protocol(c);
+            apr_cpystrn(ws->protocol, val, sizeof(ws->protocol));
         }
     }
 
@@ -515,29 +583,50 @@ AP_DECLARE(int) ap_update_child_status_from_indexes(int child_num,
 
     return update_child_status_internal(child_num, thread_num, status,
                                         r ? r->connection : NULL,
-                                        r);
+                                        r ? r->server : NULL,
+                                        r, NULL);
 }
 
 AP_DECLARE(int) ap_update_child_status(ap_sb_handle_t *sbh, int status,
                                       request_rec *r)
 {
-    if (!sbh)
+    if (!sbh || (sbh->child_num < 0))
         return -1;
 
     return update_child_status_internal(sbh->child_num, sbh->thread_num,
                                         status,
                                         r ? r->connection : NULL,
-                                        r);
+                                        r ? r->server : NULL,
+                                        r, NULL);
 }
 
 AP_DECLARE(int) ap_update_child_status_from_conn(ap_sb_handle_t *sbh, int status,
-                                       conn_rec *c)
+                                                 conn_rec *c)
 {
-    if (!sbh)
+    if (!sbh || (sbh->child_num < 0))
         return -1;
 
     return update_child_status_internal(sbh->child_num, sbh->thread_num,
-                                        status, c, NULL);
+                                        status, c, NULL, NULL, NULL);
+}
+
+AP_DECLARE(int) ap_update_child_status_from_server(ap_sb_handle_t *sbh, int status, 
+                                                   conn_rec *c, server_rec *s)
+{
+    if (!sbh || (sbh->child_num < 0))
+        return -1;
+
+    return update_child_status_internal(sbh->child_num, sbh->thread_num,
+                                        status, c, s, NULL, NULL);
+}
+
+AP_DECLARE(int) ap_update_child_status_descr(ap_sb_handle_t *sbh, int status, const char *descr)
+{
+    if (!sbh || (sbh->child_num < 0))
+        return -1;
+
+    return update_child_status_internal(sbh->child_num, sbh->thread_num,
+                                        status, NULL, NULL, NULL, descr);
 }
 
 AP_DECLARE(void) ap_time_process_request(ap_sb_handle_t *sbh, int status)
@@ -554,11 +643,25 @@ AP_DECLARE(void) ap_time_process_request(ap_sb_handle_t *sbh, int status)
     ws = &ap_scoreboard_image->servers[sbh->child_num][sbh->thread_num];
 
     if (status == START_PREQUEST) {
-        ws->start_time = apr_time_now();
+        ws->start_time = ws->last_used = apr_time_now();
     }
     else if (status == STOP_PREQUEST) {
-        ws->stop_time = apr_time_now();
+        ws->stop_time = ws->last_used = apr_time_now();
+        if (ap_extended_status) {
+            ws->duration += ws->stop_time - ws->start_time;
+        }
     }
+}
+
+AP_DECLARE(int) ap_update_global_status()
+{
+#ifdef HAVE_TIMES
+    if (ap_scoreboard_image == NULL) {
+        return APR_SUCCESS;
+    }
+    times(&ap_scoreboard_image->global->times);
+#endif
+    return APR_SUCCESS;
 }
 
 AP_DECLARE(worker_score *) ap_get_scoreboard_worker_from_indexes(int x, int y)
@@ -590,8 +693,10 @@ AP_DECLARE(void) ap_copy_scoreboard_worker(worker_score *dest,
     /* For extra safety, NUL-terminate the strings returned, though it
      * should be true those last bytes are always zero anyway. */
     dest->client[sizeof(dest->client) - 1] = '\0';
+    dest->client64[sizeof(dest->client64) - 1] = '\0';
     dest->request[sizeof(dest->request) - 1] = '\0';
     dest->vhost[sizeof(dest->vhost) - 1] = '\0';
+    dest->protocol[sizeof(dest->protocol) - 1] = '\0';
 }
 
 AP_DECLARE(process_score *) ap_get_scoreboard_process(int x)

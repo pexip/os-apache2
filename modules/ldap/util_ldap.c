@@ -163,10 +163,11 @@ static void uldap_connection_close(util_ldap_connection_t *ldc)
          /* mark our connection as available for reuse */
          ldc->freed = apr_time_now();
          ldc->r = NULL;
-#if APR_HAS_THREADS
-         apr_thread_mutex_unlock(ldc->lock);
-#endif
      }
+
+#if APR_HAS_THREADS
+     apr_thread_mutex_unlock(ldc->lock);
+#endif
 }
 
 
@@ -208,8 +209,9 @@ static apr_status_t uldap_connection_unbind(void *param)
  *
  * The caller should hold the lock for this connection
  */
-static apr_status_t util_ldap_connection_remove (void *param) {
-    util_ldap_connection_t *ldc = param, *l  = NULL, *prev = NULL;
+static apr_status_t util_ldap_connection_remove (void *param)
+{
+    util_ldap_connection_t *ldc = param, *l = NULL, *prev = NULL;
     util_ldap_state_t *st;
 
     if (!ldc) return APR_SUCCESS;
@@ -248,7 +250,7 @@ static apr_status_t util_ldap_connection_remove (void *param) {
     apr_thread_mutex_unlock(st->mutex);
 #endif
 
-    /* Destory the pool associated with this connection */
+    /* Destroy the pool associated with this connection */
 
     apr_pool_destroy(ldc->pool);
 
@@ -374,7 +376,7 @@ static int uldap_connection_init(request_rec *r,
 
     if (ldc->ChaseReferrals != AP_LDAP_CHASEREFERRALS_SDKDEFAULT) {
         /* Set options for rebind and referrals. */
-        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server, APLOGNO(01278)
+        ap_log_error(APLOG_MARK, APLOG_TRACE4, 0, r->server, APLOGNO(01278)
                 "LDAP: Setting referrals to %s.",
                 ((ldc->ChaseReferrals == AP_LDAP_CHASEREFERRALS_ON) ? "On" : "Off"));
         apr_ldap_set_option(r->pool, ldc->ldap,
@@ -1095,13 +1097,19 @@ static int uldap_cache_compare(request_rec *r, util_ldap_connection_t *ldc,
                     ldc->reason = "Comparison no such attribute (cached)";
                 }
                 else {
-                    ldc->reason = "Comparison undefined (cached)";
+                    ldc->reason = apr_psprintf(r->pool, 
+                                              "Comparison undefined: (%d): %s (adding to cache)", 
+                                              result, ldap_err2string(result));
                 }
 
                 /* record the result code to return with the reason... */
                 result = compare_nodep->result;
                 /* and unlock this read lock */
                 LDAP_CACHE_UNLOCK();
+
+                ap_log_rerror(APLOG_MARK, APLOG_TRACE5, 0, r, 
+                              "ldap_compare_s(%pp, %s, %s, %s) = %s (cached)", 
+                              ldc->ldap, dn, attrib, value, ldap_err2string(result));
                 return result;
             }
         }
@@ -1185,19 +1193,26 @@ start_over:
             }
             LDAP_CACHE_UNLOCK();
         }
+
         if (LDAP_COMPARE_TRUE == result) {
             ldc->reason = "Comparison true (adding to cache)";
-            return LDAP_COMPARE_TRUE;
         }
         else if (LDAP_COMPARE_FALSE == result) {
             ldc->reason = "Comparison false (adding to cache)";
-            return LDAP_COMPARE_FALSE;
+        }
+        else if (LDAP_NO_SUCH_ATTRIBUTE == result) {
+            ldc->reason = "Comparison no such attribute (adding to cache)";
         }
         else {
-            ldc->reason = "Comparison no such attribute (adding to cache)";
-            return LDAP_NO_SUCH_ATTRIBUTE;
+            ldc->reason = apr_psprintf(r->pool, 
+                                       "Comparison undefined: (%d): %s (adding to cache)", 
+                                        result, ldap_err2string(result));
         }
     }
+
+    ap_log_rerror(APLOG_MARK, APLOG_TRACE5, 0, r, 
+                  "ldap_compare_s(%pp, %s, %s, %s) = %s", 
+                  ldc->ldap, dn, attrib, value, ldap_err2string(result));
     return result;
 }
 
@@ -1824,7 +1839,7 @@ start_over:
          * combination, which might be reused unintentionally next time this
          * connection is used from the connection pool.
          */
-        ldc->must_rebind = 0;
+        ldc->must_rebind = 1;
         ap_log_rerror(APLOG_MARK, APLOG_TRACE5, 0, r, "LDC %pp used for authn, must be rebound", ldc);
     }
 
@@ -2229,7 +2244,7 @@ static const char *util_ldap_set_opcache_ttl(cmd_parms *cmd, void *dummy,
         return err;
     }
 
-    st->compare_cache_ttl = atol(ttl) * 1000000;
+    st->compare_cache_ttl = atol(ttl) * APR_USEC_PER_SEC;
 
     ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, cmd->server, APLOGNO(01301)
                  "ldap cache: Setting operation cache TTL to %ld microseconds.",
@@ -2656,16 +2671,17 @@ static const char *util_ldap_set_referral_hop_limit(cmd_parms *cmd,
     return NULL;
 }
 
-static void *util_ldap_create_dir_config(apr_pool_t *p, char *d) {
-   util_ldap_config_t *dc =
-       (util_ldap_config_t *) apr_pcalloc(p,sizeof(util_ldap_config_t));
+static void *util_ldap_create_dir_config(apr_pool_t *p, char *d)
+{
+    util_ldap_config_t *dc =
+        (util_ldap_config_t *) apr_pcalloc(p,sizeof(util_ldap_config_t));
 
-   /* defaults are AP_LDAP_CHASEREFERRALS_ON and AP_LDAP_DEFAULT_HOPLIMIT */
-   dc->client_certs = apr_array_make(p, 10, sizeof(apr_ldap_opt_tls_cert_t));
-   dc->ChaseReferrals = AP_LDAP_CHASEREFERRALS_ON;
-   dc->ReferralHopLimit = AP_LDAP_HOPLIMIT_UNSET;
+    /* defaults are AP_LDAP_CHASEREFERRALS_ON and AP_LDAP_DEFAULT_HOPLIMIT */
+    dc->client_certs = apr_array_make(p, 10, sizeof(apr_ldap_opt_tls_cert_t));
+    dc->ChaseReferrals = AP_LDAP_CHASEREFERRALS_ON;
+    dc->ReferralHopLimit = AP_LDAP_HOPLIMIT_UNSET;
 
-   return dc;
+    return dc;
 }
 
 static const char *util_ldap_set_op_timeout(cmd_parms *cmd,
@@ -2717,8 +2733,8 @@ static const char *util_ldap_set_op_timeout(cmd_parms *cmd,
 }
 
 static const char *util_ldap_set_conn_ttl(cmd_parms *cmd,
-                                            void *dummy,
-                                            const char *val)
+                                          void *dummy,
+                                          const char *val)
 {
     apr_interval_time_t timeout;
     util_ldap_state_t *st =
@@ -2726,19 +2742,20 @@ static const char *util_ldap_set_conn_ttl(cmd_parms *cmd,
                                                   &ldap_module);
 
     if (ap_timeout_parameter_parse(val, &timeout, "s") != APR_SUCCESS) {
-        return "LDAPConnPoolTTL has wrong format";
+        return "LDAPConnectionPoolTTL has wrong format";
     }
 
     if (timeout < 0) {
         /* reserve -1 for default value */
-        timeout =  AP_LDAP_CONNPOOL_INFINITE;
+        timeout = AP_LDAP_CONNPOOL_INFINITE;
     }
     st->connection_pool_ttl = timeout;
     return NULL;
 }
+
 static const char *util_ldap_set_retry_delay(cmd_parms *cmd,
-                                            void *dummy,
-                                            const char *val)
+                                             void *dummy,
+                                             const char *val)
 {
     apr_interval_time_t timeout;
     util_ldap_state_t *st =
@@ -2763,8 +2780,8 @@ static const char *util_ldap_set_retry_delay(cmd_parms *cmd,
 }
 
 static const char *util_ldap_set_retries(cmd_parms *cmd,
-                                            void *dummy,
-                                            const char *val)
+                                         void *dummy,
+                                         const char *val)
 {
     util_ldap_state_t *st =
         (util_ldap_state_t *)ap_get_module_config(cmd->server->module_config,
@@ -2798,9 +2815,9 @@ static void *util_ldap_create_config(apr_pool_t *p, server_rec *s)
 #endif
 
     st->cache_bytes = 500000;
-    st->search_cache_ttl = 600000000;
+    st->search_cache_ttl = 600 * APR_USEC_PER_SEC; /* 10 minutes */
     st->search_cache_size = 1024;
-    st->compare_cache_ttl = 600000000;
+    st->compare_cache_ttl = 600 * APR_USEC_PER_SEC; /* 10 minutes */
     st->compare_cache_size = 1024;
     st->connections = NULL;
     st->ssl_supported = 0;
@@ -2841,7 +2858,6 @@ static void *util_ldap_merge_config(apr_pool_t *p, void *basev,
     st->search_cache_size = base->search_cache_size;
     st->compare_cache_ttl = base->compare_cache_ttl;
     st->compare_cache_size = base->compare_cache_size;
-    st->util_ldap_cache_lock = base->util_ldap_cache_lock;
 
     st->connections = NULL;
     st->ssl_supported = 0; /* not known until post-config and re-merged */
@@ -2858,7 +2874,7 @@ static void *util_ldap_merge_config(apr_pool_t *p, void *basev,
         able to handle the connection timeout per-connection
         but the Novell SDK cannot.  Allowing the timeout to
         be set by each vhost is of little value so rather than
-        trying to make special expections for one LDAP SDK, GLOBAL_ONLY
+        trying to make special exceptions for one LDAP SDK, GLOBAL_ONLY
         is being enforced on this setting as well. */
     st->connectionTimeout = base->connectionTimeout;
     st->opTimeout = base->opTimeout;
@@ -2876,7 +2892,6 @@ static void *util_ldap_merge_config(apr_pool_t *p, void *basev,
 
 static apr_status_t util_ldap_cleanup_module(void *data)
 {
-
     server_rec *s = data;
     util_ldap_state_t *st = (util_ldap_state_t *)ap_get_module_config(
         s->module_config, &ldap_module);
@@ -2886,7 +2901,6 @@ static apr_status_t util_ldap_cleanup_module(void *data)
     }
 
     return APR_SUCCESS;
-
 }
 
 static int util_ldap_pre_config(apr_pool_t *pconf, apr_pool_t *plog,
@@ -2962,12 +2976,12 @@ static int util_ldap_post_config(apr_pool_t *p, apr_pool_t *plog,
             st_vhost = (util_ldap_state_t *)
                        ap_get_module_config(s_vhost->module_config,
                                             &ldap_module);
-
+            st_vhost->util_ldap_cache = st->util_ldap_cache;
+            st_vhost->util_ldap_cache_lock = st->util_ldap_cache_lock;
 #if APR_HAS_SHARED_MEMORY
             st_vhost->cache_shm = st->cache_shm;
             st_vhost->cache_rmm = st->cache_rmm;
             st_vhost->cache_file = st->cache_file;
-            st_vhost->util_ldap_cache = st->util_ldap_cache;
             ap_log_error(APLOG_MARK, APLOG_DEBUG, result, s, APLOGNO(01316)
                          "LDAP merging Shared Cache conf: shm=0x%pp rmm=0x%pp "
                          "for VHOST: %s", st->cache_shm, st->cache_rmm,

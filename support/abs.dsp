@@ -49,8 +49,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /libpath:"../srclib/openssl/out32dll"
-# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /debug /libpath:"../srclib/openssl/out32dll" /opt:ref
+# ADD BASE LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib rpcrt4.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /libpath:"../srclib/openssl/out32dll"
+# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib rpcrt4.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /debug /libpath:"../srclib/openssl/out32dll" /opt:ref
 # Begin Special Build Tool
 TargetPath=.\Release\abs.exe
 SOURCE="$(InputPath)"
@@ -79,8 +79,8 @@ BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /incremental:no /debug /libpath:"../srclib/openssl/out32dll"
-# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /incremental:no /debug /libpath:"../srclib/openssl/out32dll"
+# ADD BASE LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib rpcrt4.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /incremental:no /debug /libpath:"../srclib/openssl/out32dll"
+# ADD LINK32 kernel32.lib advapi32.lib wsock32.lib ws2_32.lib rpcrt4.lib shell32.lib ssleay32.lib libeay32.lib /nologo /subsystem:console /incremental:no /debug /libpath:"../srclib/openssl/out32dll"
 # Begin Special Build Tool
 TargetPath=.\Debug\abs.exe
 SOURCE="$(InputPath)"
@@ -105,6 +105,33 @@ SOURCE=.\ab.c
 !ELSEIF  "$(CFG)" == "abs - Win32 Debug"
 
 # ADD CPP /Fo"Debug/abs.obj"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=../include\ap_release.h
+
+!IF  "$(CFG)" == "abs - Win32 Release"
+
+# Begin Custom Build - Create applink.c from ms/applink.c
+InputPath=../include\ap_release.h
+
+"..\srclib\openssl\include\openssl\applink.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	IF EXIST ..\srclib\openssl\ms\applink.c type ..\srclib\openssl\ms\applink.c > ..\srclib\openssl\include\openssl\applink.c
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "abs - Win32 Debug"
+
+# Begin Custom Build - Create applink.c from ms/applink.c
+InputPath=../include\ap_release.h
+
+"..\srclib\openssl\include\openssl\applink.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	IF EXIST ..\srclib\openssl\ms\applink.c type ..\srclib\openssl\ms\applink.c > ..\srclib\openssl\include\openssl\applink.c
+
+# End Custom Build
 
 !ENDIF 
 

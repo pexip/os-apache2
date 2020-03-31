@@ -99,9 +99,9 @@ static int generate_salt(char *s, size_t size, const char **errstr,
         size--;
         val >>= 6;
         bits -= 6;
-   }
-   *s = '\0';
-   return 0;
+    }
+    *s = '\0';
+    return 0;
 }
 
 void putline(apr_file_t *f, const char *l)
@@ -168,7 +168,7 @@ int get_password(struct passwd_ctx *ctx)
 err_too_long:
     ctx->errstr = apr_psprintf(ctx->pool,
                                "password too long (>%" APR_SIZE_T_FMT ")",
-                               ctx->out_len - 1);
+                               sizeof(buf) - 1);
     return ERR_OVERFLOW;
 }
 

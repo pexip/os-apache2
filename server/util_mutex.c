@@ -165,6 +165,7 @@ AP_DECLARE_NONSTD(const char *)ap_set_mutex(cmd_parms *cmd, void *dummy,
                                             const char *arg)
 {
     apr_pool_t *p = cmd->pool;
+    apr_pool_t *ptemp = cmd->temp_pool;
     const char **elt;
     const char *mechdir;
     int no_mutex = 0, omit_pid = 0;
@@ -191,7 +192,7 @@ AP_DECLARE_NONSTD(const char *)ap_set_mutex(cmd_parms *cmd, void *dummy,
                            " (" AP_ALL_AVAILABLE_MUTEXES_STRING ")", NULL);
     }
     else if (rv == APR_BADARG
-             || (mutexdir && !ap_is_directory(p, mutexdir))) {
+             || (mutexdir && !ap_is_directory(ptemp, mutexdir))) {
         return apr_pstrcat(p, "Invalid Mutex directory in argument ",
                            mechdir, NULL);
     }
@@ -504,7 +505,7 @@ AP_CORE_DECLARE(void) ap_dump_mutexes(apr_pool_t *p, server_rec *s, apr_file_t *
     for (idx = apr_hash_first(p, mxcfg_by_type); idx; idx = apr_hash_next(idx))
     {
         mutex_cfg_t *mxcfg;
-        const char *name, *mech;
+        const char *name, *mech = "<unknown>";
         const void *name_;
         const char *dir = "";
         apr_hash_this(idx, &name_, NULL, NULL);

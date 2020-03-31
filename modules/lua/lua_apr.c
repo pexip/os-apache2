@@ -39,7 +39,13 @@ static int lua_table_set(lua_State *L)
 {
     req_table_t    *t = ap_lua_check_apr_table(L, 1);
     const char     *key = luaL_checkstring(L, 2);
-    const char     *val = luaL_checkstring(L, 3);
+    const char     *val = luaL_optlstring(L, 3, NULL, NULL);
+
+    if (!val) { 
+        apr_table_unset(t->t, key);
+        return 0;
+    }
+
     /* Unless it's the 'notes' table, check for newline chars */
     /* t->r will be NULL in case of the connection notes, but since 
        we aren't going to check anything called 'notes', we can safely 
@@ -52,8 +58,8 @@ static int lua_table_set(lua_State *L)
         while ( (badchar = ap_strchr(badchar, '\n')) ) {
             *badchar = ' ';
         }
-        ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, t->r, 
-                APLOGNO(02614) "mod_lua: Value for '%s' in table '%s' contains newline!",
+        ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, t->r, APLOGNO(02614)
+                      "mod_lua: Value for '%s' in table '%s' contains newline!",
                   key, t->n);
         apr_table_set(t->t, key, replacement);
     }
@@ -82,7 +88,11 @@ static const luaL_Reg lua_table_methods[] = {
 int ap_lua_init(lua_State *L, apr_pool_t *p)
 {
     luaL_newmetatable(L, "Apr.Table");
+#if LUA_VERSION_NUM < 502
     luaL_register(L, "apr_table", lua_table_methods);
+#else
+    luaL_newlib(L, lua_table_methods);
+#endif
     lua_pushstring(L, "__index");
     lua_pushstring(L, "get");
     lua_gettable(L, 2);

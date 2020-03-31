@@ -40,11 +40,10 @@
 #define FORM_REDIRECT_HANDLER "form-redirect-handler"
 #define MOD_AUTH_FORM_HASH "site"
 
-static int (*ap_session_load_fn) (request_rec * r, session_rec ** z) = NULL;
-static apr_status_t (*ap_session_get_fn)(request_rec * r, session_rec * z,
-        const char *key, const char **value) = NULL;
-static apr_status_t (*ap_session_set_fn)(request_rec * r, session_rec * z,
-        const char *key, const char *value) = NULL;
+static APR_OPTIONAL_FN_TYPE(ap_session_load) *ap_session_load_fn = NULL;
+static APR_OPTIONAL_FN_TYPE(ap_session_get)  *ap_session_get_fn = NULL;
+static APR_OPTIONAL_FN_TYPE(ap_session_set)  *ap_session_set_fn = NULL;
+
 static void (*ap_request_insert_filter_fn) (request_rec * r) = NULL;
 static void (*ap_request_remove_filter_fn) (request_rec * r) = NULL;
 
@@ -613,7 +612,7 @@ static int get_form_auth(request_rec * r,
 
     /* have we isolated the user and pw before? */
     get_notes_auth(r, sent_user, sent_pw, sent_method, sent_mimetype);
-    if (*sent_user && *sent_pw) {
+    if (sent_user && *sent_user && sent_pw && *sent_pw) {
         return OK;
     }
 
@@ -683,7 +682,7 @@ static int get_form_auth(request_rec * r,
     /* a missing username or missing password means auth denied */
     if (!sent_user || !*sent_user) {
 
-        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(02982)
                       "form parsed, but username field '%s' was missing or empty, unauthorized",
                       username);
 
@@ -691,7 +690,7 @@ static int get_form_auth(request_rec * r,
     }
     if (!sent_pw || !*sent_pw) {
 
-        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(02983)
                       "form parsed, but password field '%s' was missing or empty, unauthorized",
                       password);
 
@@ -798,7 +797,7 @@ static int check_authn(request_rec * r, const char *sent_user, const char *sent_
 
         apr_table_unset(r->notes, AUTHN_PROVIDER_NAME_NOTE);
 
-        /* Something occured. Stop checking. */
+        /* Something occurred. Stop checking. */
         if (auth_result != AUTH_USER_NOT_FOUND) {
             break;
         }
@@ -842,7 +841,7 @@ static int check_authn(request_rec * r, const char *sent_user, const char *sent_
             break;
         }
 
-        /* If we're returning 403, tell them to try again. */
+        /* If we're returning 401, tell them to try again. */
         if (return_code == HTTP_UNAUTHORIZED) {
             note_cookie_auth_failure(r);
         }
@@ -903,16 +902,16 @@ static int authenticate_form_authn(request_rec * r)
      * never be secure. Abort the auth attempt in this case.
      */
     if (PROXYREQ_PROXY == r->proxyreq) {
-        ap_log_rerror(APLOG_MARK, APLOG_ERR,
-                      0, r, APLOGNO(01809) "form auth cannot be used for proxy "
+        ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01809)
+                      "form auth cannot be used for proxy "
                       "requests due to XSS risk, access denied: %s", r->uri);
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
     /* We need an authentication realm. */
     if (!ap_auth_name(r)) {
-        ap_log_rerror(APLOG_MARK, APLOG_ERR,
-                      0, r, APLOGNO(01810) "need AuthName: %s", r->uri);
+        ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01810)
+                      "need AuthName: %s", r->uri);
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 

@@ -136,7 +136,7 @@ typedef struct HSE_SEND_HEADER_EX_INFO {
 #define HSE_IO_NODELAY 4096
 
 /* The Completion function prototype.  This callback may be fixed with
- * the HSE_REQ_IO_COMPLETION ServerSupportFunction call, or overriden
+ * the HSE_REQ_IO_COMPLETION ServerSupportFunction call, or overridden
  * for the HSE_REQ_TRANSMIT_FILE call.
  */
 typedef void (APR_THREAD_FUNC *PFN_HSE_IO_COMPLETION)
@@ -183,7 +183,7 @@ typedef struct HSE_URL_MAPEX_INFO {
 #define HSE_REQ_SEND_RESPONSE_HEADER     3
 #define HSE_REQ_DONE_WITH_SESSION        4
 
-/* MS Extented methods to ISAPI ServerSupportFunction() HSE_code */
+/* MS Extended methods to ISAPI ServerSupportFunction() HSE_code */
 #define HSE_REQ_MAP_URL_TO_PATH          1001 /* Emulated */
 #define HSE_REQ_GET_SSPI_INFO            1002 /* Not Supported */
 #define HSE_APPEND_LOG_PARAMETER         1003 /* Supported */

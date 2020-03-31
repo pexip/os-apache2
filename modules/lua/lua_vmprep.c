@@ -37,12 +37,28 @@ APLOG_USE_MODULE(lua);
 
 #if APR_HAS_THREADS
     apr_thread_mutex_t *ap_lua_mutex;
+#endif
+extern apr_global_mutex_t *lua_ivm_mutex;
     
 void ap_lua_init_mutex(apr_pool_t *pool, server_rec *s) 
 {
+    apr_status_t rv;
+    
+    /* global IVM mutex */
+    rv = apr_global_mutex_child_init(&lua_ivm_mutex,
+                                     apr_global_mutex_lockfile(lua_ivm_mutex),
+                                     pool);
+    if (rv != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_CRIT, rv, s, APLOGNO(03016)
+                     "mod_lua: Failed to reopen mutex lua-ivm-shm in child");
+        exit(1); /* bah :( */
+    }
+    
+    /* Server pool mutex */
+#if APR_HAS_THREADS
     apr_thread_mutex_create(&ap_lua_mutex, APR_THREAD_MUTEX_DEFAULT, pool);
-}
 #endif
+}
 
 /* forward dec'l from this file */
 
@@ -53,59 +69,65 @@ static void pstack_dump(lua_State *L, apr_pool_t *r, int level,
     int i;
     int top = lua_gettop(L);
 
-    ap_log_perror(APLOG_MARK, level, 0, r, "Lua Stack Dump: [%s]", msg);
+    ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03211)
+                  "Lua Stack Dump: [%s]", msg);
 
     for (i = 1; i <= top; i++) {
         int t = lua_type(L, i);
         switch (t) {
         case LUA_TSTRING:{
-                ap_log_perror(APLOG_MARK, level, 0, r,
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03212)
                               "%d:  '%s'", i, lua_tostring(L, i));
                 break;
             }
         case LUA_TUSERDATA:{
-                ap_log_perror(APLOG_MARK, level, 0, r, "%d:  userdata", i);
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03213)
+                              "%d:  userdata", i);
                 break;
             }
         case LUA_TLIGHTUSERDATA:{
-                ap_log_perror(APLOG_MARK, level, 0, r, "%d:  lightuserdata",
-                              i);
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03214)
+                              "%d:  lightuserdata", i);
                 break;
             }
         case LUA_TNIL:{
-                ap_log_perror(APLOG_MARK, level, 0, r, "%d:  NIL", i);
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03215)
+                              "%d:  NIL", i);
                 break;
             }
         case LUA_TNONE:{
-                ap_log_perror(APLOG_MARK, level, 0, r, "%d:  None", i);
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03216)
+                              "%d:  None", i);
                 break;
             }
         case LUA_TBOOLEAN:{
-                ap_log_perror(APLOG_MARK, level, 0, r,
-                              "%d:  %s", i, lua_toboolean(L,
-                                                          i) ? "true" :
-                              "false");
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03217)
+                              "%d:  %s",
+                              i, lua_toboolean(L, i) ? "true" : "false");
                 break;
             }
         case LUA_TNUMBER:{
-                ap_log_perror(APLOG_MARK, level, 0, r,
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03218)
                               "%d:  %g", i, lua_tonumber(L, i));
                 break;
             }
         case LUA_TTABLE:{
-                ap_log_perror(APLOG_MARK, level, 0, r, "%d:  <table>", i);
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03219)
+                              "%d:  <table>", i);
                 break;
             }
         case LUA_TTHREAD:{
-                ap_log_perror(APLOG_MARK, level, 0, r, "%d:  <thread>", i);
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03220)
+                              "%d:  <thread>", i);
                 break;
             }
         case LUA_TFUNCTION:{
-                ap_log_perror(APLOG_MARK, level, 0, r, "%d:  <function>", i);
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03221)
+                              "%d:  <function>", i);
                 break;
             }
         default:{
-                ap_log_perror(APLOG_MARK, level, 0, r,
+                ap_log_perror(APLOG_MARK, level, 0, r, APLOGNO(03222)
                               "%d:  unknown: [%s]", i, lua_typename(L, i));
                 break;
             }
@@ -222,7 +244,7 @@ static apr_status_t cleanup_lua(void *l)
     return APR_SUCCESS;
 }
 
-static apr_status_t server_cleanup_lua(void *resource)
+static apr_status_t server_cleanup_lua(void *resource, void *params, apr_pool_t *pool)
 {
     ap_lua_server_spec* spec = (ap_lua_server_spec*) resource;
     AP_DEBUG_ASSERT(spec != NULL);
@@ -289,7 +311,8 @@ static void munge_path(lua_State *L,
 }
 
 #ifdef AP_ENABLE_LUAJIT
-static int loadjitmodule(lua_State *L, apr_pool_t *lifecycle_pool) {
+static int loadjitmodule(lua_State *L, apr_pool_t *lifecycle_pool)
+{
     lua_getglobal(L, "require");
     lua_pushliteral(L, "jit.");
     lua_pushvalue(L, -3);
@@ -449,6 +472,9 @@ lua_State *ap_lua_get_lua_state(apr_pool_t *lifecycle_pool,
                     cache_info = sspec->finfo;
                 }
                 else {
+#if APR_HAS_THREADS
+                    apr_thread_mutex_unlock(ap_lua_mutex);
+#endif
                     return NULL;
                 }
             }

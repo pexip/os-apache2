@@ -126,9 +126,13 @@ static char* derive_codepage_from_lang (apr_pool_t *p, char *language)
 
     charset = (char*) apr_hash_get(charset_conversions, language, APR_HASH_KEY_STRING);
 
-    if (!charset) {
-        language[2] = '\0';
-        charset = (char*) apr_hash_get(charset_conversions, language, APR_HASH_KEY_STRING);
+    /*
+     * Test if language values like 'en-US' return a match from the charset
+     * conversion map when shortened to 'en'.
+     */
+    if (!charset && strlen(language) > 3 && language[2] == '-') {
+        char *language_short = apr_pstrndup(p, language, 2);
+        charset = (char*) apr_hash_get(charset_conversions, language_short, APR_HASH_KEY_STRING);
     }
 
     if (charset) {
@@ -490,6 +494,9 @@ static authn_status authn_ldap_check_password(request_rec *r, const char *user,
      * Basic sanity checks before any LDAP operations even happen.
      */
     if (!sec->have_ldap_url) {
+        ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(02558) 
+                      "no AuthLDAPURL");
+
         return AUTH_GENERAL_ERROR;
     }
 
@@ -1627,7 +1634,7 @@ static const char *set_bind_pattern(cmd_parms *cmd, void *_cfg, const char *exp,
     }
 
     sec->bind_regex = regexp;
-    sec->bind_subst = apr_pstrdup(cmd->pool, subst);
+    sec->bind_subst = subst;
 
     return NULL;
 }
@@ -1655,7 +1662,7 @@ static const char *set_bind_password(cmd_parms *cmd, void *_cfg, const char *arg
         result = ap_get_exec_line(cmd->pool,
                                   (const char*)argv[0], (const char * const *)argv);
 
-        if(!result) {
+        if (!result) {
             return apr_pstrcat(cmd->pool,
                                "Unable to get bind password from exec of ",
                                arg+5, NULL);
@@ -1742,17 +1749,17 @@ static const command_rec authnz_ldap_cmds[] =
 
     AP_INIT_FLAG("AuthLDAPGroupAttributeIsDN", ap_set_flag_slot,
                  (void *)APR_OFFSETOF(authn_ldap_config_t, group_attrib_is_dn), OR_AUTHCFG,
-                 "If set to 'on', auth_ldap uses the DN that is retrieved from the server for"
-                 "subsequent group comparisons. If set to 'off', auth_ldap uses the string"
+                 "If set to 'on', auth_ldap uses the DN that is retrieved from the server for "
+                 "subsequent group comparisons. If set to 'off', auth_ldap uses the string "
                  "provided by the client directly. Defaults to 'on'."),
 
     AP_INIT_TAKE1("AuthLDAPDereferenceAliases", mod_auth_ldap_set_deref, NULL, OR_AUTHCFG,
-                  "Determines how aliases are handled during a search. Can be one of the"
+                  "Determines how aliases are handled during a search. Can be one of the "
                   "values \"never\", \"searching\", \"finding\", or \"always\". "
                   "Defaults to always."),
 
     AP_INIT_TAKE1("AuthLDAPCharsetConfig", set_charset_config, NULL, RSRC_CONF,
-                  "Character set conversion configuration file. If omitted, character set"
+                  "Character set conversion configuration file. If omitted, character set "
                   "conversion is disabled."),
 
     AP_INIT_TAKE1("AuthLDAPAuthorizePrefix", ap_set_string_slot,
@@ -1770,12 +1777,12 @@ static const command_rec authnz_ldap_cmds[] =
 
      AP_INIT_FLAG("AuthLDAPSearchAsUser", ap_set_flag_slot,
                   (void *)APR_OFFSETOF(authn_ldap_config_t, search_as_user), OR_AUTHCFG,
-                   "Set to 'on' to perform authorization-based searches with the users credentials, when this module"
-                   " has also performed authentication.  Does not affect nested groups lookup."),
+                  "Set to 'on' to perform authorization-based searches with the users credentials, when this module "
+                  "has also performed authentication.  Does not affect nested groups lookup."),
      AP_INIT_FLAG("AuthLDAPCompareAsUser", ap_set_flag_slot,
                   (void *)APR_OFFSETOF(authn_ldap_config_t, compare_as_user), OR_AUTHCFG,
-                  "Set to 'on' to perform authorization-based compares with the users credentials, when this module"
-                  " has also performed authentication.  Does not affect nested groups lookups."),
+                  "Set to 'on' to perform authorization-based compares with the users credentials, when this module "
+                  "has also performed authentication.  Does not affect nested groups lookups."),
     {NULL}
 };
 
@@ -1796,8 +1803,8 @@ static int authnz_ldap_post_config(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *
     {
         if (!util_ldap_ssl_supported(s))
         {
-            ap_log_error(APLOG_MARK, APLOG_CRIT, 0, s,
-                     "LDAP: SSL connections (ldaps://) not supported by utilLDAP");
+            ap_log_error(APLOG_MARK, APLOG_CRIT, 0, s, APLOGNO(03159)
+                         "LDAP: SSL connections (ldaps://) not supported by utilLDAP");
             return(!OK);
         }
     }
@@ -1865,6 +1872,7 @@ static int authnz_ldap_post_config(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *
 static const authn_provider authn_ldap_provider =
 {
     &authn_ldap_check_password,
+    NULL,
 };
 
 static const authz_provider authz_ldapuser_provider =

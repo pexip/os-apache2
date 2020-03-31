@@ -187,6 +187,9 @@ static const char *allow_cmd(cmd_parms *cmd, void *dv, const char *from,
             return apr_psprintf(cmd->pool, "%pm", &rv);
         a->type = T_IP;
     }
+    else if (ap_strchr(where, '#')) {
+        return "No comments are allowed here";
+    }
     else { /* no slash, didn't look like an IP address => must be a host */
         a->type = T_HOST;
     }
@@ -276,10 +279,8 @@ static int find_allowdeny(request_rec *r, apr_array_header_t *a, int method)
             if (!gothost) {
                 int remotehost_is_ip;
 
-                remotehost = ap_get_remote_host(r->connection,
-                                                r->per_dir_config,
-                                                REMOTE_DOUBLE_REV,
-                                                &remotehost_is_ip);
+                remotehost = ap_get_useragent_host(r, REMOTE_DOUBLE_REV,
+                                                   &remotehost_is_ip);
 
                 if ((remotehost == NULL) || remotehost_is_ip) {
                     gothost = 1;

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head><!--
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
+<!--
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -16,7 +18,7 @@
 <body id="manual-page"><div id="page-header">
 <p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
 <p class="apache">Apache HTTP Server Version 2.4</p>
-<img alt="" src="../images/feather.gif" /></div>
+<img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
 <a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Developer Documentation</a></div><div id="page-content"><div id="preamble"><h1>Guide to writing output filters</h1>
@@ -33,7 +35,7 @@
     <code>RESOURCE</code>-level or <code>CONTENT_SET</code>-level
     filters though some advice is generic to all types of filter.</p>
   </div>
-<div id="quickview"><ul id="toc"><li><img alt="" src="../images/down.gif" /> <a href="#basics">Filters and bucket brigades</a></li>
+<div id="quickview"><a href="https://www.apache.org/foundation/contributing.html" class="badge"><img src="https://www.apache.org/images/SupportApache-small.png" alt="Support Apache!" /></a><ul id="toc"><li><img alt="" src="../images/down.gif" /> <a href="#basics">Filters and bucket brigades</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#invocation">Filter invocation</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#brigade">Brigade structure</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#buckets">Processing buckets</a></li>
@@ -42,7 +44,8 @@
 <li><img alt="" src="../images/down.gif" /> <a href="#buffer">Buffering buckets</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#nonblock">Non-blocking bucket reads</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#rules">Ten rules for output filters</a></li>
-</ul><ul class="seealso"><li><a href="#comments_section">Comments</a></li></ul></div>
+<li><img alt="" src="../images/down.gif" /> <a href="#usecase1">Use case: buffering in mod_ratelimit</a></li>
+</ul><h3>See also</h3><ul class="seealso"><li><a href="#comments_section">Comments</a></li></ul></div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="basics" id="basics">Filters and bucket brigades</a></h2>
@@ -129,12 +132,12 @@
     brigade should have no side effects (such as changing any state
     private to the filter).</p>
 
-    <div class="example"><h3>How to handle an empty brigade</h3><pre class="prettyprint lang-c">    apr_status_t dummy_filter(ap_filter_t *f, apr_bucket_brigade *bb)<br />
-    {
-        if (APR_BRIGADE_EMPTY(bb)) {
-            return APR_SUCCESS;
-        }
-        ....</pre>
+    <div class="example"><h3>How to handle an empty brigade</h3><pre class="prettyprint lang-c">apr_status_t dummy_filter(ap_filter_t *f, apr_bucket_brigade *bb)
+{
+    if (APR_BRIGADE_EMPTY(bb)) {
+        return APR_SUCCESS;
+    }
+    ...</pre>
 </div>
 
   </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
@@ -152,7 +155,7 @@
     behaviour (i.e. will crash the process).</p>
 
     <p>There are a variety of functions and macros for traversing and
-    manipulating bucket brigades; see the <a href="http://apr.apache.org/docs/apr-util/trunk/group___a_p_r___util___bucket___brigades.html">apr_bucket.h</a>
+    manipulating bucket brigades; see the <a href="http://apr.apache.org/docs/apr-util/trunk/group___a_p_r___util___bucket___brigades.html">apr_buckets.h</a>
     header for complete coverage.  Commonly used macros include:</p>
 
     <dl>
@@ -254,12 +257,11 @@
 
     <div class="example"><h3>Bad output filter -- do not imitate!</h3><pre class="prettyprint lang-c">apr_bucket *e = APR_BRIGADE_FIRST(bb);
 const char *data;
-apr_size_t len;
+apr_size_t length;
 
 while (e != APR_BRIGADE_SENTINEL(bb)) {
     apr_bucket_read(e, &amp;data, &amp;length, APR_BLOCK_READ);
     e = APR_BUCKET_NEXT(e);
-
 }
 
 return ap_pass_brigade(bb);</pre>
@@ -277,19 +279,19 @@ return ap_pass_brigade(bb);</pre>
 
     <div class="example"><h3>Better output filter</h3><pre class="prettyprint lang-c">apr_bucket *e;
 const char *data;
-apr_size_t len;
+apr_size_t length;
 
 while ((e = APR_BRIGADE_FIRST(bb)) != APR_BRIGADE_SENTINEL(bb)) {
-   rv = apr_bucket_read(e, &amp;data, &amp;length, APR_BLOCK_READ);
-   if (rv) ...;
-   /* Remove bucket e from bb. */
-   APR_BUCKET_REMOVE(e);
-   /* Insert it into  temporary brigade. */
-   APR_BRIGADE_INSERT_HEAD(tmpbb, e);
-   /* Pass brigade downstream. */
-   rv = ap_pass_brigade(f-&gt;next, tmpbb);
-   if (rv) ...;
-   apr_brigade_cleanup(tmpbb);
+    rv = apr_bucket_read(e, &amp;data, &amp;length, APR_BLOCK_READ);
+    if (rv) ...;
+    /* Remove bucket e from bb. */
+    APR_BUCKET_REMOVE(e);
+    /* Insert it into  temporary brigade. */
+    APR_BRIGADE_INSERT_HEAD(tmpbb, e);
+    /* Pass brigade downstream. */
+    rv = ap_pass_brigade(f-&gt;next, tmpbb);
+    if (rv) ...;
+    apr_brigade_cleanup(tmpbb);
 }</pre>
 </div>
 
@@ -305,27 +307,25 @@ while ((e = APR_BRIGADE_FIRST(bb)) != APR_BRIGADE_SENTINEL(bb)) {
     temporary brigade in such a structure, to avoid having to allocate
     a new brigade per invocation as described in the <a href="#brigade">Brigade structure</a> section.</p>
 
-  <div class="example"><h3>Example code to maintain filter state</h3><pre class="prettyprint lang-c">struct dummy_state {
-   apr_bucket_brigade *tmpbb;
-   int filter_state;
-   ....
+    <div class="example"><h3>Example code to maintain filter state</h3><pre class="prettyprint lang-c">struct dummy_state {
+    apr_bucket_brigade *tmpbb;
+    int filter_state;
+    ...
 };
 
 apr_status_t dummy_filter(ap_filter_t *f, apr_bucket_brigade *bb)
 {
-
     struct dummy_state *state;
-    
+
     state = f-&gt;ctx;
     if (state == NULL) {
-    
-       /* First invocation for this response: initialise state structure.
-        */
-       f-&gt;ctx = state = apr_palloc(sizeof *state, f-&gt;r-&gt;pool);
 
-       state-&gt;tmpbb = apr_brigade_create(f-&gt;r-&gt;pool, f-&gt;c-&gt;bucket_alloc);
-       state-&gt;filter_state = ...;
+        /* First invocation for this response: initialise state structure.
+         */
+        f-&gt;ctx = state = apr_palloc(f-&gt;r-&gt;pool, sizeof *state);
 
+        state-&gt;tmpbb = apr_brigade_create(f-&gt;r-&gt;pool, f-&gt;c-&gt;bucket_alloc);
+        state-&gt;filter_state = ...;
     }
     ...</pre>
 </div>
@@ -420,7 +420,8 @@ while ((e = APR_BRIGADE_FIRST(bb)) != APR_BRIGADE_SENTINEL(bb)) {
         /* Retry, using a blocking read. */
         mode = APR_BLOCK_READ;
         continue;
-    } else if (rv != APR_SUCCESS) {
+    }
+    else if (rv != APR_SUCCESS) {
         /* handle errors */
     }
 
@@ -482,10 +483,82 @@ while ((e = APR_BRIGADE_FIRST(bb)) != APR_BRIGADE_SENTINEL(bb)) {
 
     </ol>
 
+  </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
+<div class="section">
+<h2><a name="usecase1" id="usecase1">Use case: buffering in mod_ratelimit</a></h2>
+    
+    <p>The <a href="http://svn.apache.org/r1833875">r1833875</a> change is a good
+    example to show what buffering and keeping state means in the context of an
+    output filter. In this use case, a user asked on the users' mailing list a
+    interesting question about why <code class="module"><a href="../mod/mod_ratelimit.html">mod_ratelimit</a></code> seemed not to
+    honor its setting with proxied content (either rate limiting at a different
+    speed or simply not doing it at all). Before diving deep into the solution,
+    it is better to explain on a high level how <code class="module"><a href="../mod/mod_ratelimit.html">mod_ratelimit</a></code> works.
+    The trick is really simple: take the rate limit settings and calculate a
+    chunk size of data to flush every 200ms to the client. For example, let's imagine
+    that to set <code>rate-limit 60</code> in our config, these are the high level
+    steps to find the chunk size:</p>
+    <pre class="prettyprint lang-c">/* milliseconds to wait between each flush of data */
+RATE_INTERVAL_MS = 200;
+/* rate limit speed in b/s */
+speed = 60 * 1024;
+/* final chunk size is 12228 bytes */
+chunk_size = (speed / (1000 / RATE_INTERVAL_MS));</pre>
+
+    <p>If we apply this calculation to a bucket brigade carrying 38400 bytes, it means
+    that the filter will try to do the following:</p>
+    <ol>
+        <li>Split the 38400 bytes in chunks of maximum 12228 bytes each.</li>
+        <li>Flush the first 12228 chunk of bytes and sleep 200ms.</li>
+        <li>Flush the second 12228 chunk of bytes and sleep 200ms.</li>
+        <li>Flush the third 12228 chunk of bytes and sleep 200ms.</li>
+        <li>Flush the remaining 1716 bytes.</li>
+    </ol>
+    <p>The above pseudo code works fine if the output filter handles only one brigade
+    for each response, but it might happen that it needs to be called multiple times
+    with different brigade sizes as well. The former use case is for example when
+    httpd directly serves some content, like a static file: the bucket brigade
+    abstraction takes care of handling the whole content, and rate limiting
+    works nicely. But if the same static content is served via mod_proxy_http (for
+    example a backend is serving it rather than httpd) then the content generator
+    (in this case mod_proxy_http) may use a maximum buffer size and then send data
+    as bucket brigades to the output filters chain regularly, triggering of course
+    multiple calls to <code class="module"><a href="../mod/mod_ratelimit.html">mod_ratelimit</a></code>. If the reader tries to execute the pseudo code
+    assuming multiple calls to the output filter, each one requiring to process
+    a bucket brigade of 38400 bytes, then it is easy to spot some
+    anomalies:</p>
+    <ol>
+        <li>Between the last flush of a brigade and the first one of the next,
+            there is no sleep.</li>
+        <li>Even if the sleep was forced after the last flush, then that chunk size
+            would not be the ideal size (1716 bytes instead of 12228) and the final client's speed
+            would quickly become different than what set in the httpd's config.</li>
+    </ol>
+    <p>In this case, two things might help:</p>
+    <ol>
+        <li>Use the ctx internal data structure, initialized by <code class="module"><a href="../mod/mod_ratelimit.html">mod_ratelimit</a></code>
+        for each response handling cycle, to "remember" when the last sleep was
+        performed across multiple invocations, and act accordingly.</li>
+        <li>If a bucket brigade is not splittable into a finite number of chunk_size
+        blocks, store the remaining bytes (located in the tail of the bucket brigade) 
+        in a temporary holding area (namely another bucket brigade) and then use
+        <code>ap_save_brigade</code> to set them aside.
+        These bytes will be preprended to the next bucket brigade that will be handled
+        in the subsequent invocation.</li>
+        <li>Avoid the previous logic if the bucket brigade that is currently being
+        processed contains the end of stream bucket (EOS). There is no need to sleep
+        or buffering data if the end of stream is reached.</li>
+    </ol>
+    <p>The commit linked in the beginning of the section contains also a bit of code
+    refactoring so it is not trivial to read during the first pass, but the overall
+    idea is basically what written up to now. The goal of this section is not to
+    cause a headache to the reader trying to read C code, but to put him/her into
+    the right mindset needed to use efficiently the tools offered by the httpd's
+    filter chain toolset.</p>
   </div></div>
 <div class="bottomlang">
 <p><span>Available Languages: </span><a href="../en/developer/output-filters.html" title="English">&nbsp;en&nbsp;</a></p>
-</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
+</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="https://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
 var comments_identifier = 'http://httpd.apache.org/docs/2.4/developer/output-filters.html';
@@ -503,7 +576,7 @@ var comments_identifier = 'http://httpd.apache.org/docs/2.4/developer/output-fil
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
-<p class="apache">Copyright 2014 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+<p class="apache">Copyright 2020 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
 <p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();

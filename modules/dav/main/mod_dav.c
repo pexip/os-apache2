@@ -201,6 +201,12 @@ static void *dav_merge_dir_config(apr_pool_t *p, void *base, void *overrides)
     return newconf;
 }
 
+DAV_DECLARE(const char *) dav_get_provider_name(request_rec *r)
+{
+    dav_dir_conf *conf = ap_get_module_config(r->per_dir_config, &dav_module);
+    return conf ? conf->provider_name : NULL;
+}
+
 static const dav_provider *dav_get_provider(request_rec *r)
 {
     dav_dir_conf *conf;
@@ -254,7 +260,7 @@ static const char *dav_cmd_dav(cmd_parms *cmd, void *config, const char *arg1)
         conf->provider = NULL;
     }
     else {
-        conf->provider_name = apr_pstrdup(cmd->pool, arg1);
+        conf->provider_name = arg1;
     }
 
     if (conf->provider_name != NULL) {
@@ -315,6 +321,7 @@ static const char *dav_cmd_davmintimeout(cmd_parms *cmd, void *config,
 static int dav_error_response(request_rec *r, int status, const char *body)
 {
     r->status = status;
+    r->status_line = ap_get_status_line(status);
 
     ap_set_content_type(r, "text/html; charset=ISO-8859-1");
 
@@ -357,16 +364,33 @@ static int dav_error_response_tag(request_rec *r,
         ap_rputs(" xmlns:m=\"http://apache.org/dav/xmlns\"", r);
     }
 
-    if (err->namespace != NULL) {
-        ap_rprintf(r,
-                   " xmlns:C=\"%s\">" DEBUG_CR
-                   "<C:%s/>" DEBUG_CR,
-                   err->namespace, err->tagname);
+    if (err->childtags) {
+        if (err->namespace != NULL) {
+            ap_rprintf(r,
+                    " xmlns:C=\"%s\">" DEBUG_CR
+                    "<C:%s>%s</C:%s>" DEBUG_CR,
+                    err->namespace,
+                    err->tagname, err->childtags, err->tagname);
+        }
+        else {
+            ap_rprintf(r,
+                    ">" DEBUG_CR
+                    "<D:%s>%s</D:%s>" DEBUG_CR,
+                    err->tagname, err->childtags, err->tagname);
+        }
     }
     else {
-        ap_rprintf(r,
-                   ">" DEBUG_CR
-                   "<D:%s/>" DEBUG_CR, err->tagname);
+        if (err->namespace != NULL) {
+            ap_rprintf(r,
+                    " xmlns:C=\"%s\">" DEBUG_CR
+                    "<C:%s/>" DEBUG_CR,
+                    err->namespace, err->tagname);
+        }
+        else {
+            ap_rprintf(r,
+                    ">" DEBUG_CR
+                    "<D:%s/>" DEBUG_CR, err->tagname);
+        }
     }
 
     /* here's our mod_dav specific tag: */
@@ -412,32 +436,33 @@ static const char *dav_xml_escape_uri(apr_pool_t *p, const char *uri)
 }
 
 
-/* Write a complete RESPONSE object out as a <DAV:repsonse> xml
+/* Write a complete RESPONSE object out as a <DAV:response> xml
    element.  Data is sent into brigade BB, which is auto-flushed into
-   OUTPUT filter stack.  Use POOL for any temporary allocations.
+   the output filter stack for request R.  Use POOL for any temporary
+   allocations.
 
    [Presumably the <multistatus> tag has already been written;  this
    routine is shared by dav_send_multistatus and dav_stream_response.]
 */
-static void dav_send_one_response(dav_response *response,
-                                  apr_bucket_brigade *bb,
-                                  ap_filter_t *output,
-                                  apr_pool_t *pool)
+DAV_DECLARE(void) dav_send_one_response(dav_response *response,
+                                        apr_bucket_brigade *bb,
+                                        request_rec *r,
+                                        apr_pool_t *pool)
 {
     apr_text *t = NULL;
 
     if (response->propresult.xmlns == NULL) {
-      ap_fputs(output, bb, "<D:response>");
+      ap_fputs(r->output_filters, bb, "<D:response>");
     }
     else {
-      ap_fputs(output, bb, "<D:response");
+      ap_fputs(r->output_filters, bb, "<D:response");
       for (t = response->propresult.xmlns; t; t = t->next) {
-        ap_fputs(output, bb, t->text);
+        ap_fputs(r->output_filters, bb, t->text);
       }
-      ap_fputc(output, bb, '>');
+      ap_fputc(r->output_filters, bb, '>');
     }
 
-    ap_fputstrs(output, bb,
+    ap_fputstrs(r->output_filters, bb,
                 DEBUG_CR "<D:href>",
                 dav_xml_escape_uri(pool, response->href),
                 "</D:href>" DEBUG_CR,
@@ -448,7 +473,7 @@ static void dav_send_one_response(dav_response *response,
        * default to 500 Internal Server Error if first->status
        * is not a known (or valid) status code.
        */
-      ap_fputstrs(output, bb,
+      ap_fputstrs(r->output_filters, bb,
                   "<D:status>HTTP/1.1 ",
                   ap_get_status_line(response->status),
                   "</D:status>" DEBUG_CR,
@@ -457,7 +482,7 @@ static void dav_send_one_response(dav_response *response,
     else {
       /* assume this includes <propstat> and is quoted properly */
       for (t = response->propresult.propstats; t; t = t->next) {
-        ap_fputs(output, bb, t->text);
+        ap_fputs(r->output_filters, bb, t->text);
       }
     }
 
@@ -466,14 +491,14 @@ static void dav_send_one_response(dav_response *response,
        * We supply the description, so we know it doesn't have to
        * have any escaping/encoding applied to it.
        */
-      ap_fputstrs(output, bb,
+      ap_fputstrs(r->output_filters, bb,
                   "<D:responsedescription>",
                   response->desc,
                   "</D:responsedescription>" DEBUG_CR,
                   NULL);
     }
 
-    ap_fputs(output, bb, "</D:response>" DEBUG_CR);
+    ap_fputs(r->output_filters, bb, "</D:response>" DEBUG_CR);
 }
 
 
@@ -481,9 +506,9 @@ static void dav_send_one_response(dav_response *response,
    response and write <multistatus> tag into BB, destined for
    R->output_filters.  Use xml NAMESPACES in initial tag, if
    non-NULL. */
-static void dav_begin_multistatus(apr_bucket_brigade *bb,
-                                  request_rec *r, int status,
-                                  apr_array_header_t *namespaces)
+DAV_DECLARE(void) dav_begin_multistatus(apr_bucket_brigade *bb,
+                                        request_rec *r, int status,
+                                        apr_array_header_t *namespaces)
 {
     /* Set the correct status and Content-Type */
     r->status = status;
@@ -506,8 +531,8 @@ static void dav_begin_multistatus(apr_bucket_brigade *bb,
 }
 
 /* Finish a multistatus response started by dav_begin_multistatus: */
-static apr_status_t dav_finish_multistatus(request_rec *r,
-                                           apr_bucket_brigade *bb)
+DAV_DECLARE(apr_status_t) dav_finish_multistatus(request_rec *r,
+                                                 apr_bucket_brigade *bb)
 {
     apr_bucket *b;
 
@@ -521,9 +546,9 @@ static apr_status_t dav_finish_multistatus(request_rec *r,
     return ap_pass_brigade(r->output_filters, bb);
 }
 
-static void dav_send_multistatus(request_rec *r, int status,
-                                 dav_response *first,
-                                 apr_array_header_t *namespaces)
+DAV_DECLARE(void) dav_send_multistatus(request_rec *r, int status,
+                                       dav_response *first,
+                                       apr_array_header_t *namespaces)
 {
     apr_pool_t *subpool;
     apr_bucket_brigade *bb = apr_brigade_create(r->pool,
@@ -532,10 +557,11 @@ static void dav_send_multistatus(request_rec *r, int status,
     dav_begin_multistatus(bb, r, status, namespaces);
 
     apr_pool_create(&subpool, r->pool);
+    apr_pool_tag(subpool, "mod_dav-multistatus");
 
     for (; first != NULL; first = first->next) {
       apr_pool_clear(subpool);
-      dav_send_one_response(first, bb, r->output_filters, subpool);
+      dav_send_one_response(first, bb, r, subpool);
     }
     apr_pool_destroy(subpool);
 
@@ -557,6 +583,7 @@ static void dav_log_err(request_rec *r, dav_error *err, int level)
         if (errscan->desc == NULL)
             continue;
 
+        /* Intentional no APLOGNO */
         ap_log_rerror(APLOG_MARK, level, errscan->aprerr, r, "%s  [%d, #%d]",
                       errscan->desc, errscan->status, errscan->error_id);
     }
@@ -575,11 +602,16 @@ static void dav_log_err(request_rec *r, dav_error *err, int level)
  *   - repos_hooks->copy_resource
  *   - vsn_hooks->update
  */
-static int dav_handle_err(request_rec *r, dav_error *err,
-                          dav_response *response)
+DAV_DECLARE(int) dav_handle_err(request_rec *r, dav_error *err,
+                                dav_response *response)
 {
     /* log the errors */
     dav_log_err(r, err, APLOG_ERR);
+
+    if (!ap_is_HTTP_VALID_RESPONSE(err->status)) {
+        /* we have responded already */
+        return AP_FILTER_ERROR;
+    }
 
     if (response == NULL) {
         dav_error *stackerr = err;
@@ -612,7 +644,7 @@ static int dav_created(request_rec *r, const char *locn, const char *what,
     const char *body;
 
     if (locn == NULL) {
-        locn = r->unparsed_uri;
+        locn = ap_escape_uri(r->pool, r->uri);
     }
 
     /* did the target resource already exist? */
@@ -711,8 +743,8 @@ static dav_error *dav_get_resource(request_rec *r, int label_allowed,
     if (conf->provider == NULL) {
         return dav_new_error(r->pool, HTTP_METHOD_NOT_ALLOWED, 0, 0,
                              apr_psprintf(r->pool,
-				          "DAV not enabled for %s",
-					  ap_escape_html(r->pool, r->uri)));
+                             "DAV not enabled for %s",
+                             ap_escape_html(r->pool, r->uri)));
     }
 
     /* resolve the resource */
@@ -994,17 +1026,10 @@ static int dav_method_put(request_rec *r)
             if (rc != APR_SUCCESS) {
                 int http_err;
                 char *msg = ap_escape_html(r->pool, r->uri);
-                if (APR_STATUS_IS_TIMEUP(rc)) {
-                    http_err = HTTP_REQUEST_TIME_OUT;
-                    msg = apr_psprintf(r->pool, "Timeout reading the body "
-                                       "(URI: %s)", msg);
-                }
-                else {
-                    /* XXX: should this actually be HTTP_BAD_REQUEST? */
-                    http_err = HTTP_INTERNAL_SERVER_ERROR;
-                    msg = apr_psprintf(r->pool, "An error occurred while reading"
-                                       " the request body (URI: %s)", msg);
-                }
+                http_err = ap_map_http_request_error(rc, HTTP_BAD_REQUEST);
+                msg = apr_psprintf(r->pool, "An error occurred while reading "
+                                            "the request body (URI: %s)",
+                                            msg);
                 err = dav_new_error(r->pool, http_err, 0, rc, msg);
                 break;
             }
@@ -1136,7 +1161,7 @@ static void dav_stream_response(dav_walk_resource *wres,
         resp.propresult = *propstats;
     }
 
-    dav_send_one_response(&resp, ctx->bb, ctx->r->output_filters, pool);
+    dav_send_one_response(&resp, ctx->bb, ctx->r, pool);
 }
 
 
@@ -1956,8 +1981,9 @@ static dav_error * dav_propfind_walker(dav_walk_resource *wres, int calltype)
     ** Note: we cast to lose the "const". The propdb won't try to change
     ** the resource, however, since we are opening readonly.
     */
-    err = dav_open_propdb(ctx->r, ctx->w.lockdb, wres->resource, 1,
-                          ctx->doc ? ctx->doc->namespaces : NULL, &propdb);
+    err = dav_popen_propdb(ctx->scratchpool,
+                           ctx->r, ctx->w.lockdb, wres->resource, 1,
+                           ctx->doc ? ctx->doc->namespaces : NULL, &propdb);
     if (err != NULL) {
         /* ### do something with err! */
 
@@ -1988,9 +2014,9 @@ static dav_error * dav_propfind_walker(dav_walk_resource *wres, int calltype)
                                  : DAV_PROP_INSERT_NAME;
         propstats = dav_get_allprops(propdb, what);
     }
-    dav_close_propdb(propdb);
-
     dav_stream_response(wres, 0, &propstats, ctx->scratchpool);
+
+    dav_close_propdb(propdb);
 
     /* at this point, ctx->scratchpool has been used to stream a
        single response.  this function fully controls the pool, and
@@ -2089,6 +2115,7 @@ static int dav_method_propfind(request_rec *r)
     ctx.r = r;
     ctx.bb = apr_brigade_create(r->pool, r->connection->bucket_alloc);
     apr_pool_create(&ctx.scratchpool, r->pool);
+    apr_pool_tag(ctx.scratchpool, "mod_dav-scratch");
 
     /* ### should open read-only */
     if ((err = dav_open_lockdb(r, 0, &ctx.w.lockdb)) != NULL) {
@@ -2143,8 +2170,8 @@ static int dav_method_propfind(request_rec *r)
     return DONE;
 }
 
-static apr_text * dav_failed_proppatch(apr_pool_t *p,
-                                      apr_array_header_t *prop_ctx)
+DAV_DECLARE(apr_text *) dav_failed_proppatch(apr_pool_t *p,
+                                             apr_array_header_t *prop_ctx)
 {
     apr_text_header hdr = { 0 };
     int i = prop_ctx->nelts;
@@ -2204,7 +2231,8 @@ static apr_text * dav_failed_proppatch(apr_pool_t *p,
     return hdr.first;
 }
 
-static apr_text * dav_success_proppatch(apr_pool_t *p, apr_array_header_t *prop_ctx)
+DAV_DECLARE(apr_text *) dav_success_proppatch(apr_pool_t *p,
+                                              apr_array_header_t *prop_ctx)
 {
     apr_text_header hdr = { 0 };
     int i = prop_ctx->nelts;
@@ -3269,8 +3297,8 @@ static int dav_method_unlock(request_rec *r)
 
     /* ### RFC 2518 s. 8.11: If this resource is locked by locktoken,
      *     _all_ resources locked by locktoken are released.  It does not say
-     *     resource has to be the root of an infinte lock.  Thus, an UNLOCK
-     *     on any part of an infinte lock will remove the lock on all resources.
+     *     resource has to be the root of an infinite lock.  Thus, an UNLOCK
+     *     on any part of an infinite lock will remove the lock on all resources.
      *
      *     For us, if r->filename represents an indirect lock (part of an infinity lock),
      *     we must actually perform an UNLOCK on the direct lock for this resource.

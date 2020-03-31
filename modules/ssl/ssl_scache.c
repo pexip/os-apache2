@@ -110,12 +110,12 @@ void ssl_scache_kill(server_rec *s)
 
 }
 
-BOOL ssl_scache_store(server_rec *s, UCHAR *id, int idlen,
+BOOL ssl_scache_store(server_rec *s, IDCONST UCHAR *id, int idlen,
                       apr_time_t expiry, SSL_SESSION *sess,
                       apr_pool_t *p)
 {
     SSLModConfigRec *mc = myModConfig(s);
-    unsigned char encoded[SSL_SESSION_MAX_DER], *ptr;
+    unsigned char encoded[MODSSL_SESSION_MAX_DER], *ptr;
     unsigned int len;
     apr_status_t rv;
 
@@ -144,12 +144,12 @@ BOOL ssl_scache_store(server_rec *s, UCHAR *id, int idlen,
     return rv == APR_SUCCESS ? TRUE : FALSE;
 }
 
-SSL_SESSION *ssl_scache_retrieve(server_rec *s, UCHAR *id, int idlen,
+SSL_SESSION *ssl_scache_retrieve(server_rec *s, IDCONST UCHAR *id, int idlen,
                                  apr_pool_t *p)
 {
     SSLModConfigRec *mc = myModConfig(s);
-    unsigned char dest[SSL_SESSION_MAX_DER];
-    unsigned int destlen = SSL_SESSION_MAX_DER;
+    unsigned char dest[MODSSL_SESSION_MAX_DER];
+    unsigned int destlen = MODSSL_SESSION_MAX_DER;
     const unsigned char *ptr;
     apr_status_t rv;
 
@@ -173,7 +173,7 @@ SSL_SESSION *ssl_scache_retrieve(server_rec *s, UCHAR *id, int idlen,
     return d2i_SSL_SESSION(NULL, &ptr, destlen);
 }
 
-void ssl_scache_remove(server_rec *s, UCHAR *id, int idlen,
+void ssl_scache_remove(server_rec *s, IDCONST UCHAR *id, int idlen,
                        apr_pool_t *p)
 {
     SSLModConfigRec *mc = myModConfig(s);
@@ -198,15 +198,20 @@ static int ssl_ext_status_hook(request_rec *r, int flags)
 {
     SSLModConfigRec *mc = myModConfig(r->server);
 
-    if (mc == NULL || flags & AP_STATUS_SHORT || mc->sesscache == NULL)
+    if (mc == NULL || mc->sesscache == NULL)
         return OK;
 
-    ap_rputs("<hr>\n", r);
-    ap_rputs("<table cellspacing=0 cellpadding=0>\n", r);
-    ap_rputs("<tr><td bgcolor=\"#000000\">\n", r);
-    ap_rputs("<b><font color=\"#ffffff\" face=\"Arial,Helvetica\">SSL/TLS Session Cache Status:</font></b>\r", r);
-    ap_rputs("</td></tr>\n", r);
-    ap_rputs("<tr><td bgcolor=\"#ffffff\">\n", r);
+    if (!(flags & AP_STATUS_SHORT)) {
+        ap_rputs("<hr>\n", r);
+        ap_rputs("<table cellspacing=0 cellpadding=0>\n", r);
+        ap_rputs("<tr><td bgcolor=\"#000000\">\n", r);
+        ap_rputs("<b><font color=\"#ffffff\" face=\"Arial,Helvetica\">SSL/TLS Session Cache Status:</font></b>\r", r);
+        ap_rputs("</td></tr>\n", r);
+        ap_rputs("<tr><td bgcolor=\"#ffffff\">\n", r);
+    }
+    else {
+        ap_rputs("TLSSessionCacheStatus\n", r);
+    }
 
     if (mc->sesscache->flags & AP_SOCACHE_FLAG_NOTMPSAFE) {
         ssl_mutex_on(r->server);
@@ -218,8 +223,11 @@ static int ssl_ext_status_hook(request_rec *r, int flags)
         ssl_mutex_off(r->server);
     }
 
-    ap_rputs("</td></tr>\n", r);
-    ap_rputs("</table>\n", r);
+    if (!(flags & AP_STATUS_SHORT)) {
+        ap_rputs("</td></tr>\n", r);
+        ap_rputs("</table>\n", r);
+    }
+
     return OK;
 }
 

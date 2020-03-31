@@ -24,11 +24,17 @@
 /* SuExec log file */
 #undef AP_LOG_EXEC
 
+/* SuExec log to syslog */
+#undef AP_LOG_SYSLOG
+
 /* Listening sockets are non-blocking when there are more than 1 */
 #undef AP_NONBLOCK_WHEN_MULTI_LISTEN
 
 /* safe shell path for SuExec */
 #undef AP_SAFE_PATH
+
+/* Enable if suexec is installed with Linux capabilities, not setuid */
+#undef AP_SUEXEC_CAPABILITIES
 
 /* umask for suexec'd process */
 #undef AP_SUEXEC_UMASK
@@ -46,11 +52,20 @@
 /* Using autoconf to configure Apache */
 #undef AP_USING_AUTOCONF
 
+/* Define to 1 if you have the `arc4random_buf' function. */
+#undef HAVE_ARC4RANDOM_BUF
+
 /* Define to 1 if you have the `bindprocessor' function. */
 #undef HAVE_BINDPROCESSOR
 
 /* Define to 1 if you have the <bstring.h> header file. */
 #undef HAVE_BSTRING_H
+
+/* Define if curl is available */
+#undef HAVE_CURL
+
+/* Define to 1 if you have the <curl/curl.h> header file. */
+#undef HAVE_CURL_CURL_H
 
 /* Define if distcache support is enabled */
 #undef HAVE_DISTCACHE
@@ -97,6 +112,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define if jansson is available */
+#undef HAVE_JANSSON
+
 /* Define to 1 if you have the `killpg' function. */
 #undef HAVE_KILLPG
 
@@ -109,11 +127,38 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define if nghttp2 is available */
+#undef HAVE_NGHTTP2
+
+/* Define to 1 if you have the <nghttp2/nghttp2.h> header file. */
+#undef HAVE_NGHTTP2_NGHTTP2_H
+
+/* Define to 1 if you have the
+   `nghttp2_session_callbacks_set_on_invalid_header_callback' function. */
+#undef HAVE_NGHTTP2_SESSION_CALLBACKS_SET_ON_INVALID_HEADER_CALLBACK
+
+/* Define to 1 if you have the `nghttp2_session_change_stream_priority'
+   function. */
+#undef HAVE_NGHTTP2_SESSION_CHANGE_STREAM_PRIORITY
+
+/* Define to 1 if you have the `nghttp2_session_get_stream_local_window_size'
+   function. */
+#undef HAVE_NGHTTP2_SESSION_GET_STREAM_LOCAL_WINDOW_SIZE
+
+/* Define to 1 if you have the `nghttp2_session_server_new2' function. */
+#undef HAVE_NGHTTP2_SESSION_SERVER_NEW2
+
+/* Define to 1 if you have the `nghttp2_stream_get_weight' function. */
+#undef HAVE_NGHTTP2_STREAM_GET_WEIGHT
+
 /* Define if OpenSSL is available */
 #undef HAVE_OPENSSL
 
 /* Define to 1 if you have the <openssl/engine.h> header file. */
 #undef HAVE_OPENSSL_ENGINE_H
+
+/* Define to 1 if you have the `OPENSSL_init_ssl' function. */
+#undef HAVE_OPENSSL_INIT_SSL
 
 /* Define to 1 if you have the `port_create' function. */
 #undef HAVE_PORT_CREATE
@@ -130,11 +175,11 @@
 /* Define to 1 if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
 
+/* Define to 1 if you have the `RAND_egd' function. */
+#undef HAVE_RAND_EGD
+
 /* Define to 1 if you have the `setsid' function. */
 #undef HAVE_SETSID
-
-/* Define to 1 if you have the `SSLeay_version' function. */
-#undef HAVE_SSLEAY_VERSION
 
 /* Define to 1 if you have the `SSL_CTX_new' function. */
 #undef HAVE_SSL_CTX_NEW
@@ -153,6 +198,12 @@
 
 /* Define to 1 if you have the `syslog' function. */
 #undef HAVE_SYSLOG
+
+/* Define if systemd is supported */
+#undef HAVE_SYSTEMD
+
+/* Define to 1 if you have the <systemd/sd-daemon.h> header file. */
+#undef HAVE_SYSTEMD_SD_DAEMON_H
 
 /* Define to 1 if you have the <sys/ipc.h> header file. */
 #undef HAVE_SYS_IPC_H
@@ -201,6 +252,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `vsyslog' function. */
+#undef HAVE_VSYSLOG
 
 /* Root directory of the Apache install area */
 #undef HTTPD_ROOT

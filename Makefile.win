@@ -57,6 +57,15 @@ USEMAK=0
 USEDSW=1
 !ENDIF
 
+# APU 1.6 (and up?)
+!IF EXIST("srclib\apr-util\xml\xml.mak")
+EXPAT=xml
+EXPBCK = ..
+!ELSE
+EXPAT=xml\expat\lib
+EXPBCK = ..\..\..
+!ENDIF
+
 default: _buildr
 
 !IF ("$(CTARGET)" == "") && ($(USESLN) == 1)
@@ -102,17 +111,32 @@ UTILDIR=apr-util
 !IF EXIST("srclib\openssl")
 !IF "$(LONG)" == "Debug" && EXIST("srclib\openssl\out32dll.dbg\openssl.exe")
 SSLBIN=out32dll.dbg
+SSLAPP=out32dll.dbg
+SSLCRP=libeay32
+SSLLIB=ssleay32
+!ELSEIF EXIST("srclib\openssl\libcrypto.lib")
+!MESSAGE Building with OpenSSL 1.1.0
+!MESSAGE 
+SSLBIN=.
+SSLAPP=apps
+SSLCRP=libcrypto
+SSLLIB=libssl
+SSLOPT=_HAVE_OSSL110=1
 !ELSE
 SSLBIN=out32dll
+SSLAPP=out32dll
+SSLCRP=libeay32
+SSLLIB=ssleay32
 !ENDIF
+
 
 _tryssl:
 !IF $(USEMAK) == 1
 	cd modules\ssl
-	$(MAKE) $(MAKEOPT) -f mod_ssl.mak CFG="mod_ssl - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	$(MAKE) $(MAKEOPT) $(SSLOPT) -f mod_ssl.mak CFG="mod_ssl - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..\..
 	cd support
-	$(MAKE) $(MAKEOPT) -f abs.mak CFG="abs - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	$(MAKE) $(MAKEOPT) $(SSLOPT) -f abs.mak CFG="abs - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..
 !ELSEIF $(USESLN) == 1
 	devenv $(TLP).sln /useenv $(CTARGET) $(LONG) /project mod_ssl
@@ -215,6 +239,85 @@ _trylua:
 
 !ENDIF
 
+!IF EXIST("srclib\nghttp2")
+
+_trynghttp2:
+!IF $(USEMAK) == 1
+	cd modules\http2
+	$(MAKE) $(MAKEOPT) -f mod_http2.mak       CFG="mod_http2 - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	$(MAKE) $(MAKEOPT) -f mod_proxy_http2.mak CFG="mod_proxy_http2 - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	cd ..\..
+!ELSEIF $(USESLN) == 1
+	devenv $(TLP).sln /useenv $(CTARGET) $(LONG) /project mod_http2
+	devenv $(TLP).sln /useenv $(CTARGET) $(LONG) /project mod_proxy_http2
+!ELSE
+	@msdev $(TLP).dsw /USEENV /MAKE \
+		"mod_http2 - Win32 $(LONG)" /NORECURSE $(CTARGET)
+	@msdev $(TLP).dsw /USEENV /MAKE \
+		"mod_proxy_http2 - Win32 $(LONG)" /NORECURSE $(CTARGET)
+!ENDIF
+
+!ELSE
+#     NOT EXIST("srclib\nghttp2")
+
+_trynghttp2:
+	@echo -----
+	@echo mod_http2 will not build unless nghttp2 is installed in srclib\nghttp2.
+	@echo Version 1.0 includes an lib\makefile.msvc that will satisfy this
+	@echo requirement.
+
+!ENDIF
+
+!IF EXIST("srclib\brotli")
+
+_trybrotli:
+!IF $(USEMAK) == 1
+	cd modules\filters
+	$(MAKE) $(MAKEOPT) -f mod_brotli.mak CFG="mod_brotli - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	cd ..\..
+!ELSEIF $(USESLN) == 1
+	devenv $(TLP).sln /useenv $(CTARGET) $(LONG) /project mod_brotli
+!ELSE
+	@msdev $(TLP).dsw /USEENV /MAKE \
+		"mod_brotli - Win32 $(LONG)" /NORECURSE $(CTARGET)
+!ENDIF
+
+!ELSE
+#     NOT EXIST("srclib\brotli")
+
+_trybrotli:
+	@echo -----
+	@echo mod_brotli will not build unless brotli is built in srclib\brotli.  
+	@echo Version 1.0.0 and later available from https://github.com/google/brotli/releases
+	@echo build with:
+	@echo cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
+	@echo nmake
+
+!ENDIF
+
+!IF EXIST("srclib\openssl") && EXIST("srclib\jansson") && EXIST("srclib\curl")
+
+_trymd:
+!IF $(USEMAK) == 1
+	cd modules\md
+	$(MAKE) $(MAKEOPT) $(SSLOPT) -f mod_md.mak CFG="mod_md - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	cd ..\..
+!ELSEIF $(USESLN) == 1
+	devenv $(TLP).sln /useenv $(CTARGET) $(LONG) /project mod_md
+!ELSE
+	@msdev $(TLP).dsw /USEENV /MAKE \
+		"mod_md - Win32 $(LONG)" /NORECURSE $(CTARGET)
+!ENDIF
+
+!ELSE
+#     NOT EXIST("srclib\openssl") && EXIST("srclib\jansson") && EXIST("srclib\curl")
+
+_trymd:
+	@echo -----
+	@echo mod_md will not build unless OpenSSL, Jansson and Curl are built and placed
+	@echo in srclib. Example: srclib/openssl, srclib/jansson and srclib/curl
+
+!ENDIF
 
 _trydb:
 !IF $(USEMAK) == 1
@@ -347,11 +450,11 @@ _build:
 	cd ..
 !ENDIF
 	cd ..\..
-	cd srclib\apr-util\xml\expat\lib
+	cd srclib\apr-util\$(EXPAT)
 	 $(MAKE) $(MAKEOPT) -f xml.mak             CFG="xml - Win32 $(LONG)" RECURSE=0 $(CTARGET)
-	cd ..\..\..
-	 $(MAKE) $(MAKEOPT) -f aprutil.mak         CFG="aprutil - Win32 $(LONG)" RECURSE=0 $(CTARGET)
-	 $(MAKE) $(MAKEOPT) -f libaprutil.mak      CFG="libaprutil - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	cd $(EXPBCK)
+	 $(MAKE) $(MAKEOPT) $(SSLOPT) -f aprutil.mak         CFG="aprutil - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	 $(MAKE) $(MAKEOPT) $(SSLOPT) -f libaprutil.mak      CFG="libaprutil - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ldap
 	 $(MAKE) $(MAKEOPT) -f apr_ldap.mak        CFG="apr_ldap - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..
@@ -414,6 +517,7 @@ _build:
 #	 $(MAKE) $(MAKEOPT) -f mod_socache_dc.mak  CFG="mod_socache_dc - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_socache_memcache.mak CFG="mod_socache_memcache - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_socache_shmcb.mak CFG="mod_socache_shmcb - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	 $(MAKE) $(MAKEOPT) -f mod_socache_redis.mak CFG="mod_socache_redis - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..\..
 	cd modules\core
 	 $(MAKE) $(MAKEOPT) -f mod_macro.mak    CFG="mod_macro - Win32 $(LONG)" RECURSE=0 $(CTARGET)
@@ -452,6 +556,9 @@ _build:
 	cd ..\..
 !ENDIF
 	cd modules\filters
+!IF EXIST("srclib\brotli")
+	 $(MAKE) $(MAKEOPT) -f mod_brotli.mak      CFG="mod_brotli - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+!ENDIF
 	 $(MAKE) $(MAKEOPT) -f mod_buffer.mak      CFG="mod_buffer - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_charset_lite.mak CFG="mod_charset_lite - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_data.mak        CFG="mod_data - Win32 $(LONG)" RECURSE=0 $(CTARGET)
@@ -504,6 +611,11 @@ _build:
 	 $(MAKE) $(MAKEOPT) -f mod_userdir.mak     CFG="mod_userdir - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_vhost_alias.mak CFG="mod_vhost_alias - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..\..
+!IF EXIST("srclib\openssl") && EXIST("srclib\jansson") && EXIST("srclib\curl")
+	cd modules\md
+	 $(MAKE) $(MAKEOPT) $(SSLOPT) -f mod_md.mak          CFG="mod_md - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	cd ..\..
+!ENDIF
 	cd modules\metadata
 	 $(MAKE) $(MAKEOPT) -f mod_cern_meta.mak   CFG="mod_cern_meta - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_env.mak         CFG="mod_env - Win32 $(LONG)" RECURSE=0 $(CTARGET)
@@ -525,8 +637,10 @@ _build:
 	 $(MAKE) $(MAKEOPT) -f mod_proxy_express.mak CFG="mod_proxy_express - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_proxy_fcgi.mak  CFG="mod_proxy_fcgi - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_proxy_ftp.mak   CFG="mod_proxy_ftp - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	 $(MAKE) $(MAKEOPT) -f mod_proxy_hcheck.mak  CFG="mod_proxy_hcheck - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_proxy_http.mak  CFG="mod_proxy_http - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_proxy_scgi.mak  CFG="mod_proxy_scgi - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	 $(MAKE) $(MAKEOPT) -f mod_proxy_uwsgi.mak  CFG="mod_proxy_uwsgi - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_proxy_wstunnel.mak  CFG="mod_proxy_wstunnel - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..\..
 	cd modules\proxy\balancers
@@ -535,10 +649,12 @@ _build:
 	 $(MAKE) $(MAKEOPT) -f mod_lbmethod_bytraffic.mak  CFG="mod_lbmethod_bytraffic - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	 $(MAKE) $(MAKEOPT) -f mod_lbmethod_heartbeat.mak  CFG="mod_lbmethod_heartbeat - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..\..\..
-!IFDEF ALL
-	cd modules\proxy\examples
-	 $(MAKE) $(MAKEOPT) -f mod_lbmethod_rr.mak CFG="mod_lbmethod_rr - Win32 $(LONG)" RECURSE=0 $(CTARGET)
-	cd ..\..\..
+# mod_proxy_http2 must be built after mod_proxy and mod_http2
+!IF EXIST("srclib\nghttp2")
+	cd modules\http2
+	 $(MAKE) $(MAKEOPT) -f mod_http2.mak         CFG="mod_http2 - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	 $(MAKE) $(MAKEOPT) -f mod_proxy_http2.mak   CFG="mod_proxy_http2 - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	cd ..\..
 !ENDIF
 	cd modules\session
 	 $(MAKE) $(MAKEOPT) -f mod_session.mak        CFG="mod_session - Win32 $(LONG)" RECURSE=0 $(CTARGET)
@@ -554,10 +670,10 @@ _build:
 #	 $(MAKE) $(MAKEOPT) -f mod_session_crypto.mak CFG="mod_session_crypto - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 #	cd ..\..
 	cd modules\ssl
-	 $(MAKE) $(MAKEOPT) -f mod_ssl.mak         CFG="mod_ssl - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	 $(MAKE) $(MAKEOPT) $(SSLOPT) -f mod_ssl.mak         CFG="mod_ssl - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..\..
 	cd support
-	 $(MAKE) $(MAKEOPT) -f abs.mak             CFG="abs - Win32 $(LONG)" RECURSE=0 $(CTARGET)
+	 $(MAKE) $(MAKEOPT) $(SSLOPT) -f abs.mak             CFG="abs - Win32 $(LONG)" RECURSE=0 $(CTARGET)
 	cd ..
 !ENDIF
 	cd support
@@ -704,6 +820,7 @@ _copybin:
 #	copy modules\cache\$(LONG)\mod_socache_dc.$(src_so)	"$(inst_so)" <.y
 	copy modules\cache\$(LONG)\mod_socache_memcache.$(src_so) "$(inst_so)" <.y
 	copy modules\cache\$(LONG)\mod_socache_shmcb.$(src_so)	"$(inst_so)" <.y
+	copy modules\cache\$(LONG)\mod_socache_redis.$(src_so)	"$(inst_so)" <.y
 	copy modules\core\$(LONG)\mod_macro.$(src_so) 	"$(inst_so)" <.y
 	copy modules\core\$(LONG)\mod_watchdog.$(src_so) 	"$(inst_so)" <.y
 	copy modules\cluster\$(LONG)\mod_heartbeat.$(src_so)	"$(inst_so)" <.y
@@ -722,6 +839,9 @@ _copybin:
 	copy modules\examples\$(LONG)\mod_case_filter_in.$(src_so) "$(inst_so)" <.y
 	copy modules\examples\$(LONG)\mod_example_hooks.$(src_so)  "$(inst_so)" <.y
 	copy modules\examples\$(LONG)\mod_example_ipc.$(src_so)	   "$(inst_so)" <.y
+!ENDIF
+!IF EXIST("srclib\brotli")
+	copy modules\filters\$(LONG)\mod_brotli.$(src_so) 	"$(inst_so)" <.y
 !ENDIF
 	copy modules\filters\$(LONG)\mod_buffer.$(src_so) 	"$(inst_so)" <.y
 	copy modules\filters\$(LONG)\mod_charset_lite.$(src_so)	"$(inst_so)" <.y
@@ -754,6 +874,15 @@ _copybin:
 	copy modules\generators\$(LONG)\mod_info.$(src_so) 	"$(inst_so)" <.y
 	copy modules\generators\$(LONG)\mod_status.$(src_so) 	"$(inst_so)" <.y
 	copy modules\http\$(LONG)\mod_mime.$(src_so) 		"$(inst_so)" <.y
+!IF EXIST("srclib\nghttp2")
+	copy modules\http2\$(LONG)\mod_http2.$(src_so) 		"$(inst_so)" <.y
+	copy modules\http2\$(LONG)\mod_proxy_http2.$(src_so) 		"$(inst_so)" <.y
+!IF "$(SHORT)" == "D"
+	copy srclib\nghttp2\lib\MSVC_obj\nghttp2d.$(src_dll)		 	"$(inst_dll)" <.y
+!ELSE
+	copy srclib\nghttp2\lib\MSVC_obj\nghttp2.$(src_dll)		 	"$(inst_dll)" <.y
+!ENDIF
+!ENDIF
 	copy modules\ldap\$(LONG)\mod_ldap.$(src_so)		"$(inst_so)" <.y
 	copy modules\loggers\$(LONG)\mod_log_config.$(src_so) 	"$(inst_so)" <.y
 	copy modules\loggers\$(LONG)\mod_log_debug.$(src_so) 	"$(inst_so)" <.y
@@ -774,6 +903,16 @@ _copybin:
 	copy modules\mappers\$(LONG)\mod_speling.$(src_so) 	"$(inst_so)" <.y
 	copy modules\mappers\$(LONG)\mod_userdir.$(src_so) 	"$(inst_so)" <.y
 	copy modules\mappers\$(LONG)\mod_vhost_alias.$(src_so) 	"$(inst_so)" <.y
+!IF EXIST("srclib\openssl") &&  EXIST("srclib\jansson") &&  EXIST("srclib\curl")
+	copy modules\md\$(LONG)\mod_md.$(src_so) 		"$(inst_so)" <.y
+!IF "$(SHORT)" == "D"
+	-copy srclib\curl\bin\libcurl_debug.$(src_dll)		"$(inst_dll)" <.y
+	-copy srclib\jansson\bin\jansson_d.$(src_dll)		"$(inst_dll)" <.y
+!ELSE
+	-copy srclib\curl\bin\libcurl.$(src_dll)		"$(inst_dll)" <.y
+	-copy srclib\jansson\bin\jansson.$(src_dll)		"$(inst_dll)" <.y
+!ENDIF
+!ENDIF
 	copy modules\metadata\$(LONG)\mod_cern_meta.$(src_so) 	"$(inst_so)" <.y
 	copy modules\metadata\$(LONG)\mod_env.$(src_so) 	"$(inst_so)" <.y
 	copy modules\metadata\$(LONG)\mod_expires.$(src_so) 	"$(inst_so)" <.y
@@ -792,16 +931,15 @@ _copybin:
 	copy modules\proxy\$(LONG)\mod_proxy_express.$(src_so) 	"$(inst_so)" <.y
 	copy modules\proxy\$(LONG)\mod_proxy_fcgi.$(src_so) 	"$(inst_so)" <.y
 	copy modules\proxy\$(LONG)\mod_proxy_ftp.$(src_so) 	"$(inst_so)" <.y
+	copy modules\proxy\$(LONG)\mod_proxy_hcheck.$(src_so) 	"$(inst_so)" <.y
 	copy modules\proxy\$(LONG)\mod_proxy_http.$(src_so) 	"$(inst_so)" <.y
 	copy modules\proxy\$(LONG)\mod_proxy_scgi.$(src_so) 	"$(inst_so)" <.y
+	copy modules\proxy\$(LONG)\mod_proxy_uwsgi.$(src_so) 	"$(inst_so)" <.y
 	copy modules\proxy\$(LONG)\mod_proxy_wstunnel.$(src_so) 	"$(inst_so)" <.y
 	copy modules\proxy\balancers\$(LONG)\mod_lbmethod_bybusyness.$(src_so) "$(inst_so)" <.y
 	copy modules\proxy\balancers\$(LONG)\mod_lbmethod_byrequests.$(src_so) "$(inst_so)" <.y
 	copy modules\proxy\balancers\$(LONG)\mod_lbmethod_bytraffic.$(src_so)  "$(inst_so)" <.y
 	copy modules\proxy\balancers\$(LONG)\mod_lbmethod_heartbeat.$(src_so)  "$(inst_so)" <.y
-!IFDEF ALL
-	copy modules\proxy\examples\$(LONG)\mod_lbmethod_rr.$(src_so) "$(inst_so)" <.y
-!ENDIF
 	copy modules\session\$(LONG)\mod_session.$(src_so)        "$(inst_so)" <.y
 	copy modules\session\$(LONG)\mod_session_cookie.$(src_so) "$(inst_so)" <.y
 	copy modules\session\$(LONG)\mod_session_dbd.$(src_so)    "$(inst_so)" <.y
@@ -810,9 +948,9 @@ _copybin:
 !IF EXIST("srclib\openssl")
 #	copy modules\session\$(LONG)\mod_session_crypto.$(src_so) "$(inst_so)" <.y
 	copy modules\ssl\$(LONG)\mod_ssl.$(src_so) 		"$(inst_so)" <.y
-	-copy srclib\openssl\$(SSLBIN)\libeay32.$(src_dll) 	"$(inst_dll)" <.y
-	-copy srclib\openssl\$(SSLBIN)\ssleay32.$(src_dll) 	"$(inst_dll)" <.y
-	-copy srclib\openssl\$(SSLBIN)\openssl.$(src_exe) 	"$(inst_exe)" <.y
+	-copy srclib\openssl\$(SSLBIN)\$(SSLCRP)*.$(src_dll) 	"$(inst_dll)" <.y
+	-copy srclib\openssl\$(SSLBIN)\$(SSLLIB)*.$(src_dll) 	"$(inst_dll)" <.y
+	-copy srclib\openssl\$(SSLAPP)\openssl.$(src_exe) 	"$(inst_exe)" <.y
 	copy support\$(LONG)\abs.$(src_exe) 			"$(inst_exe)" <.y
 !ENDIF
 	copy support\$(LONG)\ab.$(src_exe) 			"$(inst_exe)" <.y
@@ -1000,6 +1138,65 @@ BEGIN {
 }
 <<
 !ENDIF
+!IF EXIST("srclib\libxml2")
+	type << >> "$(INSTDIR)\NOTICE.txt"
+
+This binary distributions of mod_proxy_html.so and mod_xml2enc.so include the
+libxml2 C library written by Daniel Veillard (daniel veillard.com), Bjorn 
+Reese (breese users.sourceforge.net) and Gary Pennington (Gary.Pennington 
+uk.sun.com). For complete information, visit LibXML2's web site at 
+https://http://www.xmlsoft.org/
+<<
+	-awk -f <<script.awk < "srclib\libxml2\Copyright" >> "$(INSTDIR)\LICENSE.txt"
+BEGIN {
+    print "";
+    print "For the mod_proxy_html and mod_xml2enc components:";
+    print "";
+	    while ( getline > 0 ) {
+	print $$0;
+    }
+    exit 0;
+}
+<<
+!ENDIF
+!IF EXIST("srclib\nghttp2")
+	type << >> "$(INSTDIR)\NOTICE.txt"
+
+This binary distribution of mod_http2.so includes nghttp2 C library written 
+by Tatsuhiro Tsujikawa. For complete information, visit nghttp2's web site 
+at https://nghttp2.org/
+<<
+	-awk -f <<script.awk < "srclib\nghttp2\COPYING" >> "$(INSTDIR)\LICENSE.txt"
+BEGIN {
+    print "";
+    print "For the mod_http2 component:";
+    print "";
+	    while ( getline > 0 ) {
+	print $$0;
+    }
+    exit 0;
+}
+<<
+!ENDIF
+!IF EXIST("srclib\brotli")
+	type << >> "$(INSTDIR)\NOTICE.txt"
+
+This binary distribution of mod_brotli.so includes Brotli C library written 
+by the Brotli Authors. For complete information, visit Brotli's web site 
+at https://github.com/google/brotli
+<<
+	-awk -f <<script.awk < "srclib\brotli\LICENSE" >> "$(INSTDIR)\LICENSE.txt"
+BEGIN {
+    print "";
+    print "For the mod_brotli component:";
+    print "";
+	    while ( getline > 0 ) {
+	print $$0;
+    }
+    exit 0;
+}
+<<
+!ENDIF
 	$(MAKE) $(MAKEOPT) -f Makefile.win SHORT=$(SHORT) LONG=$(LONG) \
 		_copybin src_exe=exe src_dll=dll src_so=so             \
 		inst_exe="$(INSTDIR)\bin"                              \
@@ -1051,10 +1248,12 @@ BEGIN {
 		modules\filters\mod_include.h \
 		modules\generators\mod_cgi.h \
 		modules\generators\mod_status.h \
+		modules\http2\mod_http2.h \
 		modules\loggers\mod_log_config.h \
 		modules\mappers\mod_rewrite.h \
 		modules\proxy\mod_proxy.h \
 		modules\ssl\mod_ssl.h \
+		modules\ssl\mod_ssl_openssl.h \
           ) do \
 	    @copy %f "$(INSTDIR)\include" < .y > nul
 	copy srclib\apr\Lib$(SHORT)\apr-1.lib		"$(INSTDIR)\lib" <.y
@@ -1064,8 +1263,8 @@ BEGIN {
 !IF EXIST("srclib\apr-util")
 	copy srclib\apr-util\Lib$(SHORT)\aprutil-1.lib	"$(INSTDIR)\lib" <.y
 	copy srclib\apr-util\Lib$(SHORT)\aprutil-1.pdb	"$(INSTDIR)\lib" <.y
-	copy srclib\apr-util\xml\expat\lib\Lib$(SHORT)\xml.lib "$(INSTDIR)\lib" <.y
-	copy srclib\apr-util\xml\expat\lib\Lib$(SHORT)\xml.pdb "$(INSTDIR)\lib" <.y
+	copy srclib\apr-util\$(EXPAT)\Lib$(SHORT)\xml.lib "$(INSTDIR)\lib" <.y
+	copy srclib\apr-util\$(EXPAT)\Lib$(SHORT)\xml.pdb "$(INSTDIR)\lib" <.y
 	copy srclib\apr-util\$(LONG)\libaprutil-1.lib 	"$(INSTDIR)\lib" <.y
 	copy srclib\apr-util\$(LONG)\libaprutil-1.exp 	"$(INSTDIR)\lib" <.y
 	copy srclib\apr-iconv\$(LONG)\libapriconv-1.lib	"$(INSTDIR)\lib" <.y

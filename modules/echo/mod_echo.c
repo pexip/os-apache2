@@ -108,10 +108,10 @@ static int update_echo_child_status(ap_sb_handle_t *sbh,
 
     /* initial pass only, please - in the name of efficiency */
     if (c) {
-        apr_cpystrn(ws->client,
+        apr_cpystrn(ws->client64,
                     ap_get_remote_host(c, c->base_server->lookup_defaults,
                                        REMOTE_NOLOOKUP, NULL),
-                    sizeof(ws->client));
+                    sizeof(ws->client64));
         apr_cpystrn(ws->vhost, c->base_server->server_hostname,
                     sizeof(ws->vhost));
         /* Deliberate trailing space - filling in string on WRITE passes */
@@ -160,7 +160,6 @@ static int process_echo_connection(conn_rec *c)
 
         /* Something horribly wrong happened.  Someone didn't block! */
         if (APR_BRIGADE_EMPTY(bb)) {
-            apr_brigade_cleanup(bb);
             ap_log_error(APLOG_MARK, APLOG_INFO, rv, c->base_server, APLOGNO(01612)
                          "ProtocolEcho: Error - read empty brigade from %s!",
                          c->client_ip);

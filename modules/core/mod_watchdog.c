@@ -66,7 +66,6 @@ struct wd_server_conf_t
 
 static wd_server_conf_t *wd_server_conf = NULL;
 static apr_interval_time_t wd_interval = AP_WD_TM_INTERVAL;
-static int wd_interval_set = 0;
 static int mpm_is_forked = AP_MPMQ_NOT_SUPPORTED;
 static const char *wd_proc_mutex_type = "watchdog-callback";
 
@@ -155,8 +154,8 @@ static void* APR_THREAD_FUNC wd_worker(apr_thread_t *thread, void *data)
     if (w->is_running) {
         watchdog_list_t *wl = w->callbacks;
         ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, wd_server_conf->s,
-                     "%sWatchdog (%s) running",
-                     w->singleton ? "Singleton" : "", w->name);
+                     APLOGNO(02972) "%sWatchdog (%s) running",
+                     w->singleton ? "Singleton " : "", w->name);
         apr_time_clock_hires(w->pool);
         if (wl) {
             apr_pool_t *ctx = NULL;
@@ -251,8 +250,8 @@ static void* APR_THREAD_FUNC wd_worker(apr_thread_t *thread, void *data)
         }
     }
     ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, wd_server_conf->s,
-                 "%sWatchdog (%s) stopping",
-                 w->singleton ? "Singleton" : "", w->name);
+                 APLOGNO(02973) "%sWatchdog (%s) stopping",
+                 w->singleton ? "Singleton " : "", w->name);
 
     if (locked)
         apr_proc_mutex_unlock(w->mutex);
@@ -436,37 +435,45 @@ static int wd_post_config_hook(apr_pool_t *pconf, apr_pool_t *plog,
 {
     apr_status_t rv;
     const char *pk = "watchdog_init_module_tag";
-    apr_pool_t *pproc = s->process->pool;
+    apr_pool_t *ppconf = pconf;
     const apr_array_header_t *wl;
 
     if (ap_state_query(AP_SQ_MAIN_STATE) == AP_SQ_MS_CREATE_PRE_CONFIG)
         /* First time config phase -- skip. */
         return OK;
 
-    apr_pool_userdata_get((void *)&wd_server_conf, pk, pproc);
+    apr_pool_userdata_get((void *)&wd_server_conf, pk, ppconf);
     if (!wd_server_conf) {
-        if (!(wd_server_conf = apr_pcalloc(pproc, sizeof(wd_server_conf_t))))
+        if (!(wd_server_conf = apr_pcalloc(ppconf, sizeof(wd_server_conf_t))))
             return APR_ENOMEM;
-        apr_pool_create(&wd_server_conf->pool, pproc);
-        apr_pool_userdata_set(wd_server_conf, pk, apr_pool_cleanup_null, pproc);
+        apr_pool_create(&wd_server_conf->pool, ppconf);
+        apr_pool_userdata_set(wd_server_conf, pk, apr_pool_cleanup_null, ppconf);
     }
+    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(010033)
+                 "Watchdog: Running with WatchdogInterval %"
+                 APR_TIME_T_FMT "ms", apr_time_as_msec(wd_interval));
     wd_server_conf->s = s;
     if ((wl = ap_list_provider_names(pconf, AP_WATCHDOG_PGROUP,
                                             AP_WATCHDOG_PVERSION))) {
         const ap_list_provider_names_t *wn;
         int i;
 
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(02974)
+                "Watchdog: found parent providers.");
+
         wn = (ap_list_provider_names_t *)wl->elts;
         for (i = 0; i < wl->nelts; i++) {
             ap_watchdog_t *w = ap_lookup_provider(AP_WATCHDOG_PGROUP,
                                                   wn[i].provider_name,
                                                   AP_WATCHDOG_PVERSION);
+            ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(02975)
+                    "Watchdog: Looking for parent (%s).", wn[i].provider_name);
             if (w) {
                 if (!w->active) {
                     int status = ap_run_watchdog_need(s, w->name, 1,
                                                       w->singleton);
                     if (status == OK) {
-                        /* One of the modules returned OK to this watchog.
+                        /* One of the modules returned OK to this watchdog.
                          * Mark it as active
                          */
                         w->active = 1;
@@ -481,6 +488,8 @@ static int wd_post_config_hook(apr_pool_t *pconf, apr_pool_t *plog,
                                 "Watchdog: Failed to create parent worker thread.");
                         return rv;
                     }
+                    ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, s, APLOGNO(02976)
+                            "Watchdog: Created parent worker thread (%s).", w->name);
                     wd_server_conf->parent_workers++;
                 }
             }
@@ -495,18 +504,22 @@ static int wd_post_config_hook(apr_pool_t *pconf, apr_pool_t *plog,
                                             AP_WATCHDOG_CVERSION))) {
         const ap_list_provider_names_t *wn;
         int i;
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(02977)
+                "Watchdog: found child providers.");
 
         wn = (ap_list_provider_names_t *)wl->elts;
         for (i = 0; i < wl->nelts; i++) {
             ap_watchdog_t *w = ap_lookup_provider(AP_WATCHDOG_PGROUP,
                                                   wn[i].provider_name,
                                                   AP_WATCHDOG_CVERSION);
+            ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(02978)
+                    "Watchdog: Looking for child (%s).", wn[i].provider_name);
             if (w) {
                 if (!w->active) {
                     int status = ap_run_watchdog_need(s, w->name, 0,
                                                       w->singleton);
                     if (status == OK) {
-                        /* One of the modules returned OK to this watchog.
+                        /* One of the modules returned OK to this watchdog.
                          * Mark it as active
                          */
                         w->active = 1;
@@ -521,8 +534,12 @@ static int wd_post_config_hook(apr_pool_t *pconf, apr_pool_t *plog,
                                                   w->name, s,
                                                   wd_server_conf->pool, 0);
                         if (rv != APR_SUCCESS) {
+                            ap_log_error(APLOG_MARK, APLOG_CRIT, rv, s, APLOGNO(10095)
+                                         "Watchdog: Failed to create singleton mutex.");
                             return rv;
                         }
+                        ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, s, APLOGNO(02979)
+                                "Watchdog: Created singleton mutex (%s).", w->name);
                     }
                     wd_server_conf->child_workers++;
                 }
@@ -540,12 +557,14 @@ static int wd_post_config_hook(apr_pool_t *pconf, apr_pool_t *plog,
 /*--------------------------------------------------------------------------*/
 static void wd_child_init_hook(apr_pool_t *p, server_rec *s)
 {
-    apr_status_t rv;
+    apr_status_t rv = OK;
     const apr_array_header_t *wl;
 
     if (!wd_server_conf->child_workers) {
         /* We don't have anything configured, bail out.
          */
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, s, APLOGNO(02980)
+                     "Watchdog: nothing configured?");
         return;
     }
     if ((wl = ap_list_provider_names(p, AP_WATCHDOG_PGROUP,
@@ -563,10 +582,12 @@ static void wd_child_init_hook(apr_pool_t *p, server_rec *s)
                  */
                 if ((rv = wd_startup(w, wd_server_conf->pool)) != APR_SUCCESS) {
                     ap_log_error(APLOG_MARK, APLOG_CRIT, rv, s, APLOGNO(01573)
-                                 "Watchdog: Failed to create worker thread.");
+                                 "Watchdog: Failed to create child worker thread.");
                     /* No point to continue */
                     return;
                 }
+                ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, s, APLOGNO(02981)
+                             "Watchdog: Created child worker thread (%s).", wn[i].provider_name);
             }
         }
     }
@@ -580,18 +601,20 @@ static void wd_child_init_hook(apr_pool_t *p, server_rec *s)
 static const char *wd_cmd_watchdog_int(cmd_parms *cmd, void *dummy,
                                        const char *arg)
 {
-    int i;
+    apr_status_t rv;
     const char *errs = ap_check_cmd_context(cmd, GLOBAL_ONLY);
 
     if (errs != NULL)
         return errs;
-    if (wd_interval_set)
-       return "Duplicate WatchdogInterval directives are not allowed";
-    if ((i = atoi(arg)) < 1)
-        return "Invalid WatchdogInterval value";
+    rv = ap_timeout_parameter_parse(arg, &wd_interval, "s");
 
-    wd_interval = apr_time_from_sec(i);
-    wd_interval_set = 1;
+    if (rv != APR_SUCCESS)
+        return "Unparse-able WatchdogInterval setting";
+    if (wd_interval < AP_WD_TM_SLICE) {
+        return apr_psprintf(cmd->pool, "Invalid WatchdogInterval: minimal value %"
+                APR_TIME_T_FMT "ms", apr_time_as_msec(AP_WD_TM_SLICE));
+    }
+
     return NULL;
 }
 

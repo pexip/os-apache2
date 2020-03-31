@@ -63,7 +63,13 @@
 #undef APLOG_MODULE_INDEX
 #define APLOG_MODULE_INDEX AP_CORE_MODULE_INDEX
 
-typedef enum {DO_NOTHING, SEND_SIGTERM, SEND_SIGKILL, GIVEUP} action_t;
+typedef enum {
+    DO_NOTHING,
+    SEND_SIGTERM,
+    SEND_SIGTERM_NOLOG,
+    SEND_SIGKILL,
+    GIVEUP
+} action_t;
 
 typedef struct extra_process_t {
     struct extra_process_t *next;
@@ -142,6 +148,8 @@ static int reclaim_one_pid(pid_t pid, action_t action)
                      " still did not exit, "
                      "sending a SIGTERM",
                      pid);
+        /* FALLTHROUGH */
+    case SEND_SIGTERM_NOLOG:
         kill(pid, SIGTERM);
         break;
 
@@ -193,6 +201,7 @@ AP_DECLARE(void) ap_reclaim_child_processes(int terminate,
                           * children but take no action against
                           * stragglers
                           */
+        {SEND_SIGTERM_NOLOG, 0}, /* skipped if terminate == 0 */
         {SEND_SIGTERM, apr_time_from_sec(3)},
         {SEND_SIGTERM, apr_time_from_sec(5)},
         {SEND_SIGTERM, apr_time_from_sec(7)},
@@ -202,19 +211,21 @@ AP_DECLARE(void) ap_reclaim_child_processes(int terminate,
     int cur_action;      /* index of action we decided to take this
                           * iteration
                           */
-    int next_action = 1; /* index of first real action */
+    int next_action = terminate ? 1 : 2; /* index of first real action */
 
     ap_mpm_query(AP_MPMQ_MAX_DAEMON_USED, &max_daemons);
 
     do {
-        apr_sleep(waittime);
-        /* don't let waittime get longer than 1 second; otherwise, we don't
-         * react quickly to the last child exiting, and taking action can
-         * be delayed
-         */
-        waittime = waittime * 4;
-        if (waittime > apr_time_from_sec(1)) {
-            waittime = apr_time_from_sec(1);
+        if (action_table[next_action].action_time > 0) {
+            apr_sleep(waittime);
+            /* don't let waittime get longer than 1 second; otherwise, we don't
+             * react quickly to the last child exiting, and taking action can
+             * be delayed
+             */
+            waittime = waittime * 4;
+            if (waittime > apr_time_from_sec(1)) {
+                waittime = apr_time_from_sec(1);
+            }
         }
 
         /* see what action to take, if any */
@@ -579,7 +590,7 @@ static apr_status_t podx_signal_internal(ap_pod_t *pod,
 
     rv = apr_file_write(pod->pod_out, &char_of_death, &one);
     if (rv != APR_SUCCESS) {
-        ap_log_error(APLOG_MARK, APLOG_WARNING, rv, ap_server_conf, APLOGNO(2404)
+        ap_log_error(APLOG_MARK, APLOG_WARNING, rv, ap_server_conf, APLOGNO(02404)
                      "write pipe_of_death");
     }
     return rv;
@@ -695,7 +706,7 @@ static apr_status_t dummy_connection(ap_pod_t *pod)
     }
     else /* ... XXX other request types here? */ {
         /* Create an HTTP request string.  We include a User-Agent so
-         * that adminstrators can track down the cause of the
+         * that administrators can track down the cause of the
          * odd-looking requests in their logs.  A complete request is
          * used since kernel-level filtering may require that much
          * data before returning from accept(). */
@@ -787,7 +798,10 @@ int ap_signal_server(int *exit_status, apr_pool_t *pconf)
         status = "httpd (no pid file) not running";
     }
     else {
-        if (kill(otherpid, 0) == 0) {
+        /* With containerization, httpd may get the same PID at each startup,
+         * handle it as if it were not running (it obviously can't).
+         */
+        if (otherpid != getpid() && kill(otherpid, 0) == 0) {
             running = 1;
             status = apr_psprintf(pconf,
                                   "httpd (pid %" APR_PID_T_FMT ") already "
@@ -995,20 +1009,46 @@ AP_DECLARE(apr_status_t) ap_fatal_signal_child_setup(server_rec *s)
     return APR_SUCCESS;
 }
 
+/* We can't call sig_coredump (ap_log_error) once pconf is destroyed, so
+ * avoid double faults by restoring each default signal handler on cleanup.
+ */
+static apr_status_t fatal_signal_cleanup(void *unused)
+{
+    (void)unused;
+
+    apr_signal(SIGSEGV, SIG_DFL);
+#ifdef SIGBUS
+    apr_signal(SIGBUS, SIG_DFL);
+#endif /* SIGBUS */
+#ifdef SIGABORT
+    apr_signal(SIGABORT, SIG_DFL);
+#endif /* SIGABORT */
+#ifdef SIGABRT
+    apr_signal(SIGABRT, SIG_DFL);
+#endif /* SIGABRT */
+#ifdef SIGILL
+    apr_signal(SIGILL, SIG_DFL);
+#endif /* SIGILL */
+#ifdef SIGFPE
+    apr_signal(SIGFPE, SIG_DFL);
+#endif /* SIGFPE */
+
+    return APR_SUCCESS;
+}
+
 AP_DECLARE(apr_status_t) ap_fatal_signal_setup(server_rec *s,
                                                apr_pool_t *in_pconf)
 {
 #ifndef NO_USE_SIGACTION
     struct sigaction sa;
 
+    memset(&sa, 0, sizeof sa);
     sigemptyset(&sa.sa_mask);
 
 #if defined(SA_ONESHOT)
     sa.sa_flags = SA_ONESHOT;
 #elif defined(SA_RESETHAND)
     sa.sa_flags = SA_RESETHAND;
-#else
-    sa.sa_flags = 0;
 #endif
 
     sa.sa_handler = sig_coredump;
@@ -1058,6 +1098,8 @@ AP_DECLARE(apr_status_t) ap_fatal_signal_setup(server_rec *s,
 
     pconf = in_pconf;
     parent_pid = my_pid = getpid();
+    apr_pool_cleanup_register(pconf, NULL, fatal_signal_cleanup,
+                              fatal_signal_cleanup);
 
     return APR_SUCCESS;
 }

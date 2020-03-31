@@ -528,9 +528,9 @@ static int is_quoted_pair(const char *s)
     int res = -1;
     int c;
 
-    if (((s + 1) != NULL) && (*s == '\\')) {
+    if (*s == '\\') {
         c = (int) *(s + 1);
-        if (apr_isascii(c)) {
+        if (c && apr_isascii(c)) {
             res = 1;
         }
     }
@@ -989,9 +989,7 @@ static int find_ct(request_rec *r)
     if (!r->content_languages && conf->default_language) {
         const char **new;
 
-        if (!r->content_languages) {
-            r->content_languages = apr_array_make(r->pool, 2, sizeof(char *));
-        }
+        r->content_languages = apr_array_make(r->pool, 2, sizeof(char *));
         new = (const char **)apr_array_push(r->content_languages);
         *new = conf->default_language;
     }

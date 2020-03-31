@@ -66,8 +66,12 @@ typedef struct {
     const char *file_name;
     const char *function_name;
     ap_lua_vm_spec *spec;
-    apr_array_header_t *args;
 } lua_authz_provider_spec;
+
+typedef struct {
+    lua_authz_provider_spec *spec;
+    apr_array_header_t *args;
+} lua_authz_provider_func;
 
 apr_hash_t *lua_authz_providers;
 
@@ -79,11 +83,14 @@ typedef struct
     int broken;
 } lua_filter_ctx;
 
+#define DEFAULT_LUA_SHMFILE "lua_ivm_shm"
+
 apr_global_mutex_t *lua_ivm_mutex;
 apr_shm_t *lua_ivm_shm;
 char *lua_ivm_shmfile;
 
-static apr_status_t shm_cleanup_wrapper(void *unused) {
+static apr_status_t shm_cleanup_wrapper(void *unused)
+{
     if (lua_ivm_shm) {
         return apr_shm_destroy(lua_ivm_shm);
     }
@@ -145,9 +152,11 @@ static const char *scope_to_string(unsigned int scope)
     }
 }
 
-static void ap_lua_release_state(lua_State* L, ap_lua_vm_spec* spec, request_rec* r) {
+static void ap_lua_release_state(lua_State* L, ap_lua_vm_spec* spec, request_rec* r)
+{
     char *hash;
     apr_reslist_t* reslist = NULL;
+
     if (spec->scope == AP_LUA_SCOPE_SERVER) {
         ap_lua_server_spec* sspec = NULL;
         lua_settop(L, 0);
@@ -207,6 +216,7 @@ static ap_lua_vm_spec *create_vm_spec(apr_pool_t **lifecycle_pool,
     case AP_LUA_SCOPE_ONCE:
     case AP_LUA_SCOPE_UNSET:
         apr_pool_create(&pool, r->pool);
+        apr_pool_tag(pool, "mod_lua-vm");
         break;
     case AP_LUA_SCOPE_REQUEST:
         pool = r->pool;
@@ -328,7 +338,8 @@ static int lua_handler(request_rec *r)
 /* ------------------- Input/output content filters ------------------- */
 
 
-static apr_status_t lua_setup_filter_ctx(ap_filter_t* f, request_rec* r, lua_filter_ctx** c) {
+static apr_status_t lua_setup_filter_ctx(ap_filter_t* f, request_rec* r, lua_filter_ctx** c)
+{
     apr_pool_t *pool;
     ap_lua_vm_spec *spec;
     int n, rc;
@@ -418,7 +429,8 @@ static apr_status_t lua_setup_filter_ctx(ap_filter_t* f, request_rec* r, lua_fil
     return APR_ENOENT;
 }
 
-static apr_status_t lua_output_filter_handle(ap_filter_t *f, apr_bucket_brigade *pbbIn) {
+static apr_status_t lua_output_filter_handle(ap_filter_t *f, apr_bucket_brigade *pbbIn)
+{
     request_rec *r = f->r;
     int rc;
     lua_State *L;
@@ -500,9 +512,9 @@ static apr_status_t lua_output_filter_handle(ap_filter_t *f, apr_bucket_brigade 
                 ap_remove_output_filter(f);
                 apr_brigade_cleanup(pbbIn);
                 apr_brigade_cleanup(ctx->tmpBucket);
-                ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
-                                    "lua: Error while executing filter: %s",
-                        lua_tostring(L, -1));
+                ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(02663)
+                              "lua: Error while executing filter: %s",
+                              lua_tostring(L, -1));
                 return HTTP_INTERNAL_SERVER_ERROR;
             }
         }
@@ -587,7 +599,7 @@ static apr_status_t lua_input_filter_handle(ap_filter_t *f,
     /* While the Lua function is still yielding, pass buckets to the coroutine */
     if (!ctx->broken) {
         lastCall = 0;
-        while(!APR_BRIGADE_EMPTY(ctx->tmpBucket)) {
+        while (!APR_BRIGADE_EMPTY(ctx->tmpBucket)) {
             apr_bucket *pbktIn = APR_BRIGADE_FIRST(ctx->tmpBucket);
             apr_bucket *pbktOut;
             const char *data;
@@ -722,7 +734,8 @@ static int lua_request_rec_hook_harness(request_rec *r, const char *name, int ap
                               hook_spec->file_name, hook_spec->function_name, name, rc);
             }
             else { 
-                ap_log_rerror(APLOG_MARK, APLOG_CRIT, 0, r, "Lua hook %s:%s for phase %s did not return a numeric value", 
+                ap_log_rerror(APLOG_MARK, APLOG_CRIT, 0, r, APLOGNO(03017)
+                              "Lua hook %s:%s for phase %s did not return a numeric value",
                               hook_spec->file_name, hook_spec->function_name, name);
                 return HTTP_INTERNAL_SERVER_ERROR;
             }
@@ -900,7 +913,7 @@ typedef struct cr_ctx
 } cr_ctx;
 
 
-/* Okay, this deserves a little explaination -- in order for the errors that lua
+/* Okay, this deserves a little explanation -- in order for the errors that lua
  * generates to be 'accuarate', including line numbers, we basically inject
  * N line number new lines into the 'top' of the chunk reader.....
  *
@@ -1070,7 +1083,7 @@ static const char *register_named_block_function_hook(const char *name,
             luaL_buffinit(lvm, &b);
             lua_dump(lvm, ldump_writer, &b);
             luaL_pushresult(&b);
-            spec->bytecode_len = lua_strlen(lvm, -1);
+            spec->bytecode_len = lua_rawlen(lvm, -1);
             spec->bytecode = apr_pstrmemdup(cmd->pool, lua_tostring(lvm, -1),
                                             spec->bytecode_len);
             lua_close(lvm);
@@ -1247,7 +1260,8 @@ static int lua_auth_checker_harness_last(request_rec *r)
 }
 static void lua_insert_filter_harness(request_rec *r)
 {
-    /* ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, "LuaHookInsertFilter not yet implemented"); */
+    /* ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(03223)
+     *               "LuaHookInsertFilter not yet implemented"); */
 }
 
 static int lua_log_transaction_harness(request_rec *r)
@@ -1692,6 +1706,7 @@ static const char *lua_authz_parse(cmd_parms *cmd, const char *require_line,
 {
     const char *provider_name;
     lua_authz_provider_spec *spec;
+    lua_authz_provider_func *func = apr_pcalloc(cmd->pool, sizeof(lua_authz_provider_func));
 
     apr_pool_userdata_get((void**)&provider_name, AUTHZ_PROVIDER_NAME_NOTE,
                           cmd->temp_pool);
@@ -1699,16 +1714,17 @@ static const char *lua_authz_parse(cmd_parms *cmd, const char *require_line,
 
     spec = apr_hash_get(lua_authz_providers, provider_name, APR_HASH_KEY_STRING);
     ap_assert(spec != NULL);
+    func->spec = spec;
 
     if (require_line && *require_line) {
         const char *arg;
-        spec->args = apr_array_make(cmd->pool, 2, sizeof(const char *));
+        func->args = apr_array_make(cmd->pool, 2, sizeof(const char *));
         while ((arg = ap_getword_conf(cmd->pool, &require_line)) && *arg) {
-            APR_ARRAY_PUSH(spec->args, const char *) = arg;
+            APR_ARRAY_PUSH(func->args, const char *) = arg;
         }
     }
 
-    *parsed_require_line = spec;
+    *parsed_require_line = func;
     return NULL;
 }
 
@@ -1722,7 +1738,8 @@ static authz_status lua_authz_check(request_rec *r, const char *require_line,
                                                          &lua_module);
     const ap_lua_dir_cfg *cfg = ap_get_module_config(r->per_dir_config,
                                                      &lua_module);
-    const lua_authz_provider_spec *prov_spec = parsed_require_line;
+    const lua_authz_provider_func *prov_func = parsed_require_line;
+    const lua_authz_provider_spec *prov_spec = prov_func->spec;
     int result;
     int nargs = 0;
 
@@ -1744,19 +1761,19 @@ static authz_status lua_authz_check(request_rec *r, const char *require_line,
         return AUTHZ_GENERAL_ERROR;
     }
     ap_lua_run_lua_request(L, r);
-    if (prov_spec->args) {
+    if (prov_func->args) {
         int i;
-        if (!lua_checkstack(L, prov_spec->args->nelts)) {
+        if (!lua_checkstack(L, prov_func->args->nelts)) {
             ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(02315)
                           "Error: authz provider %s: too many arguments", prov_spec->name);
             ap_lua_release_state(L, spec, r);
             return AUTHZ_GENERAL_ERROR;
         }
-        for (i = 0; i < prov_spec->args->nelts; i++) {
-            const char *arg = APR_ARRAY_IDX(prov_spec->args, i, const char *);
+        for (i = 0; i < prov_func->args->nelts; i++) {
+            const char *arg = APR_ARRAY_IDX(prov_func->args, i, const char *);
             lua_pushstring(L, arg);
         }
-        nargs = prov_spec->args->nelts;
+        nargs = prov_func->args->nelts;
     }
     if (lua_pcall(L, 1 + nargs, 1, 0)) {
         const char *err = lua_tostring(L, -1);
@@ -1943,6 +1960,7 @@ static void *create_dir_config(apr_pool_t *p, char *dir)
     cfg->codecache = AP_LUA_CACHE_UNSET;
     cfg->vm_min = 0;
     cfg->vm_max = 0;
+    cfg->inherit = AP_LUA_INHERIT_UNSET;
 
     return cfg;
 }
@@ -1960,8 +1978,6 @@ static void *create_server_config(apr_pool_t *p, server_rec *s)
 {
 
     ap_lua_server_cfg *cfg = apr_pcalloc(p, sizeof(ap_lua_server_cfg));
-    cfg->vm_reslists = apr_hash_make(p);
-    apr_thread_rwlock_create(&cfg->vm_reslists_lock, p);
     cfg->root_path = NULL;
 
     return cfg;
@@ -1984,7 +2000,6 @@ static int lua_post_config(apr_pool_t *pconf, apr_pool_t *plog,
                              apr_pool_t *ptemp, server_rec *s)
 {
     apr_pool_t **pool;
-    const char *tempdir;
     apr_status_t rs;
 
     lua_ssl_val = APR_RETRIEVE_OPTIONAL_FN(ssl_var_lookup);
@@ -2000,25 +2015,25 @@ static int lua_post_config(apr_pool_t *pconf, apr_pool_t *plog,
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    /* Create shared memory space */
-    rs = apr_temp_dir_get(&tempdir, pconf);
-    if (rs != APR_SUCCESS) {
-        ap_log_error(APLOG_MARK, APLOG_ERR, rs, s,
-                 "mod_lua IVM: Failed to find temporary directory");
-        return HTTP_INTERNAL_SERVER_ERROR;
+    /* Create shared memory space, anonymous first if possible. */
+    rs = apr_shm_create(&lua_ivm_shm, sizeof pool, NULL, pconf);
+    if (APR_STATUS_IS_ENOTIMPL(rs)) {
+        /* Fall back to filename-based; nuke any left-over first. */
+        lua_ivm_shmfile = ap_runtime_dir_relative(pconf, DEFAULT_LUA_SHMFILE);
+
+        apr_shm_remove(lua_ivm_shmfile, pconf);
+        
+        rs = apr_shm_create(&lua_ivm_shm, sizeof pool, lua_ivm_shmfile, pconf);
     }
-    lua_ivm_shmfile = apr_psprintf(pconf, "%s/httpd_lua_shm.%ld", tempdir,
-                           (long int)getpid());
-    rs = apr_shm_create(&lua_ivm_shm, sizeof(apr_pool_t**),
-                    (const char *) lua_ivm_shmfile, pconf);
     if (rs != APR_SUCCESS) {
-        ap_log_error(APLOG_MARK, APLOG_ERR, rs, s,
+        ap_log_error(APLOG_MARK, APLOG_ERR, rs, s, APLOGNO(02665)
             "mod_lua: Failed to create shared memory segment on file %s",
-                     lua_ivm_shmfile);
+                     lua_ivm_shmfile ? lua_ivm_shmfile : "(anonymous)");
         return HTTP_INTERNAL_SERVER_ERROR;
     }
     pool = (apr_pool_t **)apr_shm_baseaddr_get(lua_ivm_shm);
     apr_pool_create(pool, pconf);
+    apr_pool_tag(*pool, "mod_lua-shared");
     apr_pool_cleanup_register(pconf, NULL, shm_cleanup_wrapper,
                           apr_pool_cleanup_null);
     return OK;
