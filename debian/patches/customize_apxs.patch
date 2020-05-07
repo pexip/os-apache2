@@ -16,7 +16,7 @@ Last-Update: 2012-03-17
 +  qw(SHLTCFLAGS CFLAGS CPPFLAGS NOTEST_CPPFLAGS EXTRA_CPPFLAGS EXTRA_CFLAGS);
  my $CFG_LDFLAGS    = join ' ', map { get_vars($_) }
    qw(LDFLAGS NOTEST_LDFLAGS SH_LDFLAGS);
- my $includedir     = get_vars("includedir");
+ my $includedir     = $destdir . get_vars("includedir");
 @@ -276,6 +276,7 @@
      $data =~ s|%TARGET%|$CFG_TARGET|sg;
      $data =~ s|%PREFIX%|$prefix|sg;
@@ -45,7 +45,7 @@ Last-Update: 2012-03-17
      &execute_cmds(@cmds);
 @@ -503,7 +504,7 @@
          if ($opt_i) {
- 	    push(@cmds, "$installbuilddir/instdso.sh SH_LIBTOOL='" .
+ 	    push(@cmds, $destdir . "$installbuilddir/instdso.sh SH_LIBTOOL='" .
                   "$libtool' $f $CFG_LIBEXECDIR");
 -	    push(@cmds, "chmod 755 $CFG_LIBEXECDIR/$t");
 +	    push(@cmds, "chmod 644 $CFG_LIBEXECDIR/$t");
