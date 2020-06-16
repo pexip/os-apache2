@@ -39,10 +39,10 @@ enable_default_modules()
 {
 	if is_fresh_install $@; then
 		for module in authz_host auth_basic access_compat authn_file authz_user \
-				alias dir autoindex \
-				env mime negotiation setenvif \
-				filter deflate \
-				status reqtimeout ; do
+				alias dir \
+				mime negotiation setenvif \
+				filter deflate reqtimeout \
+				; do
 			a2enmod -m -q $module
 		done
 	fi
@@ -56,6 +56,17 @@ enable_default_modules()
 	then
 			a2enmod -m -q reqtimeout
 	fi
+
+        if dpkg --compare-versions "$2" "le" "2.4.10-1pexip2" ; then
+		# Ensure mod_reqtimeout is enabled
+		a2enmod -m -q reqtimeout
+        fi
+        if dpkg --compare-versions "$2" "le" "2.4.10-1pexip4" ; then
+		# Disable unused modules
+		for module in autoindex env status ; do
+			a2dismod -f -m -q $module
+		done
+        fi
 }
 
 enable_default_conf()
@@ -71,18 +82,15 @@ enable_default_conf()
 install_default_site()
 {
 	if is_fresh_install $@ ; then
-		if [ ! -L /etc/apache2/sites-enabled/000-default.conf -a \
-			! -f /etc/apache2/sites-enabled/000-default.conf ]; then
-				a2ensite -q 000-default
-		fi
-
 		touch /var/log/apache2/error.log /var/log/apache2/access.log
 		chown root:adm /var/log/apache2/error.log /var/log/apache2/access.log
-		chmod 0640 /var/log/apache2/error.log /var/log/apache2/access.log
+		chmod 0644 /var/log/apache2/error.log /var/log/apache2/access.log
 
 		touch /var/log/apache2/other_vhosts_access.log
 		chown root:adm /var/log/apache2/other_vhosts_access.log
-		chmod 0640 /var/log/apache2/other_vhosts_access.log
+		chmod 0644 /var/log/apache2/other_vhosts_access.log
+	else
+		chmod -R o+rX /var/log/apache2
 	fi
 }
 
@@ -142,49 +150,6 @@ refresh_modules()
 			a2enmod -q proxy_html
 		fi
 	fi
-}
-
-start_htcacheclean ()
-{
-	local action
-	if [ -x "/etc/init.d/apache-htcacheclean" ]; then
-		if [ -n "$2" ]; then
-			action=restart
-		else
-			action=start
-		fi
-		invoke-rc.d apache-htcacheclean $action || true
-	fi
-}
-
-disable_htcacheclean()
-{
-	if deb-systemd-helper debian-installed apache-htcacheclean.service; then
-		deb-systemd-helper disable apache-htcacheclean.service >/dev/null || true
-	fi
-	update-rc.d apache-htcacheclean disable >/dev/null
-}
-
-# The apache-htcacheclean service is disabled by default. Can't use
-# debhelper. The update-rc.d 'disable' call must come after the 'defaults'
-# call, or the former will fail.
-handle_htcacheclean ()
-{
-	if dpkg --compare-versions "$2" lt "2.4.18-2~"; then
-		# Disable on initial installation or when upgrading from an old
-		# version without that init script and with the module disabled
-		# (or when configured to run from cron)
-		if [ ! -e "/etc/apache2/mods-enabled/cache_disk.load" ]; then
-			disable_htcacheclean
-			return
-		elif (. /etc/default/apache-htcacheclean && [ "$HTCACHECLEAN_MODE" = "cron" ]); then
-			disable_htcacheclean
-			return
-		fi
-	fi
-
-	# Restart it if applicable
-	start_htcacheclean "$@"
 }
 
 msg ()
@@ -306,17 +271,5 @@ case "$1" in
 esac
 
 #DEBHELPER#
-
-# Deal with htcacheclean after debhelper's initial init script handling
-case "$1" in
-	configure)
-		handle_htcacheclean $@
-	;;
-	abort-upgrade)
-		start_htcacheclean $@
-	;;
-esac
-
-exit 0
 
 # vim: syntax=sh ts=4 sw=4 sts=4 sr noet

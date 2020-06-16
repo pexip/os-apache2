@@ -45,3 +45,11 @@ export LANG
 ## This will produce a verbose output on package installations of web server modules and web application
 ## installations which interact with Apache
 #export APACHE2_MAINTSCRIPT_DEBUG=1
+
+if [ -d "${APACHE_CONFDIR}/envvars.d" ]; then
+	for i in ${APACHE_CONFDIR}/envvars.d/*.conf; do
+		if [ -r "$i" ]; then
+			. "$i"
+		fi
+	done
+fi
