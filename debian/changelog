@@ -1,3 +1,11 @@
+apache2 (2.4.43-1pexip2) pexip; urgency=medium
+
+  * Remove our forking.conf systemd service, not needed now we're up
+    to date
+  * Fix broken date in the changelog for 2.4.43-1pexip1
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Mon, 22 Jun 2020 14:12:31 +0100
+
 apache2 (2.4.43-1pexip1) pexip; urgency=medium
 
   * Refactor our Pexip changes to sit on top of current Debian
@@ -37,7 +45,7 @@ apache2 (2.4.43-1pexip1) pexip; urgency=medium
       - proxy_http2
     + Removed htcacheclean, not something we use at all
 
- -- Steve McIntyre <steve.mcintyre@pexip.com>  Thu, 16 Jun 2020 12:08:16 +0100
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Thu, 18 Jun 2020 12:08:16 +0100
 
 apache2 (2.4.43-1) unstable; urgency=medium
 
