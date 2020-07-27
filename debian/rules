@@ -126,6 +126,7 @@ configure-stamp: prebuild-checks-stamp support/suexec-custom.c
 		--disable-md \
 		--disable-proxy-fdpass \
 		--disable-proxy-http2 \
+		--disable-lua --disable-luajit \
 		CFLAGS="$(AP2_CFLAGS)" CPPFLAGS="$(AP2_CPPFLAGS)" LDFLAGS="$(AP2_LDFLAGS)" \
 		LTFLAGS="$(AP2_LTFLAGS)" SHELL=/bin/bash GREP=/bin/grep
 	touch $@
