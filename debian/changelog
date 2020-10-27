@@ -1,3 +1,9 @@
+apache2 (2.4.46-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 27 Oct 2020 14:28:48 +0000
+
 apache2 (2.4.43-1pexip5) pexip; urgency=medium
 
   * Rebuild again in buster, -1pexip4 was built in stretch sandbox by
