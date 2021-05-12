@@ -1,3 +1,9 @@
+apache2 (2.4.51-0pexip2) pexip; urgency=medium
+
+  * Build-Depend on libssl3-dev
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 12 May 2021 16:04:22 +0100
+
 apache2 (2.4.51-0pexip1) pexip; urgency=medium
 
   * New upstream release
