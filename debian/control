@@ -16,7 +16,7 @@ Build-Depends: debhelper (>= 10),
                libaprutil1-dev,
                libnghttp2-dev,
                libpcre3-dev,
-               libssl1.0-dev | libssl-dev (<< 1.1),
+               libssl-dev (>= 3),
                libxml2-dev,
                lsb-release,
                perl,
@@ -185,7 +185,7 @@ Description: Apache HTTP Server (development headers)
 Package: apache2-ssl-dev
 Architecture: any
 Depends: apache2-dev (= ${binary:Version}),
-         libssl-dev (>= 1.1),
+         libssl-dev (>= 3),
          ${misc:Depends}
 Description: Apache HTTP Server (mod_ssl development headers)
  The Apache HTTP Server Project's goal is to build a secure, efficient and
