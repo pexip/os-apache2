@@ -1,0 +1,473 @@
+diff --git a/modules/ssl/ssl_engine_config.c b/modules/ssl/ssl_engine_config.c
+index 97778a82..c9745e1b 100644
+--- a/modules/ssl/ssl_engine_config.c
++++ b/modules/ssl/ssl_engine_config.c
+@@ -607,6 +607,7 @@ const char *ssl_cmd_SSLCryptoDevice(cmd_parms *cmd,
+     if (strcEQ(arg, "builtin")) {
+         mc->szCryptoDevice = NULL;
+     }
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     else if ((e = ENGINE_by_id(arg))) {
+         mc->szCryptoDevice = arg;
+         ENGINE_free(e);
+@@ -624,6 +625,7 @@ const char *ssl_cmd_SSLCryptoDevice(cmd_parms *cmd,
+         }
+         return err;
+     }
++#endif
+ 
+     return NULL;
+ }
+diff --git a/modules/ssl/ssl_engine_init.c b/modules/ssl/ssl_engine_init.c
+index 807c8410..b1598c4c 100644
+--- a/modules/ssl/ssl_engine_init.c
++++ b/modules/ssl/ssl_engine_init.c
+@@ -93,6 +93,7 @@ static int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g)
+ }
+ #endif
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+ /*
+  * Grab well-defined DH parameters from OpenSSL, see the BN_get_rfc*
+  * functions in <openssl/bn.h> for all available primes.
+@@ -171,6 +172,7 @@ DH *modssl_get_dh_params(unsigned keylen)
+         
+     return NULL; /* impossible to reach. */
+ }
++#endif
+ 
+ static void ssl_add_version_components(apr_pool_t *ptemp, apr_pool_t *pconf,
+                                        server_rec *s)
+@@ -435,7 +436,9 @@ apr_status_t ssl_init_Module(apr_pool_t *p, apr_pool_t *plog,
+ 
+     modssl_init_app_data2_idx(); /* for modssl_get_app_data2() at request time */
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     init_dh_params();
++#endif
+ #if !MODSSL_USE_OPENSSL_PRE_1_1_API
+     init_bio_methods();
+ #endif
+@@ -451,9 +455,12 @@ apr_status_t ssl_init_Module(apr_pool_t *p, apr_pool_t *plog,
+ apr_status_t ssl_init_Engine(server_rec *s, apr_pool_t *p)
+ {
+     SSLModConfigRec *mc = myModConfig(s);
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     ENGINE *e;
++#endif
+ 
+     if (mc->szCryptoDevice) {
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+         if (!(e = ENGINE_by_id(mc->szCryptoDevice))) {
+             ap_log_error(APLOG_MARK, APLOG_EMERG, 0, s, APLOGNO(01888)
+                          "Init: Failed to load Crypto Device API `%s'",
+@@ -480,6 +487,7 @@ apr_status_t ssl_init_Engine(server_rec *s, apr_pool_t *p)
+                      mc->szCryptoDevice);
+ 
+         ENGINE_free(e);
++#endif
+     }
+ 
+     return APR_SUCCESS;
+@@ -829,7 +837,9 @@ static void ssl_init_ctx_callbacks(server_rec *s,
+ {
+     SSL_CTX *ctx = mctx->ssl_ctx;
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     SSL_CTX_set_tmp_dh_callback(ctx,  ssl_callback_TmpDH);
++#endif
+ 
+     SSL_CTX_set_info_callback(ctx, ssl_callback_Info);
+ 
+@@ -1244,11 +1254,19 @@ static apr_status_t ssl_init_server_certs(server_rec *s,
+     const char *vhost_id = mctx->sc->vhost_id, *key_id, *certfile, *keyfile;
+     int i;
+     X509 *cert;
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     DH *dhparams;
++#else
++    EVP_PKEY *dhparams = NULL;
++#endif
+ #ifdef HAVE_ECC
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     EC_GROUP *ecparams = NULL;
+     int nid;
+     EC_KEY *eckey = NULL;
++#else
++    EVP_PKEY *ecparams = NULL;
++#endif
+ #endif
+ #ifndef HAVE_SSL_CONF_CMD
+     SSL *ssl;
+@@ -1430,17 +1448,33 @@ static apr_status_t ssl_init_server_certs(server_rec *s,
+     certfile = APR_ARRAY_IDX(mctx->pks->cert_files, 0, const char *);
+     if (certfile && !modssl_is_engine_id(certfile)
+         && (dhparams = ssl_dh_GetParamFromFile(certfile))) {
++        int dh_bits = 0;
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
++        dh_bits = DH_bits(dhparams);
+         SSL_CTX_set_tmp_dh(mctx->ssl_ctx, dhparams);
++#else
++        EVP_PKEY_get_int_param(dhparams, OSSL_PKEY_PARAM_BITS, &dh_bits);
++        if (!SSL_CTX_set0_tmp_dh_pkey(mctx->ssl_ctx, dhparams)) {
++            EVP_PKEY_free(dhparams);
++        }
++#endif
+         ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(02540)
+                      "Custom DH parameters (%d bits) for %s loaded from %s",
+-                     DH_bits(dhparams), vhost_id, certfile);
++                     dh_bits, vhost_id, certfile);
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+         DH_free(dhparams);
++#endif
++    } else {
++#if !MODSSL_USE_OPENSSL_PRE_3_0_API
++        SSL_CTX_set_dh_auto(mctx->ssl_ctx, 1);
++#endif
+     }
+ 
+ #ifdef HAVE_ECC
+     /*
+      * Similarly, try to read the ECDH curve name from SSLCertificateFile...
+      */
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     if (certfile && !modssl_is_engine_id(certfile)
+         && (ecparams = ssl_ec_GetParamFromFile(certfile))
+         && (nid = EC_GROUP_get_curve_name(ecparams)) 
+@@ -1469,6 +1503,19 @@ static apr_status_t ssl_init_server_certs(server_rec *s,
+     EC_KEY_free(eckey);
+     EC_GROUP_free(ecparams);
+ #endif
++#else
++    if (certfile && !modssl_is_engine_id(certfile)
++        && (ecparams = ssl_ec_GetParamFromFile(certfile))) {
++        char cname[128];
++        if (EVP_PKEY_get_group_name(key, cname, sizeof(cname), NULL)) {
++            if (SSL_CTX_set1_groups_list(mctx-ssl_ctx, cname)) {
++                ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(02541)
++                             "ECDH curve %s for %s specified in %s",
++                              cname, vhost_id, certfile);
++            }
++        }
++    }
++#endif
+ 
+     return APR_SUCCESS;
+ }
+@@ -1515,8 +1562,13 @@ static apr_status_t ssl_init_ticket_key(server_rec *s,
+     memcpy(ticket_key->hmac_secret, buf + 16, 16);
+     memcpy(ticket_key->aes_key, buf + 32, 16);
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     if (!SSL_CTX_set_tlsext_ticket_key_cb(mctx->ssl_ctx,
+                                           ssl_callback_SessionTicket)) {
++#else
++    if (!SSL_CTX_set_tlsext_ticket_key_evp_cb(mctx->ssl_ctx,
++                                              ssl_callback_SessionTicket)) {
++#endif
+         ap_log_error(APLOG_MARK, APLOG_EMERG, 0, s, APLOGNO(01913)
+                      "Unable to initialize TLS session ticket key callback "
+                      "(incompatible OpenSSL version?)");
+@@ -2245,7 +2297,9 @@ apr_status_t ssl_init_ModuleKill(void *data)
+ #if !MODSSL_USE_OPENSSL_PRE_1_1_API
+     free_bio_methods();
+ #endif
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     free_dh_params();
++#endif
+ 
+     return APR_SUCCESS;
+ }
+diff --git a/modules/ssl/ssl_engine_kernel.c b/modules/ssl/ssl_engine_kernel.c
+index 08a7b8dd..85dfaa27 100644
+--- a/modules/ssl/ssl_engine_kernel.c
++++ b/modules/ssl/ssl_engine_kernel.c
+@@ -1664,6 +1664,7 @@ const authz_provider ssl_authz_provider_verify_client =
+ **  _________________________________________________________________
+ */
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+ /*
+  * Hand out standard DH parameters, based on the authentication strength
+  */
+@@ -1709,6 +1710,7 @@ DH *ssl_callback_TmpDH(SSL *ssl, int export, int keylen)
+ 
+     return modssl_get_dh_params(keylen);
+ }
++#endif
+ 
+ /*
+  * This OpenSSL callback function is called when OpenSSL
+@@ -2581,7 +2583,11 @@ int ssl_callback_SessionTicket(SSL *ssl,
+                                unsigned char *keyname,
+                                unsigned char *iv,
+                                EVP_CIPHER_CTX *cipher_ctx,
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+                                HMAC_CTX *hctx,
++#else
++                               EVP_MAC_CTX *mac_ctx,
++#endif
+                                int mode)
+ {
+     conn_rec *c = (conn_rec *)SSL_get_app_data(ssl);
+@@ -2590,6 +2596,9 @@ int ssl_callback_SessionTicket(SSL *ssl,
+     SSLConnRec *sslconn = myConnConfig(c);
+     modssl_ctx_t *mctx = myCtxConfig(sslconn, sc);
+     modssl_ticket_key_t *ticket_key = mctx->ticket_key;
++#if !MODSSL_USE_OPENSSL_PRE_3_0_API
++    OSSL_PARAM params[3];
++#endif
+ 
+     if (mode == 1) {
+         /* 
+@@ -2608,7 +2617,18 @@ int ssl_callback_SessionTicket(SSL *ssl,
+         }
+         EVP_EncryptInit_ex(cipher_ctx, EVP_aes_128_cbc(), NULL,
+                            ticket_key->aes_key, iv);
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+         HMAC_Init_ex(hctx, ticket_key->hmac_secret, 16, tlsext_tick_md(), NULL);
++#else
++        params[0] = OSSL_PARAM_construct_octet_string(OSSL_MAC_PARAM_KEY,
++                                                      ticket_key->hmac_secret,
++                                                      16);
++        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
++                                                     (char *) EVP_MD_name(tlsext_tick_md()),
++                                                     0);
++        params[2] = OSSL_PARAM_construct_end();
++        EVP_MAC_CTX_set_params(mac_ctx, params);
++#endif
+ 
+         ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, APLOGNO(02289)
+                       "TLS session ticket key for %s successfully set, "
+@@ -2629,7 +2649,18 @@ int ssl_callback_SessionTicket(SSL *ssl,
+ 
+         EVP_DecryptInit_ex(cipher_ctx, EVP_aes_128_cbc(), NULL,
+                            ticket_key->aes_key, iv);
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+         HMAC_Init_ex(hctx, ticket_key->hmac_secret, 16, tlsext_tick_md(), NULL);
++#else
++        params[0] = OSSL_PARAM_construct_octet_string(OSSL_MAC_PARAM_KEY,
++                                                      ticket_key->hmac_secret,
++                                                      16);
++        params[1] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
++                                                     (char *) EVP_MD_name(tlsext_tick_md()),
++                                                     0);
++        params[2] = OSSL_PARAM_construct_end();
++        EVP_MAC_CTX_set_params(mac_ctx, params);
++#endif
+ 
+         ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, APLOGNO(02290)
+                       "TLS session ticket key for %s successfully set, "
+diff --git a/modules/ssl/ssl_engine_log.c b/modules/ssl/ssl_engine_log.c
+index 7dbbbdb5..6e43bc40 100644
+--- a/modules/ssl/ssl_engine_log.c
++++ b/modules/ssl/ssl_engine_log.c
+@@ -87,7 +87,11 @@ void ssl_log_ssl_error(const char *file, int line, int level, server_rec *s)
+     const char *data;
+     int flags;
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+     while ((e = ERR_peek_error_line_data(NULL, NULL, &data, &flags))) {
++#else
++    while ((e = ERR_peek_error_all(NULL, NULL, NULL, &data, &flags))) {
++#endif
+         const char *annotation;
+         char err[256];
+ 
+diff --git a/modules/ssl/ssl_engine_pphrase.c b/modules/ssl/ssl_engine_pphrase.c
+index d1859f79..5bf85b3b 100644
+--- a/modules/ssl/ssl_engine_pphrase.c
++++ b/modules/ssl/ssl_engine_pphrase.c
+@@ -831,7 +831,7 @@ apr_status_t modssl_load_engine_keypair(server_rec *s, apr_pool_t *p,
+                                         const char *certid, const char *keyid,
+                                         X509 **pubkey, EVP_PKEY **privkey)
+ {
+-#if defined(HAVE_OPENSSL_ENGINE_H) && defined(HAVE_ENGINE_INIT)
++#if defined(HAVE_OPENSSL_ENGINE_H) && defined(HAVE_ENGINE_INIT) && MODSSL_USE_OPENSSL_PRE_3_0_API
+     const char *c, *scheme;
+     ENGINE *e;
+     UI_METHOD *ui_method = get_passphrase_ui(p);
+diff --git a/modules/ssl/ssl_private.h b/modules/ssl/ssl_private.h
+index 9e8bf891..98512c01 100644
+--- a/modules/ssl/ssl_private.h
++++ b/modules/ssl/ssl_private.h
+@@ -99,6 +99,11 @@
+ #include <openssl/x509_vfy.h>
+ #include <openssl/ocsp.h>
+ 
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++#include <openssl/core_names.h>
++#include <openssl/decoder.h>
++#endif
++
+ /* Avoid tripping over an engine build installed globally and detected
+  * when the user points at an explicit non-engine flavor of OpenSSL
+  */
+@@ -144,6 +149,8 @@
+ #define MODSSL_USE_OPENSSL_PRE_1_1_API (OPENSSL_VERSION_NUMBER < 0x10100000L)
+ #endif
+ 
++#define MODSSL_USE_OPENSSL_PRE_3_0_API (OPENSSL_VERSION_NUMBER < 0x30000000L)
++
+ #if defined(OPENSSL_FIPS)
+ #define HAVE_FIPS
+ #endif
+@@ -195,7 +204,8 @@
+ #endif /* if !defined(OPENSSL_NO_OCSP) && defined(SSL_CTX_set_tlsext_status_cb) */
+ 
+ /* TLS session tickets */
+-#if defined(SSL_CTX_set_tlsext_ticket_key_cb)
++#if defined(SSL_CTX_set_tlsext_ticket_key_cb) || \
++    defined(SSL_CTX_set_tlsext_ticket_key_evp_cb)
+ #define HAVE_TLS_SESSION_TICKETS
+ #define TLSEXT_TICKET_KEY_LEN 48
+ #ifndef tlsext_tick_md
+@@ -919,7 +927,9 @@ extern const authz_provider ssl_authz_provider_require_ssl;
+ extern const authz_provider ssl_authz_provider_verify_client;
+ 
+ /**  OpenSSL callbacks */
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+ DH          *ssl_callback_TmpDH(SSL *, int, int);
++#endif
+ int          ssl_callback_SSLVerify(int, X509_STORE_CTX *);
+ int          ssl_callback_SSLVerify_CRL(int, X509_STORE_CTX *, conn_rec *);
+ int          ssl_callback_proxy_cert(SSL *ssl, X509 **x509, EVP_PKEY **pkey);
+@@ -934,8 +944,13 @@ int          ssl_callback_ServerNameIndication(SSL *, int *, modssl_ctx_t *);
+ int          ssl_callback_ClientHello(SSL *, int *, void *);
+ #endif
+ #ifdef HAVE_TLS_SESSION_TICKETS
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+ int         ssl_callback_SessionTicket(SSL *, unsigned char *, unsigned char *,
+                                        EVP_CIPHER_CTX *, HMAC_CTX *, int);
++#else
++int         ssl_callback_SessionTicket(SSL *, unsigned char *, unsigned char *,
++                                       EVP_CIPHER_CTX *, EVP_MAC_CTX *, int);
++#endif
+ #endif
+ 
+ #ifdef HAVE_TLS_ALPN
+@@ -1016,10 +1031,17 @@ apr_status_t modssl_load_engine_keypair(server_rec *s, apr_pool_t *p,
+                                         X509 **pubkey, EVP_PKEY **privkey);
+ 
+ /**  Diffie-Hellman Parameter Support  */
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+ DH           *ssl_dh_GetParamFromFile(const char *);
+ #ifdef HAVE_ECC
+ EC_GROUP     *ssl_ec_GetParamFromFile(const char *);
+ #endif
++#else
++EVP_PKEY     *ssl_dh_GetParamFromFile(const char *);
++#ifdef HAVE_ECC
++EVP_PKEY     *ssl_ec_GetParamFromFile(const char *);
++#endif
++#endif
+ 
+ /* Store the EVP_PKEY key (serialized into DER) in the hash table with
+  * key, returning the ssl_asn1_t structure pointer. */
+@@ -1108,10 +1130,12 @@ void ssl_init_ocsp_certificates(server_rec *s, modssl_ctx_t *mctx);
+ 
+ #endif
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+ /* Retrieve DH parameters for given key length.  Return value should
+  * be treated as unmutable, since it is stored in process-global
+  * memory. */
+ DH *modssl_get_dh_params(unsigned keylen);
++#endif
+ 
+ /* Returns non-zero if the request was made over SSL/TLS.  If sslconn
+  * is non-NULL and the request is using SSL/TLS, sets *sslconn to the
+diff --git a/modules/ssl/ssl_util_ssl.c b/modules/ssl/ssl_util_ssl.c
+index 74088f5e..70906082 100644
+--- a/modules/ssl/ssl_util_ssl.c
++++ b/modules/ssl/ssl_util_ssl.c
+@@ -464,6 +464,7 @@ BOOL modssl_X509_match_name(apr_pool_t *p, X509 *x509, const char *name,
+ **  _________________________________________________________________
+ */
+ 
++#if MODSSL_USE_OPENSSL_PRE_3_0_API
+ DH *ssl_dh_GetParamFromFile(const char *file)
+ {
+     DH *dh = NULL;
+@@ -489,6 +490,55 @@ EC_GROUP *ssl_ec_GetParamFromFile(const char *file)
+     return (group);
+ }
+ #endif
++#else
++EVP_PKEY *ssl_dh_GetParamFromFile(const char *file)
++{
++    OSSL_DECODER_CTX *ctx;
++    EVP_PKEY *pkey = NULL;
++    BIO *bio;
++
++    if ((ctx = OSSL_DECODER_CTX_new_for_pkey(&pkey,
++                                             "PEM",
++                                             NULL,
++                                             "DH",
++                                             OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
++                                             NULL,
++                                             NULL)) != NULL
++        && (bio = BIO_new_file(file, "r")) != NULL) {
++        OSSL_DECODER_from_bio(ctx, bio);
++    }
++    if (bio != NULL)
++        BIO_free(bio);
++    if (ctx != NULL)
++        OSSL_DECODER_CTX_free(ctx);
++    return (pkey);
++}
++
++#ifdef HAVE_ECC
++EVP_PKEY *ssl_ec_GetParamFromFile(const char *file)
++{
++    OSSL_DECODER_CTX *ctx;
++    EVP_PKEY *pkey = NULL;
++    BIO *bio;
++
++    if ((ctx = OSSL_DECODER_CTX_new_for_pkey(&pkey,
++                                             "PEM",
++                                             NULL,
++                                             "EC",
++                                             OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
++                                             NULL,
++                                             NULL)) != NULL
++        && (bio = BIO_new_file(file, "r")) != NULL) {
++        OSSL_DECODER_from_bio(ctx, bio);
++    }
++    if (bio != NULL)
++        BIO_free(bio);
++    if (ctx != NULL)
++        OSSL_DECODER_CTX_free(ctx);
++    return (pkey);
++}
++#endif
++#endif
+ 
+ /*  _________________________________________________________________
+ **
+diff --git a/support/ab.c b/support/ab.c
+index 71cf484f..221a8123 100644
+--- a/support/ab.c
++++ b/support/ab.c
+@@ -752,6 +752,7 @@ static void ssl_proceed_handshake(struct connection *c)
+                         break;
+ #ifndef OPENSSL_NO_EC
+                     case EVP_PKEY_EC: {
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
+                         const char *cname = NULL;
+                         EC_KEY *ec = EVP_PKEY_get1_EC_KEY(key);
+                         int nid = EC_GROUP_get_curve_name(EC_KEY_get0_group(ec));
+@@ -759,7 +760,12 @@ static void ssl_proceed_handshake(struct connection *c)
+                         cname = EC_curve_nid2nist(nid);
+                         if (!cname)
+                             cname = OBJ_nid2sn(nid);
+-
++#else
++                        char cname[128];
++                        if (!EVP_PKEY_get_group_name(key, cname, sizeof(cname), NULL)) {
++                            strcpy(cname, "Unknown");
++                        }
++#endif
+                         apr_snprintf(ssl_tmp_key, 128, "ECDH %s %d bits",
+                                      cname,
+                                      EVP_PKEY_bits(key));
