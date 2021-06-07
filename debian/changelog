@@ -1,3 +1,11 @@
+apache2 (2.4.48-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+  * debian/patches/buffer-http-request-bodies-for-tlsv13.diff,
+    debian/patches/tlsv13-add-logno.diff: Drop; merged upstream
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 07 Jun 2021 12:15:07 +0100
+
 apache2 (2.4.46-0pexip1) pexip; urgency=medium
 
   * New upstream release
