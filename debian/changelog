@@ -1,3 +1,9 @@
+apache2 (2.4.48-0pexip2) pexip; urgency=medium
+
+  * Rebuild to move libapache2-mod-wsgi-py3 into main.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Mon, 19 Jul 2021 11:26:06 +0100
+
 apache2 (2.4.48-0pexip1) pexip; urgency=medium
 
   * New upstream release
