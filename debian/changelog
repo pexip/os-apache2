@@ -1,3 +1,9 @@
+apache2 (2.4.48-0pexip3) pexip; urgency=medium
+
+  * Force removal of old config files on upgrade
+
+ -- Huw Jones <huw@pexip.com>  Wed, 4 Aug 2021 10:25:26 +0100
+
 apache2 (2.4.48-0pexip2) pexip; urgency=medium
 
   * Rebuild to move libapache2-mod-wsgi-py3 into main.
