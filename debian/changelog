@@ -1,3 +1,9 @@
+apache2 (2.4.49-0pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Fri, 17 Sep 2021 13:05:47 +0100
+
 apache2 (2.4.48-0pexip3) pexip; urgency=medium
 
   * Force removal of old config files on upgrade
