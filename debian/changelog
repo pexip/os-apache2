@@ -1,6 +1,7 @@
 apache2 (2.4.52-0pexip1) pexip; urgency=medium
 
   * New upstream release.
+  * Update and refresh patches.
 
  -- Mark Hymers <mark.hymers@pexip.com>  Mon, 20 Dec 2021 14:49:53 +0000
 
