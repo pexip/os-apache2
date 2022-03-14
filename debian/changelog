@@ -1,3 +1,15 @@
+apache2 (2.4.53-0pexip1) pexip; urgency=medium
+
+  * New upstream release.
+    + mod_lua: Fix use of uninitialized value of in r:parsebody
+      (CVE-2022-22719)
+    + core: Fix HTTP request smuggling vulnerability (CVE-2022-22720)
+    + core: Make sure and check that LimitXMLRequestBody fits in
+      system memory. (CVE-2022-22721)
+    + mod_sed: Fix read/write beyond bounds. (CVE-2022-23943)
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Mon, 14 Mar 2022 15:21:10 +0000
+
 apache2 (2.4.52-0pexip1) pexip; urgency=medium
 
   * New upstream release.
