@@ -2,28 +2,36 @@ Description: Fix up FHS file locations for apache2 droppings.
 Forwarded: not-needed
 Author: Adam Conrad <adconrad@0c3.net>
 Last-Update: 2012-02-25
---- a/configure
-+++ b/configure
-@@ -41848,13 +41848,13 @@
- ap_prefix="${ap_cur}"
+Index: os-apache2/configure
+===================================================================
+--- os-apache2.orig/configure
++++ os-apache2/configure
+@@ -41141,17 +41141,17 @@ ap_prefix="${ap_cur}"
  
  
--printf "%s\n" "#define HTTPD_ROOT \"${ap_prefix}\"" >>confdefs.h
-+printf "%s\n" "#define HTTPD_ROOT \"/etc/apache2\"" >>confdefs.h
+ cat >>confdefs.h <<_ACEOF
+-#define HTTPD_ROOT "${ap_prefix}"
++#define HTTPD_ROOT "/etc/apache2"
+ _ACEOF
  
  
--printf "%s\n" "#define SERVER_CONFIG_FILE \"${rel_sysconfdir}/${progname}.conf\"" >>confdefs.h
-+printf "%s\n" "#define SERVER_CONFIG_FILE \"${progname}.conf\"" >>confdefs.h
+ cat >>confdefs.h <<_ACEOF
+-#define SERVER_CONFIG_FILE "${rel_sysconfdir}/${progname}.conf"
++#define SERVER_CONFIG_FILE "${progname}.conf"
+ _ACEOF
  
  
--printf "%s\n" "#define AP_TYPES_CONFIG_FILE \"${rel_sysconfdir}/mime.types\"" >>confdefs.h
-+printf "%s\n" "#define AP_TYPES_CONFIG_FILE \"mime.types\"" >>confdefs.h
+ cat >>confdefs.h <<_ACEOF
+-#define AP_TYPES_CONFIG_FILE "${rel_sysconfdir}/mime.types"
++#define AP_TYPES_CONFIG_FILE "mime.types"
+ _ACEOF
  
  
- perlbin=`$ac_aux_dir/PrintPath perl`
---- a/configure.in
-+++ b/configure.in
-@@ -878,11 +878,11 @@
+Index: os-apache2/configure.in
+===================================================================
+--- os-apache2.orig/configure.in
++++ os-apache2/configure.in
+@@ -901,11 +901,11 @@ rm -f modules.c
  echo $MODLIST | $AWK -f $srcdir/build/build-modules-c.awk > modules.c
  
  APR_EXPAND_VAR(ap_prefix, $prefix)
@@ -38,8 +46,10 @@ Last-Update: 2012-02-25
  	[Location of the MIME types config file, relative to the Apache root directory])
  
  perlbin=`$ac_aux_dir/PrintPath perl`
---- a/include/ap_config_layout.h.in
-+++ b/include/ap_config_layout.h.in
+Index: os-apache2/include/ap_config_layout.h.in
+===================================================================
+--- os-apache2.orig/include/ap_config_layout.h.in
++++ os-apache2/include/ap_config_layout.h.in
 @@ -60,5 +60,6 @@
  #define DEFAULT_REL_LOGFILEDIR "@rel_logfiledir@"
  #define DEFAULT_EXP_PROXYCACHEDIR "@exp_proxycachedir@"
@@ -47,9 +57,11 @@ Last-Update: 2012-02-25
 +#define DEFAULT_PIDLOG "/var/run/apache2.pid"
  
  #endif /* AP_CONFIG_LAYOUT_H */
---- a/include/httpd.h
-+++ b/include/httpd.h
-@@ -109,7 +109,7 @@
+Index: os-apache2/include/httpd.h
+===================================================================
+--- os-apache2.orig/include/httpd.h
++++ os-apache2/include/httpd.h
+@@ -110,7 +110,7 @@ extern "C" {
  #define DOCUMENT_LOCATION  HTTPD_ROOT "/docs"
  #else
  /* Set default for non OS/2 file system */
