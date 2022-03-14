@@ -24,6 +24,7 @@
 #include <http_protocol.h>
 #include <http_request.h>
 #include <http_log.h>
+#include <mpm_common.h>
 
 #include "mod_http2.h"
 
@@ -180,15 +181,33 @@ static void http2_get_num_workers(server_rec *s, int *minw, int *maxw)
 /* Runs once per created child process. Perform any process 
  * related initionalization here.
  */
-static void h2_child_init(apr_pool_t *pool, server_rec *s)
+static void h2_child_init(apr_pool_t *pchild, server_rec *s)
 {
+    apr_allocator_t *allocator;
+    apr_thread_mutex_t *mutex;
+    apr_status_t status;
+
+    /* The allocator of pchild has no mutex with MPM prefork, but we need one
+     * for h2 workers threads synchronization. Even though mod_http2 shouldn't
+     * be used with prefork, better be safe than sorry, so forcibly set the
+     * mutex here. For MPM event/worker, pchild has no allocator so pconf's
+     * is used, with its mutex.
+     */
+    allocator = apr_pool_allocator_get(pchild);
+    if (allocator) {
+        mutex = apr_allocator_mutex_get(allocator);
+        if (!mutex) {
+            apr_thread_mutex_create(&mutex, APR_THREAD_MUTEX_DEFAULT, pchild);
+            apr_allocator_mutex_set(allocator, mutex);
+        }
+    }
+
     /* Set up our connection processing */
-    apr_status_t status = h2_conn_child_init(pool, s);
+    status = h2_conn_child_init(pchild, s);
     if (status != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_ERR, status, s,
                      APLOGNO(02949) "initializing connection handling");
     }
-    
 }
 
 /* Install this module into the apache2 infrastructure.
@@ -210,7 +229,9 @@ static void h2_hooks(apr_pool_t *pool)
     /* Run once after a child process has been created.
      */
     ap_hook_child_init(h2_child_init, NULL, NULL, APR_HOOK_MIDDLE);
-
+#if AP_MODULE_MAGIC_AT_LEAST(20120211, 110)
+    ap_hook_child_stopping(h2_conn_child_stopping, NULL, NULL, APR_HOOK_MIDDLE);
+#endif
     h2_h2_register_hooks();
     h2_switch_register_hooks();
     h2_task_register_hooks();
@@ -237,7 +258,7 @@ static const char *val_H2_PUSH(apr_pool_t *p, server_rec *s,
     if (ctx) {
         if (r) {
             if (ctx->task) {
-                h2_stream *stream = h2_mplx_stream_get(ctx->task->mplx, ctx->task->stream_id);
+                h2_stream *stream = h2_mplx_t_stream_get(ctx->task->mplx, ctx->task);
                 if (stream && stream->push_policy != H2_PUSH_NONE) {
                     return "on";
                 }
@@ -271,7 +292,7 @@ static const char *val_H2_PUSHED_ON(apr_pool_t *p, server_rec *s,
 {
     if (ctx) {
         if (ctx->task && !H2_STREAM_CLIENT_INITIATED(ctx->task->stream_id)) {
-            h2_stream *stream = h2_mplx_stream_get(ctx->task->mplx, ctx->task->stream_id);
+            h2_stream *stream = h2_mplx_t_stream_get(ctx->task->mplx, ctx->task);
             if (stream) {
                 return apr_itoa(p, stream->initiated_on);
             }

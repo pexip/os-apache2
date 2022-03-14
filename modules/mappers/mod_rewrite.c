@@ -55,6 +55,12 @@
 #include "apr_global_mutex.h"
 #include "apr_dbm.h"
 #include "apr_dbd.h"
+
+#include "apr_version.h"
+#if !APR_VERSION_AT_LEAST(2,0,0)
+#include "apu_version.h"
+#endif
+
 #include "mod_dbd.h"
 
 #if APR_HAS_THREADS
@@ -93,10 +99,9 @@
 #include "http_core.h"
 #include "http_log.h"
 #include "http_protocol.h"
+#include "http_ssl.h"
 #include "http_vhost.h"
 #include "util_mutex.h"
-
-#include "mod_ssl.h"
 
 #include "mod_rewrite.h"
 #include "ap_expr.h"
@@ -421,8 +426,6 @@ static apr_global_mutex_t *rewrite_mapr_lock_acquire = NULL;
 static const char *rewritemap_mutex_type = "rewrite-map";
 
 /* Optional functions imported from mod_ssl when loaded: */
-static APR_OPTIONAL_FN_TYPE(ssl_var_lookup) *rewrite_ssl_lookup = NULL;
-static APR_OPTIONAL_FN_TYPE(ssl_is_https) *rewrite_is_https = NULL;
 static char *escape_backref(apr_pool_t *p, const char *path, const char *escapeme, int noplus);
 
 /*
@@ -524,7 +527,7 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
     switch (*uri++) {
     case 'a':
     case 'A':
-        if (!strncasecmp(uri, "jp://", 5)) {        /* ajp://    */
+        if (!ap_cstr_casecmpn(uri, "jp://", 5)) {        /* ajp://    */
           *sqs = 1;
           return 6;
         }
@@ -532,7 +535,7 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'b':
     case 'B':
-        if (!strncasecmp(uri, "alancer://", 10)) {   /* balancer:// */
+        if (!ap_cstr_casecmpn(uri, "alancer://", 10)) {   /* balancer:// */
           *sqs = 1;
           return 11;
         }
@@ -540,10 +543,10 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'f':
     case 'F':
-        if (!strncasecmp(uri, "tp://", 5)) {        /* ftp://    */
+        if (!ap_cstr_casecmpn(uri, "tp://", 5)) {        /* ftp://    */
             return 6;
         }
-        if (!strncasecmp(uri, "cgi://", 6)) {       /* fcgi://   */
+        if (!ap_cstr_casecmpn(uri, "cgi://", 6)) {       /* fcgi://   */
             *sqs = 1;
             return 7;
         }
@@ -551,26 +554,26 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'g':
     case 'G':
-        if (!strncasecmp(uri, "opher://", 8)) {     /* gopher:// */
+        if (!ap_cstr_casecmpn(uri, "opher://", 8)) {     /* gopher:// */
             return 9;
         }
         break;
 
     case 'h':
     case 'H':
-        if (!strncasecmp(uri, "ttp://", 6)) {       /* http://   */
+        if (!ap_cstr_casecmpn(uri, "ttp://", 6)) {       /* http://   */
             *sqs = 1;
             return 7;
         }
-        else if (!strncasecmp(uri, "ttps://", 7)) { /* https://  */
+        else if (!ap_cstr_casecmpn(uri, "ttps://", 7)) { /* https://  */
             *sqs = 1;
             return 8;
         }
-        else if (!strncasecmp(uri, "2://", 4)) {    /* h2://     */
+        else if (!ap_cstr_casecmpn(uri, "2://", 4)) {    /* h2://     */
             *sqs = 1;
             return 5;
         }
-        else if (!strncasecmp(uri, "2c://", 5)) {   /* h2c://    */
+        else if (!ap_cstr_casecmpn(uri, "2c://", 5)) {   /* h2c://    */
             *sqs = 1;
             return 6;
         }
@@ -578,14 +581,14 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'l':
     case 'L':
-        if (!strncasecmp(uri, "dap://", 6)) {       /* ldap://   */
+        if (!ap_cstr_casecmpn(uri, "dap://", 6)) {       /* ldap://   */
             return 7;
         }
         break;
 
     case 'm':
     case 'M':
-        if (!strncasecmp(uri, "ailto:", 6)) {       /* mailto:   */
+        if (!ap_cstr_casecmpn(uri, "ailto:", 6)) {       /* mailto:   */
             *sqs = 1;
             return 7;
         }
@@ -593,17 +596,17 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'n':
     case 'N':
-        if (!strncasecmp(uri, "ews:", 4)) {         /* news:     */
+        if (!ap_cstr_casecmpn(uri, "ews:", 4)) {         /* news:     */
             return 5;
         }
-        else if (!strncasecmp(uri, "ntp://", 6)) {  /* nntp://   */
+        else if (!ap_cstr_casecmpn(uri, "ntp://", 6)) {  /* nntp://   */
             return 7;
         }
         break;
 
     case 's':
     case 'S':
-        if (!strncasecmp(uri, "cgi://", 6)) {       /* scgi://   */
+        if (!ap_cstr_casecmpn(uri, "cgi://", 6)) {       /* scgi://   */
             *sqs = 1;
             return 7;
         }
@@ -611,15 +614,22 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'w':
     case 'W':
-        if (!strncasecmp(uri, "s://", 4)) {        /* ws://     */
+        if (!ap_cstr_casecmpn(uri, "s://", 4)) {        /* ws://     */
             *sqs = 1;
             return 5;
         }
-        else if (!strncasecmp(uri, "ss://", 5)) {  /* wss://    */
+        else if (!ap_cstr_casecmpn(uri, "ss://", 5)) {  /* wss://    */
             *sqs = 1;
             return 6;
         }
         break;
+
+    case 'u':
+    case 'U':
+        if (!ap_cstr_casecmpn(uri, "nix:", 4)) {        /* unix:     */
+            *sqs = 1;
+            return (uri[4] == '/' && uri[5] == '/') ? 7 : 5;
+        }
     }
 
     return 0;
@@ -723,7 +733,7 @@ static char *escape_absolute_uri(apr_pool_t *p, char *uri, unsigned scheme)
          *               [dn ["?" [attributes] ["?" [scope]
          *               ["?" [filter] ["?" extensions]]]]]]
          */
-        if (!strncasecmp(uri, "ldap", 4)) {
+        if (!ap_cstr_casecmpn(uri, "ldap", 4)) {
             char *token[5];
             int c = 0;
 
@@ -763,23 +773,23 @@ static void splitout_queryargs(request_rec *r, int qsappend, int qsdiscard,
                                int qslast)
 {
     char *q;
-    int split;
+    int split, skip;
 
     /* don't touch, unless it's a scheme for which a query string makes sense.
      * See RFC 1738 and RFC 2368.
      */
-    if (is_absolute_uri(r->filename, &split)
+    if ((skip = is_absolute_uri(r->filename, &split))
         && !split) {
         r->args = NULL; /* forget the query that's still flying around */
         return;
     }
 
-    if ( qsdiscard ) {
+    if (qsdiscard) {
         r->args = NULL; /* Discard query string */
         rewritelog((r, 2, NULL, "discarding query string"));
     }
 
-    q = qslast ? ap_strrchr(r->filename, '?') : ap_strchr(r->filename, '?');
+    q = qslast ? ap_strrchr(r->filename + skip, '?') : ap_strchr(r->filename + skip, '?');
 
     if (q != NULL) {
         char *olduri;
@@ -810,8 +820,6 @@ static void splitout_queryargs(request_rec *r, int qsappend, int qsdiscard,
         rewritelog((r, 3, NULL, "split uri=%s -> uri=%s, args=%s", olduri,
                     r->filename, r->args ? r->args : "<none>"));
     }
-
-    return;
 }
 
 /*
@@ -825,7 +833,7 @@ static void reduce_uri(request_rec *r)
     cp = (char *)ap_http_scheme(r);
     l  = strlen(cp);
     if (   strlen(r->filename) > l+3
-        && strncasecmp(r->filename, cp, l) == 0
+        && ap_cstr_casecmpn(r->filename, cp, l) == 0
         && r->filename[l]   == ':'
         && r->filename[l+1] == '/'
         && r->filename[l+2] == '/' ) {
@@ -1029,6 +1037,7 @@ static void set_cache_value(const char *name, apr_time_t t, char *key,
 #endif
                 return;
             }
+            apr_pool_tag(p, "rewrite_cachedmap");
 
             map = apr_palloc(cachep->pool, sizeof(cachedmap));
             map->pool = p;
@@ -1106,6 +1115,7 @@ static int init_cache(apr_pool_t *p)
         cachep = NULL; /* turns off cache */
         return 0;
     }
+    apr_pool_tag(cachep->pool, "rewrite_cachep");
 
     cachep->maps = apr_hash_make(cachep->pool);
 #if APR_HAS_THREADS
@@ -1353,12 +1363,31 @@ static char *lookup_map_txtfile(request_rec *r, const char *file, char *key)
 static char *lookup_map_dbmfile(request_rec *r, const char *file,
                                 const char *dbmtype, char *key)
 {
+#if APU_MAJOR_VERSION > 1 || (APU_MAJOR_VERSION == 1 && APU_MINOR_VERSION >= 7)
+    const apr_dbm_driver_t *driver;
+    const apu_err_t *err;
+#endif
     apr_dbm_t *dbmfp = NULL;
     apr_datum_t dbmkey;
     apr_datum_t dbmval;
     char *value;
     apr_status_t rv;
 
+#if APU_MAJOR_VERSION > 1 || (APU_MAJOR_VERSION == 1 && APU_MINOR_VERSION >= 7)
+    if ((rv = apr_dbm_get_driver(&driver, dbmtype, &err,
+            r->pool)) != APR_SUCCESS) {
+        ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r, APLOGNO(10287)
+                "mod_rewrite: can't load DBM library '%s': %s",
+                     err->reason, err->msg);
+        return NULL;
+    }
+    if ((rv = apr_dbm_open2(&dbmfp, driver, file, APR_DBM_READONLY,
+                              APR_OS_DEFAULT, r->pool)) != APR_SUCCESS) {
+        ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r, APLOGNO(00656)
+                      "mod_rewrite: can't open DBM RewriteMap %s", file);
+        return NULL;
+    }
+#else
     if ((rv = apr_dbm_open_ex(&dbmfp, dbmtype, file, APR_DBM_READONLY,
                               APR_OS_DEFAULT, r->pool)) != APR_SUCCESS)
     {
@@ -1366,6 +1395,7 @@ static char *lookup_map_dbmfile(request_rec *r, const char *file,
                       "mod_rewrite: can't open DBM RewriteMap %s", file);
         return NULL;
     }
+#endif
 
     dbmkey.dptr  = key;
     dbmkey.dsize = strlen(key);
@@ -1864,8 +1894,8 @@ static char *lookup_variable(char *var, rewrite_ctx *ctx)
                 result = getenv(var);
             }
         }
-        else if (var[4] && !strncasecmp(var, "SSL", 3) && rewrite_ssl_lookup) {
-            result = rewrite_ssl_lookup(r->pool, r->server, r->connection, r,
+        else if (var[4] && !strncasecmp(var, "SSL", 3)) {
+            result = ap_ssl_var_lookup(r->pool, r->server, r->connection, r,
                                         var + 4);
         }
     }
@@ -1963,7 +1993,7 @@ static char *lookup_variable(char *var, rewrite_ctx *ctx)
 
         case  5:
             if (!strcmp(var, "HTTPS")) {
-                int flag = rewrite_is_https && rewrite_is_https(r->connection);
+                int flag = ap_ssl_conn_is_ssl(r->connection);
                 return apr_pstrdup(r->pool, flag ? "on" : "off");
             }
             break;
@@ -2538,6 +2568,7 @@ static void add_cookie(request_rec *r, char *s)
     char *path;
     char *secure;
     char *httponly;
+    char *samesite;
 
     char *tok_cntx;
     char *cookie;
@@ -2572,6 +2603,7 @@ static void add_cookie(request_rec *r, char *s)
             path = expires ? apr_strtok(NULL, sep, &tok_cntx) : NULL;
             secure = path ? apr_strtok(NULL, sep, &tok_cntx) : NULL;
             httponly = secure ? apr_strtok(NULL, sep, &tok_cntx) : NULL;
+            samesite = httponly ? apr_strtok(NULL, sep, &tok_cntx) : NULL;
 
             if (expires) {
                 apr_time_exp_t tms;
@@ -2599,17 +2631,22 @@ static void add_cookie(request_rec *r, char *s)
                                  : NULL,
                                  expires ? (exp_time ? exp_time : "")
                                  : NULL,
-                                 (secure && (!strcasecmp(secure, "true")
+                                 (secure && (!ap_cstr_casecmp(secure, "true")
                                              || !strcmp(secure, "1")
-                                             || !strcasecmp(secure,
+                                             || !ap_cstr_casecmp(secure,
                                                             "secure"))) ?
                                   "; secure" : NULL,
-                                 (httponly && (!strcasecmp(httponly, "true")
+                                 (httponly && (!ap_cstr_casecmp(httponly, "true")
                                                || !strcmp(httponly, "1")
-                                               || !strcasecmp(httponly,
+                                               || !ap_cstr_casecmp(httponly,
                                                               "HttpOnly"))) ?
                                   "; HttpOnly" : NULL,
                                  NULL);
+
+            if (samesite && strcmp(samesite, "0") && ap_cstr_casecmp(samesite,"false")) { 
+                cookie = apr_pstrcat(rmain->pool, cookie, "; SameSite=", 
+                                     samesite, NULL);
+            }
 
             apr_table_addn(rmain->err_headers_out, "Set-Cookie", cookie);
             apr_pool_userdata_set("set", notename, NULL, rmain->pool);
@@ -4515,9 +4552,6 @@ static int post_config(apr_pool_t *p,
             }
         }
     }
-
-    rewrite_ssl_lookup = APR_RETRIEVE_OPTIONAL_FN(ssl_var_lookup);
-    rewrite_is_https = APR_RETRIEVE_OPTIONAL_FN(ssl_is_https);
 
     return OK;
 }

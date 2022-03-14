@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Guía Rápida de Referencia de Directivas - Servidor HTTP Apache Versión 2.4</title>
+<title>Gu&#237;a R&#225;pida de Referencia de Directivas - Servidor HTTP Apache Versi&#243;n 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,39 +17,39 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="directive-index">
 <div id="page-header">
-<p class="menu"><a href="../mod/">Módulos</a> | <a href="../mod/directives.html">Directivas</a> | <a href="http://wiki.apache.org/httpd/FAQ">Preguntas Frecuentes</a> | <a href="../glossary.html">Glosario</a> | <a href="../sitemap.html">Mapa del sitio web</a></p>
-<p class="apache">Versión 2.4 del Servidor HTTP Apache</p>
+<p class="menu"><a href="../mod/">M&#243;dulos</a> | <a href="../mod/directives.html">Directivas</a> | <a href="http://wiki.apache.org/httpd/FAQ">Preguntas Frecuentes</a> | <a href="../glossary.html">Glosario</a> | <a href="../sitemap.html">Mapa del sitio web</a></p>
+<p class="apache">Versi&#243;n 2.4 del Servidor HTTP Apache</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Servidor HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentación</a> &gt; <a href="../">Versión 2.4</a> &gt; <a href="./">Módulos</a></div>
-<div id="preamble"><h1>Guía Rápida de Referencia de Directivas</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Servidor HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentaci&#243;n</a> &gt; <a href="../">Versi&#243;n 2.4</a> &gt; <a href="./">M&#243;dulos</a></div>
+<div id="preamble"><h1>Gu&#237;a R&#225;pida de Referencia de Directivas</h1>
 <div class="toplang">
 <p><span>Idiomas disponibles: </span><a href="../de/mod/quickreference.html" hreflang="de" rel="alternate" title="Deutsch">&nbsp;de&nbsp;</a> |
 <a href="../en/mod/quickreference.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
-<a href="../es/mod/quickreference.html" title="Español">&nbsp;es&nbsp;</a> |
-<a href="../fr/mod/quickreference.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
+<a href="../es/mod/quickreference.html" title="Espa&#241;ol">&nbsp;es&nbsp;</a> |
+<a href="../fr/mod/quickreference.html" hreflang="fr" rel="alternate" title="Fran&#231;ais">&nbsp;fr&nbsp;</a> |
 <a href="../ja/mod/quickreference.html" hreflang="ja" rel="alternate" title="Japanese">&nbsp;ja&nbsp;</a> |
 <a href="../ko/mod/quickreference.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
-<a href="../tr/mod/quickreference.html" hreflang="tr" rel="alternate" title="Türkçe">&nbsp;tr&nbsp;</a> |
+<a href="../tr/mod/quickreference.html" hreflang="tr" rel="alternate" title="T&#252;rk&#231;e">&nbsp;tr&nbsp;</a> |
 <a href="../zh-cn/mod/quickreference.html" hreflang="zh-cn" rel="alternate" title="Simplified Chinese">&nbsp;zh-cn&nbsp;</a></p>
 </div>
 
-    <p>La Guía Rápida de Referencia de Directivas muestra el uso, las
+    <p>La Gu&#237;a R&#225;pida de Referencia de Directivas muestra el uso, las
     opciones por defecto, el estado y el contexto de cada directiva de
-    configuración de Apache.  Para más información sobre cada
+    configuraci&#243;n de Apache.  Para m&#225;s informaci&#243;n sobre cada
     directiva, consulte el <a href="directive-dict.html">Diccionario
     de Directivas</a>.</p>
 
     <p>La primera columna muestra el nombre y el uso de la directiva.
     La segunda columna muestra el valor por defecto de la directiva,
     si existe ese valor por defecto.  Si el valor por defecto es
-    demasiado largo para mostrarlo, el primer carácter va seguido de
+    demasiado largo para mostrarlo, el primer car&#225;cter va seguido de
     un signo "+".</p>
 
     <p>La tercera y la cuarta columna listan los contextos en los que
     la directiva puede funcionar y el estado de la directiva de
-    acuerdo con las notas que detallan más abajo.</p>
+    acuerdo con las notas que detallan m&#225;s abajo.</p>
   </div>
 <div id="directive-ref"><table id="legend">
 <tr><td class="letters"><span><a href="#A">&nbsp;A&nbsp;</a> | <a href="#B">&nbsp;B&nbsp;</a> | <a href="#C">&nbsp;C&nbsp;</a> | <a href="#D">&nbsp;D&nbsp;</a> | <a href="#E">&nbsp;E&nbsp;</a> | <a href="#F">&nbsp;F&nbsp;</a> | <a href="#G">&nbsp;G&nbsp;</a> | <a href="#H">&nbsp;H&nbsp;</a> | <a href="#I">&nbsp;I&nbsp;</a> | <a href="#K">&nbsp;K&nbsp;</a> | <a href="#L">&nbsp;L&nbsp;</a> | <a href="#M">&nbsp;M&nbsp;</a> | <a href="#N">&nbsp;N&nbsp;</a> | <a href="#O">&nbsp;O&nbsp;</a> | <a href="#P">&nbsp;P&nbsp;</a> | <a href="#Q">&nbsp;Q&nbsp;</a> | <a href="#R">&nbsp;R&nbsp;</a> | <a href="#S">&nbsp;S&nbsp;</a> | <a href="#T">&nbsp;T&nbsp;</a> | <a href="#U">&nbsp;U&nbsp;</a> | <a href="#V">&nbsp;V&nbsp;</a> | <a href="#W">&nbsp;W&nbsp;</a> | <a href="#X">&nbsp;X&nbsp;</a></span></td>
@@ -57,20 +57,20 @@
 <tr><th>v</th><td>virtual host</td></tr>
 <tr><th>d</th><td>directory</td></tr>
 <tr><th>h</th><td>.htaccess</td></tr>
-<tr><th>p</th><td>sección de proxy</td></tr>
+<tr><th>p</th><td>secci&#243;n de proxy</td></tr>
 </table></td>
 <td><table><tr><th>C</th><td>Core</td></tr>
 <tr><th>M</th><td>MPM</td></tr>
 <tr><th>B</th><td>Base</td></tr>
-<tr><th>E</th><td>Extensión</td></tr>
+<tr><th>E</th><td>Extensi&#243;n</td></tr>
 <tr><th>X</th><td>Experimental</td></tr>
 <tr><th>T</th><td>Externo</td></tr>
 </table></td></tr>
 </table>
 <table class="qref">
 <tr><td><a href="core.html#acceptfilter" id="A" name="A">AcceptFilter <var>protocol</var> <var>accept_filter</var></a></td><td></td><td>s</td><td>C</td></tr><tr><td class="descr" colspan="4">Configura mejoras para un Protocolo de Escucha de Sockets</td></tr>
-<tr class="odd"><td><a href="core.html#acceptpathinfo">AcceptPathInfo On|Off|Default</a></td><td> Default </td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Los recursos aceptan información sobre su ruta</td></tr>
-<tr><td><a href="core.html#accessfilename">AccessFileName <var>filename</var> [<var>filename</var>] ...</a></td><td> .htaccess </td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Nombre del fichero distribuido de configuración</td></tr>
+<tr class="odd"><td><a href="core.html#acceptpathinfo">AcceptPathInfo On|Off|Default</a></td><td> Default </td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Los recursos aceptan informaci&#243;n sobre su ruta</td></tr>
+<tr><td><a href="core.html#accessfilename">AccessFileName <var>filename</var> [<var>filename</var>] ...</a></td><td> .htaccess </td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Nombre del fichero distribuido de configuraci&#243;n</td></tr>
 <tr class="odd"><td><a href="mod_actions.html#action">Action <var>action-type</var> <var>cgi-script</var> [virtual]</a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Activates a CGI script for a particular handler or
 content-type</td></tr>
 <tr><td><a href="mod_autoindex.html#addalt">AddAlt <var>string</var> <var>file</var> [<var>file</var>] ...</a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Alternate text to display for a file, instead of an
@@ -344,159 +344,165 @@ variables</td></tr>
 <tr class="odd"><td><a href="mod_charset_lite.html#charsetdefault">CharsetDefault <var>charset</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Charset to translate into</td></tr>
 <tr><td><a href="mod_charset_lite.html#charsetoptions">CharsetOptions <var>option</var> [<var>option</var>] ...</a></td><td> ImplicitAdd </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Configures charset translation behavior</td></tr>
 <tr class="odd"><td><a href="mod_charset_lite.html#charsetsourceenc">CharsetSourceEnc <var>charset</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Source charset of files</td></tr>
-<tr><td><a href="mod_speling.html#checkcaseonly">CheckCaseOnly on|off</a></td><td> Off </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Limits the action of the speling module to case corrections</td></tr>
-<tr class="odd"><td><a href="mod_speling.html#checkspelling">CheckSpelling on|off</a></td><td> Off </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Enables the spelling
+<tr><td><a href="mod_speling.html#checkbasenamematch">CheckBasenameMatch on|off</a></td><td> On </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Also match files with differing file name extensions.</td></tr>
+<tr class="odd"><td><a href="mod_speling.html#checkcaseonly">CheckCaseOnly on|off</a></td><td> Off </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Limits the action of the speling module to case corrections</td></tr>
+<tr><td><a href="mod_speling.html#checkspelling">CheckSpelling on|off</a></td><td> Off </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Enables the spelling
 module</td></tr>
-<tr><td><a href="mod_unixd.html#chrootdir">ChrootDir <var>/path/to/directory</var></a></td><td></td><td>s</td><td>B</td></tr><tr><td class="descr" colspan="4">Directory for apache to run chroot(8) after startup.</td></tr>
-<tr class="odd"><td><a href="core.html#contentdigest">ContentDigest On|Off</a></td><td> Off </td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Enables the generation of <code>Content-MD5</code> HTTP Response
+<tr class="odd"><td><a href="mod_unixd.html#chrootdir">ChrootDir <var>/path/to/directory</var></a></td><td></td><td>s</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Directory for apache to run chroot(8) after startup.</td></tr>
+<tr><td><a href="core.html#contentdigest">ContentDigest On|Off</a></td><td> Off </td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Enables the generation of <code>Content-MD5</code> HTTP Response
 headers</td></tr>
-<tr><td><a href="mod_usertrack.html#cookiedomain">CookieDomain <em>domain</em></a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">The domain to which the tracking cookie applies</td></tr>
-<tr class="odd"><td><a href="mod_usertrack.html#cookieexpires">CookieExpires <em>expiry-period</em></a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Expiry time for the tracking cookie</td></tr>
-<tr><td><a href="mod_usertrack.html#cookiehttponly">CookieHTTPOnly on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Adds the 'HTTPOnly' attribute to the cookie</td></tr>
-<tr class="odd"><td><a href="mod_usertrack.html#cookiename">CookieName <em>token</em></a></td><td> Apache </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Name of the tracking cookie</td></tr>
-<tr><td><a href="mod_usertrack.html#cookiesamesite">CookieSameSite None|Lax|Strict</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Adds the 'SameSite' attribute to the cookie</td></tr>
-<tr class="odd"><td><a href="mod_usertrack.html#cookiesecure">CookieSecure on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Adds the 'Secure' attribute to the cookie</td></tr>
-<tr><td><a href="mod_usertrack.html#cookiestyle">CookieStyle
-    Netscape|Cookie|Cookie2|RFC2109|RFC2965</a></td><td> Netscape </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Format of the cookie header field</td></tr>
-<tr class="odd"><td><a href="mod_usertrack.html#cookietracking">CookieTracking on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Enables tracking cookie</td></tr>
-<tr><td><a href="mpm_common.html#coredumpdirectory">CoreDumpDirectory <var>directory</var></a></td><td></td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Directory where Apache HTTP Server attempts to
+<tr class="odd"><td><a href="mod_usertrack.html#cookiedomain">CookieDomain <em>domain</em></a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">The domain to which the tracking cookie applies</td></tr>
+<tr><td><a href="mod_usertrack.html#cookieexpires">CookieExpires <em>expiry-period</em></a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Expiry time for the tracking cookie</td></tr>
+<tr class="odd"><td><a href="mod_usertrack.html#cookiehttponly">CookieHTTPOnly on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Adds the 'HTTPOnly' attribute to the cookie</td></tr>
+<tr><td><a href="mod_usertrack.html#cookiename">CookieName <em>token</em></a></td><td> Apache </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Name of the tracking cookie</td></tr>
+<tr class="odd"><td><a href="mod_usertrack.html#cookiesamesite">CookieSameSite None|Lax|Strict</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Adds the 'SameSite' attribute to the cookie</td></tr>
+<tr><td><a href="mod_usertrack.html#cookiesecure">CookieSecure on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Adds the 'Secure' attribute to the cookie</td></tr>
+<tr class="odd"><td><a href="mod_usertrack.html#cookiestyle">CookieStyle
+    Netscape|Cookie|Cookie2|RFC2109|RFC2965</a></td><td> Netscape </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Format of the cookie header field</td></tr>
+<tr><td><a href="mod_usertrack.html#cookietracking">CookieTracking on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Enables tracking cookie</td></tr>
+<tr class="odd"><td><a href="mpm_common.html#coredumpdirectory">CoreDumpDirectory <var>directory</var></a></td><td></td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Directory where Apache HTTP Server attempts to
 switch before dumping core</td></tr>
-<tr class="odd"><td><a href="mod_log_config.html#customlog">CustomLog  <var>file</var>|<var>pipe</var>
+<tr><td><a href="mod_log_config.html#customlog">CustomLog  <var>file</var>|<var>pipe</var>
 <var>format</var>|<var>nickname</var>
 [env=[!]<var>environment-variable</var>|
-expr=<var>expression</var>]</a></td><td></td><td>sv</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Sets filename and format of log file</td></tr>
-<tr><td><a href="mod_dav.html#dav" id="D" name="D">Dav On|Off|<var>provider-name</var></a></td><td> Off </td><td>d</td><td>E</td></tr><tr><td class="descr" colspan="4">Enable WebDAV HTTP methods</td></tr>
-<tr class="odd"><td><a href="mod_dav.html#davdepthinfinity">DavDepthInfinity on|off</a></td><td> off </td><td>svd</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Allow PROPFIND, Depth: Infinity requests</td></tr>
-<tr><td><a href="mod_dav_lock.html#davgenericlockdb">DavGenericLockDB <var>file-path</var></a></td><td></td><td>svd</td><td>E</td></tr><tr><td class="descr" colspan="4">Location of the DAV lock database</td></tr>
-<tr class="odd"><td><a href="mod_dav_fs.html#davlockdb">DavLockDB <var>file-path</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Location of the DAV lock database</td></tr>
-<tr><td><a href="mod_dav.html#davmintimeout">DavMinTimeout <var>seconds</var></a></td><td> 0 </td><td>svd</td><td>E</td></tr><tr><td class="descr" colspan="4">Minimum amount of time the server holds a lock on
+expr=<var>expression</var>]</a></td><td></td><td>sv</td><td>B</td></tr><tr><td class="descr" colspan="4">Sets filename and format of log file</td></tr>
+<tr class="odd"><td><a href="mod_dav.html#dav" id="D" name="D">Dav On|Off|<var>provider-name</var></a></td><td> Off </td><td>d</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Enable WebDAV HTTP methods</td></tr>
+<tr><td><a href="mod_dav.html#davdepthinfinity">DavDepthInfinity on|off</a></td><td> off </td><td>svd</td><td>E</td></tr><tr><td class="descr" colspan="4">Allow PROPFIND, Depth: Infinity requests</td></tr>
+<tr class="odd"><td><a href="mod_dav_lock.html#davgenericlockdb">DavGenericLockDB <var>file-path</var></a></td><td></td><td>svd</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Location of the DAV lock database</td></tr>
+<tr><td><a href="mod_dav_fs.html#davlockdb">DavLockDB <var>file-path</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Location of the DAV lock database</td></tr>
+<tr class="odd"><td><a href="mod_dav.html#davmintimeout">DavMinTimeout <var>seconds</var></a></td><td> 0 </td><td>svd</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Minimum amount of time the server holds a lock on
 a DAV resource</td></tr>
-<tr class="odd"><td><a href="mod_dbd.html#dbdexptime">DBDExptime <var>time-in-seconds</var></a></td><td> 300 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Keepalive time for idle connections</td></tr>
-<tr><td><a href="mod_dbd.html#dbdinitsql">DBDInitSQL <var>"SQL statement"</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Execute an SQL statement after connecting to a database</td></tr>
-<tr class="odd"><td><a href="mod_dbd.html#dbdkeep">DBDKeep <var>number</var></a></td><td> 2 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum sustained number of connections</td></tr>
-<tr><td><a href="mod_dbd.html#dbdmax">DBDMax <var>number</var></a></td><td> 10 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum number of connections</td></tr>
-<tr class="odd"><td><a href="mod_dbd.html#dbdmin">DBDMin <var>number</var></a></td><td> 1 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Minimum number of connections</td></tr>
-<tr><td><a href="mod_dbd.html#dbdparams">DBDParams
-<var>param1</var>=<var>value1</var>[,<var>param2</var>=<var>value2</var>]</a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Parameters for database connection</td></tr>
-<tr class="odd"><td><a href="mod_dbd.html#dbdpersist">DBDPersist On|Off</a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Whether to use persistent connections</td></tr>
-<tr><td><a href="mod_dbd.html#dbdpreparesql">DBDPrepareSQL <var>"SQL statement"</var> <var>label</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Define an SQL prepared statement</td></tr>
-<tr class="odd"><td><a href="mod_dbd.html#dbdriver">DBDriver <var>name</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Specify an SQL driver</td></tr>
-<tr><td><a href="mod_autoindex.html#defaulticon">DefaultIcon <var>url-path</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Icon to display for files when no specific icon is
+<tr><td><a href="mod_dbd.html#dbdexptime">DBDExptime <var>time-in-seconds</var></a></td><td> 300 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Keepalive time for idle connections</td></tr>
+<tr class="odd"><td><a href="mod_dbd.html#dbdinitsql">DBDInitSQL <var>"SQL statement"</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Execute an SQL statement after connecting to a database</td></tr>
+<tr><td><a href="mod_dbd.html#dbdkeep">DBDKeep <var>number</var></a></td><td> 2 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum sustained number of connections</td></tr>
+<tr class="odd"><td><a href="mod_dbd.html#dbdmax">DBDMax <var>number</var></a></td><td> 10 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of connections</td></tr>
+<tr><td><a href="mod_dbd.html#dbdmin">DBDMin <var>number</var></a></td><td> 1 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Minimum number of connections</td></tr>
+<tr class="odd"><td><a href="mod_dbd.html#dbdparams">DBDParams
+<var>param1</var>=<var>value1</var>[,<var>param2</var>=<var>value2</var>]</a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Parameters for database connection</td></tr>
+<tr><td><a href="mod_dbd.html#dbdpersist">DBDPersist On|Off</a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Whether to use persistent connections</td></tr>
+<tr class="odd"><td><a href="mod_dbd.html#dbdpreparesql">DBDPrepareSQL <var>"SQL statement"</var> <var>label</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Define an SQL prepared statement</td></tr>
+<tr><td><a href="mod_dbd.html#dbdriver">DBDriver <var>name</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Specify an SQL driver</td></tr>
+<tr class="odd"><td><a href="mod_autoindex.html#defaulticon">DefaultIcon <var>url-path</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Icon to display for files when no specific icon is
 configured</td></tr>
-<tr class="odd"><td><a href="mod_mime.html#defaultlanguage">DefaultLanguage <var>language-tag</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Defines a default language-tag to be sent in the Content-Language
+<tr><td><a href="mod_mime.html#defaultlanguage">DefaultLanguage <var>language-tag</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Defines a default language-tag to be sent in the Content-Language
 header field for all resources in the current context that have not been
 assigned a language-tag by some other means.</td></tr>
-<tr><td><a href="core.html#defaultruntimedir">DefaultRuntimeDir <var>directory-path</var></a></td><td> DEFAULT_REL_RUNTIME +</td><td>s</td><td>C</td></tr><tr><td class="descr" colspan="4">Base directory for the server run-time files</td></tr>
-<tr class="odd"><td><a href="core.html#defaulttype">DefaultType <var>media-type|none</var></a></td><td> none </td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">This directive has no effect other than to emit warnings
+<tr class="odd"><td><a href="core.html#defaultruntimedir">DefaultRuntimeDir <var>directory-path</var></a></td><td> DEFAULT_REL_RUNTIME +</td><td>s</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Base directory for the server run-time files</td></tr>
+<tr><td><a href="core.html#defaulttype">DefaultType <var>media-type|none</var></a></td><td> none </td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">This directive has no effect other than to emit warnings
 if the value is not <code>none</code>. In prior versions, DefaultType
 would specify a default media type to assign to response content for
 which no other media type configuration could be found.
 </td></tr>
-<tr><td><a href="core.html#define">Define <var>parameter-name</var></a></td><td></td><td>s</td><td>C</td></tr><tr><td class="descr" colspan="4">Define the existence of a variable</td></tr>
-<tr class="odd"><td><a href="mod_deflate.html#deflatebuffersize">DeflateBufferSize <var>value</var></a></td><td> 8096 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Fragment size to be compressed at one time by zlib</td></tr>
-<tr><td><a href="mod_deflate.html#deflatecompressionlevel">DeflateCompressionLevel <var>value</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">How much compression do we apply to the output</td></tr>
-<tr class="odd"><td><a href="mod_deflate.html#deflatefilternote">DeflateFilterNote [<var>type</var>] <var>notename</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Places the compression ratio in a note for logging</td></tr>
-<tr><td><a href="mod_deflate.html#deflateinflatelimitrequestbody">DeflateInflateLimitRequestBody <var>value</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum size of inflated request bodies</td></tr>
-<tr class="odd"><td><a href="mod_deflate.html#deflateinflateratioburst">DeflateInflateRatioBurst <var>value</var></a></td><td> 3 </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of times the inflation ratio for request bodies
+<tr class="odd"><td><a href="core.html#define">Define <var>parameter-name</var></a></td><td></td><td>s</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Define the existence of a variable</td></tr>
+<tr><td><a href="mod_deflate.html#deflatebuffersize">DeflateBufferSize <var>value</var></a></td><td> 8096 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Fragment size to be compressed at one time by zlib</td></tr>
+<tr class="odd"><td><a href="mod_deflate.html#deflatecompressionlevel">DeflateCompressionLevel <var>value</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">How much compression do we apply to the output</td></tr>
+<tr><td><a href="mod_deflate.html#deflatefilternote">DeflateFilterNote [<var>type</var>] <var>notename</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Places the compression ratio in a note for logging</td></tr>
+<tr class="odd"><td><a href="mod_deflate.html#deflateinflatelimitrequestbody">DeflateInflateLimitRequestBody <var>value</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum size of inflated request bodies</td></tr>
+<tr><td><a href="mod_deflate.html#deflateinflateratioburst">DeflateInflateRatioBurst <var>value</var></a></td><td> 3 </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum number of times the inflation ratio for request bodies
              can be crossed</td></tr>
-<tr><td><a href="mod_deflate.html#deflateinflateratiolimit">DeflateInflateRatioLimit <var>value</var></a></td><td> 200 </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum inflation ratio for request bodies</td></tr>
-<tr class="odd"><td><a href="mod_deflate.html#deflatememlevel">DeflateMemLevel <var>value</var></a></td><td> 9 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">How much memory should be used by zlib for compression</td></tr>
-<tr><td><a href="mod_deflate.html#deflatewindowsize">DeflateWindowSize <var>value</var></a></td><td> 15 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Zlib compression window size</td></tr>
-<tr class="odd"><td><a href="mod_access_compat.html#deny"> Deny from all|<var>host</var>|env=[!]<var>env-variable</var>
-[<var>host</var>|env=[!]<var>env-variable</var>] ...</a></td><td></td><td>dh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Controls which hosts are denied access to the
+<tr class="odd"><td><a href="mod_deflate.html#deflateinflateratiolimit">DeflateInflateRatioLimit <var>value</var></a></td><td> 200 </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum inflation ratio for request bodies</td></tr>
+<tr><td><a href="mod_deflate.html#deflatememlevel">DeflateMemLevel <var>value</var></a></td><td> 9 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">How much memory should be used by zlib for compression</td></tr>
+<tr class="odd"><td><a href="mod_deflate.html#deflatewindowsize">DeflateWindowSize <var>value</var></a></td><td> 15 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Zlib compression window size</td></tr>
+<tr><td><a href="mod_access_compat.html#deny"> Deny from all|<var>host</var>|env=[!]<var>env-variable</var>
+[<var>host</var>|env=[!]<var>env-variable</var>] ...</a></td><td></td><td>dh</td><td>E</td></tr><tr><td class="descr" colspan="4">Controls which hosts are denied access to the
 server</td></tr>
-<tr><td><a href="core.html#directory">&lt;Directory <var>directory-path</var>&gt;
-... &lt;/Directory&gt;</a></td><td></td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Enclose a group of directives that apply only to the
+<tr class="odd"><td><a href="core.html#directory">&lt;Directory <var>directory-path</var>&gt;
+... &lt;/Directory&gt;</a></td><td></td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Enclose a group of directives that apply only to the
 named file-system directory, sub-directories, and their contents.</td></tr>
-<tr class="odd"><td><a href="mod_dir.html#directorycheckhandler">DirectoryCheckHandler On|Off</a></td><td> Off </td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Toggle how this module responds when another handler is configured</td></tr>
-<tr><td><a href="mod_dir.html#directoryindex">DirectoryIndex
-    disabled | <var>local-url</var> [<var>local-url</var>] ...</a></td><td> index.html </td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">List of resources to look for when the client requests
+<tr><td><a href="mod_dir.html#directorycheckhandler">DirectoryCheckHandler On|Off</a></td><td> Off </td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Toggle how this module responds when another handler is configured</td></tr>
+<tr class="odd"><td><a href="mod_dir.html#directoryindex">DirectoryIndex
+    disabled | <var>local-url</var> [<var>local-url</var>] ...</a></td><td> index.html </td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">List of resources to look for when the client requests
 a directory</td></tr>
-<tr class="odd"><td><a href="mod_dir.html#directoryindexredirect">DirectoryIndexRedirect on | off | permanent | temp | seeother |
+<tr><td><a href="mod_dir.html#directoryindexredirect">DirectoryIndexRedirect on | off | permanent | temp | seeother |
 <var>3xx-code</var>
-</a></td><td> off </td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Configures an external redirect for directory indexes.
+</a></td><td> off </td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Configures an external redirect for directory indexes.
 </td></tr>
-<tr><td><a href="core.html#directorymatch">&lt;DirectoryMatch <var>regex</var>&gt;
-... &lt;/DirectoryMatch&gt;</a></td><td></td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Enclose directives that apply to
+<tr class="odd"><td><a href="core.html#directorymatch">&lt;DirectoryMatch <var>regex</var>&gt;
+... &lt;/DirectoryMatch&gt;</a></td><td></td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Enclose directives that apply to
 the contents of file-system directories matching a regular expression.</td></tr>
-<tr class="odd"><td><a href="mod_dir.html#directoryslash">DirectorySlash On|Off</a></td><td> On </td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Toggle trailing slash redirects on or off</td></tr>
-<tr><td><a href="core.html#documentroot">DocumentRoot <var>directory-path</var></a></td><td> /usr/local/apache/h +</td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Directory that forms the main document tree visible
+<tr><td><a href="mod_dir.html#directoryslash">DirectorySlash On|Off</a></td><td> On </td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Toggle trailing slash redirects on or off</td></tr>
+<tr class="odd"><td><a href="core.html#documentroot">DocumentRoot <var>directory-path</var></a></td><td> /usr/local/apache/h +</td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Directory that forms the main document tree visible
 from the web</td></tr>
-<tr class="odd"><td><a href="mod_privileges.html#dtraceprivileges">DTracePrivileges On|Off</a></td><td> Off </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Determines whether the privileges required by dtrace are enabled.</td></tr>
-<tr><td><a href="mod_dumpio.html#dumpioinput">DumpIOInput On|Off</a></td><td> Off </td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Dump all input data to the error log</td></tr>
-<tr class="odd"><td><a href="mod_dumpio.html#dumpiooutput">DumpIOOutput On|Off</a></td><td> Off </td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Dump all output data to the error log</td></tr>
-<tr><td><a href="core.html#else" id="E" name="E">&lt;Else&gt; ... &lt;/Else&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Contains directives that apply only if the condition of a
+<tr><td><a href="mod_privileges.html#dtraceprivileges">DTracePrivileges On|Off</a></td><td> Off </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Determines whether the privileges required by dtrace are enabled.</td></tr>
+<tr class="odd"><td><a href="mod_dumpio.html#dumpioinput">DumpIOInput On|Off</a></td><td> Off </td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Dump all input data to the error log</td></tr>
+<tr><td><a href="mod_dumpio.html#dumpiooutput">DumpIOOutput On|Off</a></td><td> Off </td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Dump all output data to the error log</td></tr>
+<tr class="odd"><td><a href="core.html#else" id="E" name="E">&lt;Else&gt; ... &lt;/Else&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Contains directives that apply only if the condition of a
 previous <code class="directive"><a href="../mod/core.html#if">&lt;If&gt;</a></code> or
 <code class="directive"><a href="../mod/core.html#elseif">&lt;ElseIf&gt;</a></code> section is not
 satisfied by a request at runtime</td></tr>
-<tr class="odd"><td><a href="core.html#elseif">&lt;ElseIf <var>expression</var>&gt; ... &lt;/ElseIf&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Contains directives that apply only if a condition is satisfied
+<tr><td><a href="core.html#elseif">&lt;ElseIf <var>expression</var>&gt; ... &lt;/ElseIf&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Contains directives that apply only if a condition is satisfied
 by a request at runtime while the condition of a previous
 <code class="directive"><a href="../mod/core.html#if">&lt;If&gt;</a></code> or
 <code class="directive">&lt;ElseIf&gt;</code> section is not
 satisfied</td></tr>
-<tr><td><a href="mpm_common.html#enableexceptionhook">EnableExceptionHook On|Off</a></td><td> Off </td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Enables a hook that runs exception handlers
+<tr class="odd"><td><a href="mpm_common.html#enableexceptionhook">EnableExceptionHook On|Off</a></td><td> Off </td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Enables a hook that runs exception handlers
 after a crash</td></tr>
-<tr class="odd"><td><a href="core.html#enablemmap">EnableMMAP On|Off</a></td><td> On </td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Use memory-mapping to read files during delivery</td></tr>
-<tr><td><a href="core.html#enablesendfile">EnableSendfile On|Off</a></td><td> Off </td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Use the kernel sendfile support to deliver files to the client</td></tr>
-<tr class="odd"><td><a href="core.html#error">Error <var>message</var></a></td><td></td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Abort configuration parsing with a custom error message</td></tr>
-<tr><td><a href="core.html#errordocument">ErrorDocument <var>error-code</var> <var>document</var></a></td><td></td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">What the server will return to the client
+<tr><td><a href="core.html#enablemmap">EnableMMAP On|Off</a></td><td> On </td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Use memory-mapping to read files during delivery</td></tr>
+<tr class="odd"><td><a href="core.html#enablesendfile">EnableSendfile On|Off</a></td><td> Off </td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Use the kernel sendfile support to deliver files to the client</td></tr>
+<tr><td><a href="core.html#error">Error <var>message</var></a></td><td></td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Abort configuration parsing with a custom error message</td></tr>
+<tr class="odd"><td><a href="core.html#errordocument">ErrorDocument <var>error-code</var> <var>document</var></a></td><td></td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">What the server will return to the client
 in case of an error</td></tr>
-<tr class="odd"><td><a href="core.html#errorlog"> ErrorLog <var>file-path</var>|syslog[:<var>facility</var>]</a></td><td> logs/error_log (Uni +</td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Location where the server will log errors</td></tr>
-<tr><td><a href="core.html#errorlogformat"> ErrorLog [connection|request] <var>format</var></a></td><td></td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Format specification for error log entries</td></tr>
-<tr class="odd"><td><a href="mod_example_hooks.html#example">Example</a></td><td></td><td>svdh</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Demonstration directive to illustrate the Apache module
+<tr><td><a href="core.html#errorlog"> ErrorLog <var>file-path</var>|syslog[:<var>facility</var>]</a></td><td> logs/error_log (Uni +</td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Location where the server will log errors</td></tr>
+<tr class="odd"><td><a href="core.html#errorlogformat"> ErrorLog [connection|request] <var>format</var></a></td><td></td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Format specification for error log entries</td></tr>
+<tr><td><a href="mod_example_hooks.html#example">Example</a></td><td></td><td>svdh</td><td>X</td></tr><tr><td class="descr" colspan="4">Demonstration directive to illustrate the Apache module
 API</td></tr>
-<tr><td><a href="mod_expires.html#expiresactive">ExpiresActive On|Off</a></td><td> Off </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Enables generation of <code>Expires</code>
+<tr class="odd"><td><a href="mod_expires.html#expiresactive">ExpiresActive On|Off</a></td><td> Off </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Enables generation of <code>Expires</code>
 headers</td></tr>
-<tr class="odd"><td><a href="mod_expires.html#expiresbytype">ExpiresByType <var>MIME-type</var>
-<var>&lt;code&gt;seconds</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Value of the <code>Expires</code> header configured
+<tr><td><a href="mod_expires.html#expiresbytype">ExpiresByType <var>MIME-type</var>
+<var>&lt;code&gt;seconds</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Value of the <code>Expires</code> header configured
 by MIME type</td></tr>
-<tr><td><a href="mod_expires.html#expiresdefault">ExpiresDefault <var>&lt;code&gt;seconds</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Default algorithm for calculating expiration time</td></tr>
-<tr class="odd"><td><a href="core.html#extendedstatus">ExtendedStatus On|Off</a></td><td> Off[*] </td><td>s</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Keep track of extended status information for each 
+<tr class="odd"><td><a href="mod_expires.html#expiresdefault">ExpiresDefault <var>&lt;code&gt;seconds</var></a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Default algorithm for calculating expiration time</td></tr>
+<tr><td><a href="core.html#extendedstatus">ExtendedStatus On|Off</a></td><td> Off[*] </td><td>s</td><td>C</td></tr><tr><td class="descr" colspan="4">Keep track of extended status information for each 
 request</td></tr>
-<tr><td><a href="mod_ext_filter.html#extfilterdefine">ExtFilterDefine <var>filtername</var> <var>parameters</var></a></td><td></td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Define an external filter</td></tr>
-<tr class="odd"><td><a href="mod_ext_filter.html#extfilteroptions">ExtFilterOptions <var>option</var> [<var>option</var>] ...</a></td><td> NoLogStderr </td><td>d</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Configure <code class="module"><a href="../mod/mod_ext_filter.html">mod_ext_filter</a></code> options</td></tr>
-<tr><td><a href="mod_dir.html#fallbackresource" id="F" name="F">FallbackResource disabled | <var>local-url</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Define a default URL for requests that don't map to a file</td></tr>
-<tr class="odd"><td><a href="core.html#fileetag">FileETag <var>component</var> ...</a></td><td> INode MTime Size </td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">File attributes used to create the ETag
+<tr class="odd"><td><a href="mod_ext_filter.html#extfilterdefine">ExtFilterDefine <var>filtername</var> <var>parameters</var></a></td><td></td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Define an external filter</td></tr>
+<tr><td><a href="mod_ext_filter.html#extfilteroptions">ExtFilterOptions <var>option</var> [<var>option</var>] ...</a></td><td> NoLogStderr </td><td>d</td><td>E</td></tr><tr><td class="descr" colspan="4">Configure <code class="module"><a href="../mod/mod_ext_filter.html">mod_ext_filter</a></code> options</td></tr>
+<tr class="odd"><td><a href="mod_dir.html#fallbackresource" id="F" name="F">FallbackResource disabled | <var>local-url</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Define a default URL for requests that don't map to a file</td></tr>
+<tr><td><a href="core.html#fileetag">FileETag <var>component</var> ...</a></td><td> INode MTime Size </td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">File attributes used to create the ETag
 HTTP response header for static files</td></tr>
-<tr><td><a href="core.html#files">&lt;Files <var>filename</var>&gt; ... &lt;/Files&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Contains directives that apply to matched
+<tr class="odd"><td><a href="core.html#files">&lt;Files <var>filename</var>&gt; ... &lt;/Files&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Contains directives that apply to matched
 filenames</td></tr>
-<tr class="odd"><td><a href="core.html#filesmatch">&lt;FilesMatch <var>regex</var>&gt; ... &lt;/FilesMatch&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Contains directives that apply to regular-expression matched
+<tr><td><a href="core.html#filesmatch">&lt;FilesMatch <var>regex</var>&gt; ... &lt;/FilesMatch&gt;</a></td><td></td><td>svdh</td><td>C</td></tr><tr><td class="descr" colspan="4">Contains directives that apply to regular-expression matched
 filenames</td></tr>
-<tr><td><a href="mod_filter.html#filterchain">FilterChain [+=-@!]<var>filter-name</var> <var>...</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Configure the filter chain</td></tr>
-<tr class="odd"><td><a href="mod_filter.html#filterdeclare">FilterDeclare <var>filter-name</var> <var>[type]</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Declare a smart filter</td></tr>
-<tr><td><a href="mod_filter.html#filterprotocol">FilterProtocol <var>filter-name</var> [<var>provider-name</var>]
-    <var>proto-flags</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Deal with correct HTTP protocol handling</td></tr>
-<tr class="odd"><td><a href="mod_filter.html#filterprovider">FilterProvider <var>filter-name</var> <var>provider-name</var>
- <var>expression</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Register a content filter</td></tr>
-<tr><td><a href="mod_filter.html#filtertrace">FilterTrace <var>filter-name</var> <var>level</var></a></td><td></td><td>svd</td><td>B</td></tr><tr><td class="descr" colspan="4">Get debug/diagnostic information from
+<tr class="odd"><td><a href="mod_filter.html#filterchain">FilterChain [+=-@!]<var>filter-name</var> <var>...</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Configure the filter chain</td></tr>
+<tr><td><a href="mod_filter.html#filterdeclare">FilterDeclare <var>filter-name</var> <var>[type]</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Declare a smart filter</td></tr>
+<tr class="odd"><td><a href="mod_filter.html#filterprotocol">FilterProtocol <var>filter-name</var> [<var>provider-name</var>]
+    <var>proto-flags</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Deal with correct HTTP protocol handling</td></tr>
+<tr><td><a href="mod_filter.html#filterprovider">FilterProvider <var>filter-name</var> <var>provider-name</var>
+ <var>expression</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Register a content filter</td></tr>
+<tr class="odd"><td><a href="mod_filter.html#filtertrace">FilterTrace <var>filter-name</var> <var>level</var></a></td><td></td><td>svd</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Get debug/diagnostic information from
     <code class="module"><a href="../mod/mod_filter.html">mod_filter</a></code></td></tr>
-<tr class="odd"><td><a href="mod_negotiation.html#forcelanguagepriority">ForceLanguagePriority None|Prefer|Fallback [Prefer|Fallback]</a></td><td> Prefer </td><td>svdh</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Action to take if a single acceptable document is not
+<tr><td><a href="core.html#flushmaxpipelined">FlushMaxPipelined <var>number</var></a></td><td> 5 </td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Maximum number of pipelined responses above which they are flushed
+to the network</td></tr>
+<tr class="odd"><td><a href="core.html#flushmaxthreshold">FlushMaxThreshold <var>number-of-bytes</var></a></td><td> 65536 </td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Threshold above which pending data are flushed to the
+network</td></tr>
+<tr><td><a href="mod_negotiation.html#forcelanguagepriority">ForceLanguagePriority None|Prefer|Fallback [Prefer|Fallback]</a></td><td> Prefer </td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Action to take if a single acceptable document is not
 found</td></tr>
-<tr><td><a href="core.html#forcetype">ForceType <var>media-type</var>|None</a></td><td></td><td>dh</td><td>C</td></tr><tr><td class="descr" colspan="4">Forces all matching files to be served with the specified
+<tr class="odd"><td><a href="core.html#forcetype">ForceType <var>media-type</var>|None</a></td><td></td><td>dh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Forces all matching files to be served with the specified
 media type in the HTTP Content-Type header field</td></tr>
-<tr class="odd"><td><a href="mod_log_forensic.html#forensiclog">ForensicLog <var>filename</var>|<var>pipe</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Sets filename of the forensic log</td></tr>
-<tr><td><a href="mod_log_config.html#globallog" id="G" name="G">GlobalLog<var>file</var>|<var>pipe</var>
+<tr><td><a href="mod_log_forensic.html#forensiclog">ForensicLog <var>filename</var>|<var>pipe</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Sets filename of the forensic log</td></tr>
+<tr class="odd"><td><a href="mod_log_config.html#globallog" id="G" name="G">GlobalLog<var>file</var>|<var>pipe</var>
 <var>format</var>|<var>nickname</var>
 [env=[!]<var>environment-variable</var>|
-expr=<var>expression</var>]</a></td><td></td><td>s</td><td>B</td></tr><tr><td class="descr" colspan="4">Sets filename and format of log file</td></tr>
-<tr class="odd"><td><a href="core.html#gprofdir">GprofDir <var>/tmp/gprof/</var>|<var>/tmp/gprof/</var>%</a></td><td></td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Directory to write gmon.out profiling data to.  </td></tr>
-<tr><td><a href="mpm_common.html#gracefulshutdowntimeout">GracefulShutdownTimeout <var>seconds</var></a></td><td> 0 </td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Specify a timeout after which a gracefully shutdown server
+expr=<var>expression</var>]</a></td><td></td><td>s</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Sets filename and format of log file</td></tr>
+<tr><td><a href="core.html#gprofdir">GprofDir <var>/tmp/gprof/</var>|<var>/tmp/gprof/</var>%</a></td><td></td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Directory to write gmon.out profiling data to.  </td></tr>
+<tr class="odd"><td><a href="mpm_common.html#gracefulshutdowntimeout">GracefulShutdownTimeout <var>seconds</var></a></td><td> 0 </td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Specify a timeout after which a gracefully shutdown server
 will exit.</td></tr>
-<tr class="odd"><td><a href="mod_unixd.html#group">Group <var>unix-group</var></a></td><td> #-1 </td><td>s</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Group under which the server will answer
+<tr><td><a href="mod_unixd.html#group">Group <var>unix-group</var></a></td><td> #-1 </td><td>s</td><td>B</td></tr><tr><td class="descr" colspan="4">Group under which the server will answer
 requests</td></tr>
-<tr><td><a href="mod_http2.html#h2copyfiles" id="H" name="H">H2CopyFiles on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Determine file handling in responses</td></tr>
-<tr class="odd"><td><a href="mod_http2.html#h2direct">H2Direct on|off</a></td><td> on for h2c, off for +</td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">H2 Direct Protocol Switch</td></tr>
-<tr><td><a href="mod_http2.html#h2earlyhints">H2EarlyHints on|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Determine sending of 103 status codes</td></tr>
-<tr class="odd"><td><a href="mod_http2.html#h2maxsessionstreams">H2MaxSessionStreams <em>n</em></a></td><td> 100 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of active streams per HTTP/2 session.</td></tr>
-<tr><td><a href="mod_http2.html#h2maxworkeridleseconds">H2MaxWorkerIdleSeconds <em>n</em></a></td><td> 600 </td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum number of seconds h2 workers remain idle until shut down.</td></tr>
-<tr class="odd"><td><a href="mod_http2.html#h2maxworkers">H2MaxWorkers <em>n</em></a></td><td></td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of worker threads to use per child process.</td></tr>
-<tr><td><a href="mod_http2.html#h2minworkers">H2MinWorkers <em>n</em></a></td><td></td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Minimal number of worker threads to use per child process.</td></tr>
-<tr class="odd"><td><a href="mod_http2.html#h2moderntlsonly">H2ModernTLSOnly on|off</a></td><td> on </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Require HTTP/2 connections to be "modern TLS" only</td></tr>
-<tr><td><a href="mod_http2.html#h2padding">H2Padding numbits</a></td><td> 0 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Determine the range of padding bytes added to payload frames</td></tr>
+<tr class="odd"><td><a href="mod_http2.html#h2copyfiles" id="H" name="H">H2CopyFiles on|off</a></td><td> off </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Determine file handling in responses</td></tr>
+<tr><td><a href="mod_http2.html#h2direct">H2Direct on|off</a></td><td> on for h2c, off for +</td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">H2 Direct Protocol Switch</td></tr>
+<tr class="odd"><td><a href="mod_http2.html#h2earlyhints">H2EarlyHints on|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Determine sending of 103 status codes</td></tr>
+<tr><td><a href="mod_http2.html#h2maxsessionstreams">H2MaxSessionStreams <em>n</em></a></td><td> 100 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum number of active streams per HTTP/2 session.</td></tr>
+<tr class="odd"><td><a href="mod_http2.html#h2maxworkeridleseconds">H2MaxWorkerIdleSeconds <em>n</em></a></td><td> 600 </td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of seconds h2 workers remain idle until shut down.</td></tr>
+<tr><td><a href="mod_http2.html#h2maxworkers">H2MaxWorkers <em>n</em></a></td><td></td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum number of worker threads to use per child process.</td></tr>
+<tr class="odd"><td><a href="mod_http2.html#h2minworkers">H2MinWorkers <em>n</em></a></td><td></td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Minimal number of worker threads to use per child process.</td></tr>
+<tr><td><a href="mod_http2.html#h2moderntlsonly">H2ModernTLSOnly on|off</a></td><td> on </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Require HTTP/2 connections to be "modern TLS" only</td></tr>
+<tr class="odd"><td><a href="mod_http2.html#h2outputbuffering">H2OutputBuffering on|off</a></td><td> on </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Determine buffering behaviour of output</td></tr>
+<tr><td><a href="mod_http2.html#h2padding">H2Padding <em>numbits</em></a></td><td> 0 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Determine the range of padding bytes added to payload frames</td></tr>
 <tr class="odd"><td><a href="mod_http2.html#h2push">H2Push on|off</a></td><td> on </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">H2 Server Push Switch</td></tr>
 <tr><td><a href="mod_http2.html#h2pushdiarysize">H2PushDiarySize <em>n</em></a></td><td> 256 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">H2 Server Push Diary Size</td></tr>
-<tr class="odd"><td><a href="mod_http2.html#h2pushpriority">H2PushPriority <em>mime-type</em> [after|before|interleaved] [weight]</a></td><td> * After 16 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">H2 Server Push Priority</td></tr>
-<tr><td><a href="mod_http2.html#h2pushresource">H2PushResource [add] path [critical]</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Declares resources for early pushing to the client</td></tr>
+<tr class="odd"><td><a href="mod_http2.html#h2pushpriority">H2PushPriority <em>mime-type</em> [after|before|interleaved] [<em>weight</em>]</a></td><td> * After 16 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">H2 Server Push Priority</td></tr>
+<tr><td><a href="mod_http2.html#h2pushresource">H2PushResource [add] <em>path</em> [critical]</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Declares resources for early pushing to the client</td></tr>
 <tr class="odd"><td><a href="mod_http2.html#h2serializeheaders">H2SerializeHeaders on|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Serialize Request/Response Processing Switch</td></tr>
 <tr><td><a href="mod_http2.html#h2streammaxmemsize">H2StreamMaxMemSize <em>bytes</em></a></td><td> 65536 </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Maximum amount of output data buffered per stream.</td></tr>
 <tr class="odd"><td><a href="mod_http2.html#h2tlscooldownsecs">H2TLSCoolDownSecs <em>seconds</em></a></td><td> 1 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Configure the number of seconds of idle time on TLS before shrinking writes</td></tr>
@@ -591,7 +597,7 @@ operations</td></tr>
 <tr class="odd"><td><a href="mod_ldap.html#ldapopcachettl">LDAPOpCacheTTL <var>seconds</var></a></td><td> 600 </td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Time that entries in the operation cache remain
 valid</td></tr>
 <tr><td><a href="mod_ldap.html#ldapreferralhoplimit">LDAPReferralHopLimit <var>number</var></a></td><td></td><td>dh</td><td>E</td></tr><tr><td class="descr" colspan="4">The maximum number of referral hops to chase before terminating an LDAP query.</td></tr>
-<tr class="odd"><td><a href="mod_ldap.html#ldapreferrals">LDAPReferrals <var>On|Off|default</var></a></td><td> On </td><td>dh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Enable referral chasing during queries to the LDAP server.</td></tr>
+<tr class="odd"><td><a href="mod_ldap.html#ldapreferrals">LDAPReferrals On|Off|default</a></td><td> On </td><td>dh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Enable referral chasing during queries to the LDAP server.</td></tr>
 <tr><td><a href="mod_ldap.html#ldapretries">LDAPRetries <var>number-of-retries</var></a></td><td> 3 </td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Configures the number of LDAP server retries.</td></tr>
 <tr class="odd"><td><a href="mod_ldap.html#ldapretrydelay">LDAPRetryDelay <var>seconds</var></a></td><td> 0 </td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Configures the delay between LDAP server retries.</td></tr>
 <tr><td><a href="mod_ldap.html#ldapsharedcachefile">LDAPSharedCacheFile <var>directory-path/filename</var></a></td><td></td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Sets the shared memory cache file</td></tr>
@@ -603,7 +609,7 @@ connection client certificates.</td></tr>
 <tr><td><a href="mod_ldap.html#ldaptrustedglobalcert">LDAPTrustedGlobalCert <var>type</var> <var>directory-path/filename</var> <var>[password]</var></a></td><td></td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Sets the file or database containing global trusted
 Certificate Authority or global client certificates</td></tr>
 <tr class="odd"><td><a href="mod_ldap.html#ldaptrustedmode">LDAPTrustedMode <var>type</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Specifies the SSL/TLS mode to be used when connecting to an LDAP server.</td></tr>
-<tr><td><a href="mod_ldap.html#ldapverifyservercert">LDAPVerifyServerCert <var>On|Off</var></a></td><td> On </td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Force server certificate verification</td></tr>
+<tr><td><a href="mod_ldap.html#ldapverifyservercert">LDAPVerifyServerCert On|Off</a></td><td> On </td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Force server certificate verification</td></tr>
 <tr class="odd"><td><a href="core.html#limit">&lt;Limit <var>method</var> [<var>method</var>] ... &gt; ...
     &lt;/Limit&gt;</a></td><td></td><td>dh</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Restrict enclosed access controls to only certain HTTP
 methods</td></tr>
@@ -657,54 +663,59 @@ processing</td></tr>
 <tr class="odd"><td><a href="mod_lua.html#luahooklog">LuaHookLog  /path/to/lua/script.lua log_function_name</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Provide a hook for the access log phase of a request
 processing</td></tr>
 <tr><td><a href="mod_lua.html#luahookmaptostorage">LuaHookMapToStorage  /path/to/lua/script.lua hook_function_name</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Provide a hook for the map_to_storage phase of request processing</td></tr>
-<tr class="odd"><td><a href="mod_lua.html#luahooktranslatename">LuaHookTranslateName  /path/to/lua/script.lua  hook_function_name [early|late]</a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Provide a hook for the translate name phase of request processing</td></tr>
-<tr><td><a href="mod_lua.html#luahooktypechecker">LuaHookTypeChecker  /path/to/lua/script.lua hook_function_name</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Provide a hook for the type_checker phase of request processing</td></tr>
-<tr class="odd"><td><a href="mod_lua.html#luainherit">LuaInherit none|parent-first|parent-last</a></td><td> parent-first </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Controls how parent configuration sections are merged into children</td></tr>
-<tr><td><a href="mod_lua.html#luainputfilter">LuaInputFilter filter_name /path/to/lua/script.lua function_name</a></td><td></td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Provide a Lua function for content input filtering</td></tr>
-<tr class="odd"><td><a href="mod_lua.html#luamaphandler">LuaMapHandler uri-pattern /path/to/lua/script.lua [function-name]</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Map a path to a lua handler</td></tr>
-<tr><td><a href="mod_lua.html#luaoutputfilter">LuaOutputFilter filter_name /path/to/lua/script.lua function_name</a></td><td></td><td>s</td><td>E</td></tr><tr><td class="descr" colspan="4">Provide a Lua function for content output filtering</td></tr>
-<tr class="odd"><td><a href="mod_lua.html#luapackagecpath">LuaPackageCPath /path/to/include/?.soa</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Add a directory to lua's package.cpath</td></tr>
-<tr><td><a href="mod_lua.html#luapackagepath">LuaPackagePath /path/to/include/?.lua</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Add a directory to lua's package.path</td></tr>
-<tr class="odd"><td><a href="mod_lua.html#luaquickhandler">LuaQuickHandler /path/to/script.lua hook_function_name</a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Provide a hook for the quick handler of request processing</td></tr>
-<tr><td><a href="mod_lua.html#luaroot">LuaRoot /path/to/a/directory</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Specify the base path for resolving relative paths for mod_lua directives</td></tr>
-<tr class="odd"><td><a href="mod_lua.html#luascope">LuaScope once|request|conn|thread|server [min] [max]</a></td><td> once </td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">One of once, request, conn, thread -- default is once</td></tr>
-<tr><td><a href="mod_macro.html#macro" id="M" name="M">
+<tr class="odd"><td><a href="mod_lua.html#luahookpretranslate">LuaHookPreTranslate  /path/to/lua/script.lua hook_function_name</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Provide a hook for the pre_translate phase of a request
+processing</td></tr>
+<tr><td><a href="mod_lua.html#luahooktranslatename">LuaHookTranslateName  /path/to/lua/script.lua  hook_function_name [early|late]</a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Provide a hook for the translate name phase of request processing</td></tr>
+<tr class="odd"><td><a href="mod_lua.html#luahooktypechecker">LuaHookTypeChecker  /path/to/lua/script.lua hook_function_name</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Provide a hook for the type_checker phase of request processing</td></tr>
+<tr><td><a href="mod_lua.html#luainherit">LuaInherit none|parent-first|parent-last</a></td><td> parent-first </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Controls how parent configuration sections are merged into children</td></tr>
+<tr class="odd"><td><a href="mod_lua.html#luainputfilter">LuaInputFilter filter_name /path/to/lua/script.lua function_name</a></td><td></td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Provide a Lua function for content input filtering</td></tr>
+<tr><td><a href="mod_lua.html#luamaphandler">LuaMapHandler uri-pattern /path/to/lua/script.lua [function-name]</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Map a path to a lua handler</td></tr>
+<tr class="odd"><td><a href="mod_lua.html#luaoutputfilter">LuaOutputFilter filter_name /path/to/lua/script.lua function_name</a></td><td></td><td>s</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Provide a Lua function for content output filtering</td></tr>
+<tr><td><a href="mod_lua.html#luapackagecpath">LuaPackageCPath /path/to/include/?.soa</a></td><td></td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">Add a directory to lua's package.cpath</td></tr>
+<tr class="odd"><td><a href="mod_lua.html#luapackagepath">LuaPackagePath /path/to/include/?.lua</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Add a directory to lua's package.path</td></tr>
+<tr><td><a href="mod_lua.html#luaquickhandler">LuaQuickHandler /path/to/script.lua hook_function_name</a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Provide a hook for the quick handler of request processing</td></tr>
+<tr class="odd"><td><a href="mod_lua.html#luaroot">LuaRoot /path/to/a/directory</a></td><td></td><td>svdh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Specify the base path for resolving relative paths for mod_lua directives</td></tr>
+<tr><td><a href="mod_lua.html#luascope">LuaScope once|request|conn|thread|server [min] [max]</a></td><td> once </td><td>svdh</td><td>E</td></tr><tr><td class="descr" colspan="4">One of once, request, conn, thread -- default is once</td></tr>
+<tr class="odd"><td><a href="mod_macro.html#macro" id="M" name="M">
 &lt;Macro <var>name</var> [<var>par1</var> .. <var>parN</var>]&gt;
-... &lt;/Macro&gt;</a></td><td></td><td>svd</td><td>B</td></tr><tr><td class="descr" colspan="4">Define a configuration file macro</td></tr>
-<tr class="odd"><td><a href="mpm_common.html#maxconnectionsperchild">MaxConnectionsPerChild <var>number</var></a></td><td> 0 </td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Limit on the number of connections that an individual child server
+... &lt;/Macro&gt;</a></td><td></td><td>svd</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Define a configuration file macro</td></tr>
+<tr><td><a href="mpm_common.html#maxconnectionsperchild">MaxConnectionsPerChild <var>number</var></a></td><td> 0 </td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Limit on the number of connections that an individual child server
 will handle during its life</td></tr>
-<tr><td><a href="core.html#maxkeepaliverequests">MaxKeepAliveRequests <var>number</var></a></td><td> 100 </td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Number of requests allowed on a persistent
+<tr class="odd"><td><a href="core.html#maxkeepaliverequests">MaxKeepAliveRequests <var>number</var></a></td><td> 100 </td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Number of requests allowed on a persistent
 connection</td></tr>
-<tr class="odd"><td><a href="mpm_common.html#maxmemfree">MaxMemFree <var>KBytes</var></a></td><td> 2048 </td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum amount of memory that the main allocator is allowed
+<tr><td><a href="mpm_common.html#maxmemfree">MaxMemFree <var>KBytes</var></a></td><td> 2048 </td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Maximum amount of memory that the main allocator is allowed
 to hold without calling <code>free()</code></td></tr>
-<tr><td><a href="core.html#maxrangeoverlaps">MaxRangeOverlaps default | unlimited | none | <var>number-of-ranges</var></a></td><td> 20 </td><td>svd</td><td>C</td></tr><tr><td class="descr" colspan="4">Number of overlapping ranges (eg: <code>100-200,150-300</code>) allowed before returning the complete
+<tr class="odd"><td><a href="core.html#maxrangeoverlaps">MaxRangeOverlaps default | unlimited | none | <var>number-of-ranges</var></a></td><td> 20 </td><td>svd</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Number of overlapping ranges (eg: <code>100-200,150-300</code>) allowed before returning the complete
         resource </td></tr>
-<tr class="odd"><td><a href="core.html#maxrangereversals">MaxRangeReversals default | unlimited | none | <var>number-of-ranges</var></a></td><td> 20 </td><td>svd</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Number of range reversals (eg: <code>100-200,50-70</code>) allowed before returning the complete
+<tr><td><a href="core.html#maxrangereversals">MaxRangeReversals default | unlimited | none | <var>number-of-ranges</var></a></td><td> 20 </td><td>svd</td><td>C</td></tr><tr><td class="descr" colspan="4">Number of range reversals (eg: <code>100-200,50-70</code>) allowed before returning the complete
         resource </td></tr>
-<tr><td><a href="core.html#maxranges">MaxRanges default | unlimited | none | <var>number-of-ranges</var></a></td><td> 200 </td><td>svd</td><td>C</td></tr><tr><td class="descr" colspan="4">Number of ranges allowed before returning the complete
+<tr class="odd"><td><a href="core.html#maxranges">MaxRanges default | unlimited | none | <var>number-of-ranges</var></a></td><td> 200 </td><td>svd</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Number of ranges allowed before returning the complete
 resource </td></tr>
-<tr class="odd"><td><a href="mpm_common.html#maxrequestworkers">MaxRequestWorkers <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of connections that will be processed
+<tr><td><a href="mpm_common.html#maxrequestworkers">MaxRequestWorkers <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Maximum number of connections that will be processed
 simultaneously</td></tr>
-<tr><td><a href="prefork.html#maxspareservers">MaxSpareServers <var>number</var></a></td><td> 10 </td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Maximum number of idle child server processes</td></tr>
-<tr class="odd"><td><a href="mpm_common.html#maxsparethreads">MaxSpareThreads <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of idle threads</td></tr>
-<tr><td><a href="mpm_netware.html#maxthreads">MaxThreads <var>number</var></a></td><td> 2048 </td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Set the maximum number of worker threads</td></tr>
+<tr class="odd"><td><a href="prefork.html#maxspareservers">MaxSpareServers <var>number</var></a></td><td> 10 </td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of idle child server processes</td></tr>
+<tr><td><a href="mpm_common.html#maxsparethreads">MaxSpareThreads <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Maximum number of idle threads</td></tr>
+<tr class="odd"><td><a href="mpm_netware.html#maxthreads">MaxThreads <var>number</var></a></td><td> 2048 </td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Set the maximum number of worker threads</td></tr>
+<tr><td><a href="mod_md.html#mdactivationdelay">MDActivationDelay <var>duration</var></a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">-</td></tr>
 <tr class="odd"><td><a href="mod_md.html#mdbaseserver">MDBaseServer on|off</a></td><td> off </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Control if base server may be managed or only virtual hosts.</td></tr>
 <tr><td><a href="mod_md.html#mdcachallenges">MDCAChallenges <var>name</var> [ <var>name</var> ... ]</a></td><td> tls-alpn-01 http-01 +</td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Type of ACME challenge used to prove domain ownership.</td></tr>
 <tr class="odd"><td><a href="mod_md.html#mdcertificateagreement">MDCertificateAgreement accepted</a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">You confirm that you accepted the Terms of Service of the Certificate
         Authority.</td></tr>
 <tr><td><a href="mod_md.html#mdcertificateauthority">MDCertificateAuthority <var>url</var></a></td><td> https://acme-v02.ap +</td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">The URL of the ACME Certificate Authority service.</td></tr>
-<tr class="odd"><td><a href="mod_md.html#mdcertificatefile">MDCertificateFile path-to-pem-file</a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Specify a static certificate file for the MD.</td></tr>
-<tr><td><a href="mod_md.html#mdcertificatekeyfile">MDCertificateKeyFile path-to-file</a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Specify a static private key for for the static cerrtificate.</td></tr>
-<tr class="odd"><td><a href="mod_md.html#mdcertificatemonitor">MDCertificateMonitor name url</a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">The URL of a certificate log monitor.</td></tr>
-<tr><td><a href="mod_md.html#mdcertificateprotocol">MDCertificateProtocol <var>protocol</var></a></td><td> ACME </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">The protocol to use with the Certificate Authority.</td></tr>
-<tr class="odd"><td><a href="mod_md.html#mdcertificatestatus">MDCertificateStatus on|off</a></td><td> on </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Exposes public certificate information in JSON.</td></tr>
-<tr><td><a href="mod_md.html#mdchallengedns01">MDChallengeDns01 path-to-command</a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">-</td></tr>
-<tr class="odd"><td><a href="mod_md.html#mdcontactemail">MDContactEmail address</a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">-</td></tr>
-<tr><td><a href="mod_md.html#mddrivemode">MDDriveMode always|auto|manual</a></td><td> auto </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">former name of MDRenewMode.</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mdcertificatecheck">MDCertificateCheck <var>name</var> <var>url</var></a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">-</td></tr>
+<tr><td><a href="mod_md.html#mdcertificatefile">MDCertificateFile <var>path-to-pem-file</var></a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Specify a static certificate file for the MD.</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mdcertificatekeyfile">MDCertificateKeyFile <var>path-to-file</var></a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Specify a static private key for for the static cerrtificate.</td></tr>
+<tr><td><a href="mod_md.html#mdcertificatemonitor">MDCertificateMonitor name url</a></td><td> crt.sh https://crt. +</td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">The URL of a certificate log monitor.</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mdcertificateprotocol">MDCertificateProtocol <var>protocol</var></a></td><td> ACME </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">The protocol to use with the Certificate Authority.</td></tr>
+<tr><td><a href="mod_md.html#mdcertificatestatus">MDCertificateStatus on|off</a></td><td> on </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Exposes public certificate information in JSON.</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mdchallengedns01">MDChallengeDns01 <var>path-to-command</var></a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">-</td></tr>
+<tr><td><a href="mod_md.html#mdcontactemail">MDContactEmail <var>address</var></a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">-</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mddrivemode">MDDriveMode always|auto|manual</a></td><td> auto </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">former name of MDRenewMode.</td></tr>
+<tr><td><a href="mod_md.html#mdexternalaccountbinding">MDExternalAccountBinding <var>key-id</var> <var>hmac-64</var> | none | <var>file</var></a></td><td> none </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">-</td></tr>
 <tr class="odd"><td><a href="mod_md.html#mdhttpproxy">MDHttpProxy <var>url</var></a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Define a proxy for outgoing connections.</td></tr>
 <tr><td><a href="mod_md.html#mdmember">MDMember <var>hostname</var></a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Additional hostname for the managed domain.</td></tr>
 <tr class="odd"><td><a href="mod_md.html#mdmembers">MDMembers auto|manual</a></td><td> auto </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Control if the alias domain names are automatically added.</td></tr>
-<tr><td><a href="mod_md.html#mdmessagecmd">MDMessageCmd path-to-cmd optional-args</a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Handle events for Manage Domains</td></tr>
+<tr><td><a href="mod_md.html#mdmessagecmd">MDMessageCmd <var>path-to-cmd</var> <var>optional-args</var></a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Handle events for Manage Domains</td></tr>
 <tr class="odd"><td><a href="mod_md.html#mdmuststaple">MDMustStaple on|off</a></td><td> off </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Control if new certificates carry the OCSP Must Staple flag.</td></tr>
 <tr><td><a href="mod_md.html#mdnotifycmd">MDNotifyCmd <var>path</var> [ <var>args</var> ]</a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Run a program when a Managed Domain is ready.</td></tr>
 <tr class="odd"><td><a href="mod_md.html#mdomain">MDomain <var>dns-name</var> [ <var>other-dns-name</var>... ] [auto|manual]</a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Define list of domain names that belong to one group.</td></tr>
@@ -715,11 +726,11 @@ simultaneously</td></tr>
 <tr><td><a href="mod_md.html#mdrenewwindow">MDRenewWindow <var>duration</var></a></td><td> 33% </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Control when a certificate will be renewed.</td></tr>
 <tr class="odd"><td><a href="mod_md.html#mdrequirehttps">MDRequireHttps off|temporary|permanent</a></td><td> off </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Redirects http: traffic to https: for Managed Domains.</td></tr>
 <tr><td><a href="mod_md.html#mdserverstatus">MDServerStatus on|off</a></td><td> on </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Control if Managed Domain information is added to server-status.</td></tr>
-<tr class="odd"><td><a href="mod_md.html#mdstapleothers">MDStapleOthers on|off</a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Enable stapling for certificates not managed by mod_md.</td></tr>
-<tr><td><a href="mod_md.html#mdstapling">MDStapling on|off</a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Enable stapling for all or a particular MDomain.</td></tr>
-<tr class="odd"><td><a href="mod_md.html#mdstaplingkeepresponse">MDStaplingKeepResponse duration</a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Controls when old responses should be removed.</td></tr>
-<tr><td><a href="mod_md.html#mdstaplingrenewwindow">MDStaplingRenewWindow duration</a></td><td></td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Control when the stapling responses will be renewed.</td></tr>
-<tr class="odd"><td><a href="mod_md.html#mdstoredir">MDStoreDir path</a></td><td> md </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Path on the local file system to store the Managed Domains data.</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mdstapleothers">MDStapleOthers on|off</a></td><td> on </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Enable stapling for certificates not managed by mod_md.</td></tr>
+<tr><td><a href="mod_md.html#mdstapling">MDStapling on|off</a></td><td> off </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Enable stapling for all or a particular MDomain.</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mdstaplingkeepresponse">MDStaplingKeepResponse <var>duration</var></a></td><td> 7d </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Controls when old responses should be removed.</td></tr>
+<tr><td><a href="mod_md.html#mdstaplingrenewwindow">MDStaplingRenewWindow <var>duration</var></a></td><td> 33% </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Control when the stapling responses will be renewed.</td></tr>
+<tr class="odd"><td><a href="mod_md.html#mdstoredir">MDStoreDir <var>path</var></a></td><td> md </td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">Path on the local file system to store the Managed Domains data.</td></tr>
 <tr><td><a href="mod_md.html#mdwarnwindow">MDWarnWindow duration</a></td><td> 10% </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">Define the time window when you want to be warned about an expiring certificate.</td></tr>
 <tr class="odd"><td><a href="mod_socache_memcache.html#memcacheconnttl">MemcacheConnTTL <em>num[units]</em></a></td><td> 15s </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Keepalive time for idle connections</td></tr>
 <tr><td><a href="core.html#mergeslashes">MergeSlashes ON|OFF</a></td><td> ON </td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Controls whether the server merges consecutive slashes in URLs.
@@ -776,7 +787,7 @@ response</td></tr>
 [<var>word</var>|<var>host</var>|<var>domain</var>] ...</a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Words, hosts, or domains that are banned from being
 proxied</td></tr>
 <tr><td><a href="mod_proxy.html#proxydomain">ProxyDomain <var>Domain</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Default domain name for proxied requests</td></tr>
-<tr class="odd"><td><a href="mod_proxy.html#proxyerroroverride">ProxyErrorOverride On|Off</a></td><td> Off </td><td>svd</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Override error pages for proxied content</td></tr>
+<tr class="odd"><td><a href="mod_proxy.html#proxyerroroverride">ProxyErrorOverride Off|On [<var>code</var> ...]</a></td><td> Off </td><td>svd</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Override error pages for proxied content</td></tr>
 <tr><td><a href="mod_proxy_express.html#proxyexpressdbmfile">ProxyExpressDBMFile <var>pathname</var></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Pathname to DBM file.</td></tr>
 <tr class="odd"><td><a href="mod_proxy_express.html#proxyexpressdbmtype">ProxyExpressDBMType <var>type</var></a></td><td> default </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">DBM type of file.</td></tr>
 <tr><td><a href="mod_proxy_express.html#proxyexpressenable">ProxyExpressEnable on|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Enable the module functionality.</td></tr>
@@ -810,7 +821,7 @@ and scripting events.</td></tr>
 <tr class="odd"><td><a href="mod_proxy.html#proxyiobuffersize">ProxyIOBufferSize <var>bytes</var></a></td><td> 8192 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Determine size of internal data throughput buffer</td></tr>
 <tr><td><a href="mod_proxy.html#proxymatch">&lt;ProxyMatch <var>regex</var>&gt; ...&lt;/ProxyMatch&gt;</a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Container for directives applied to regular-expression-matched
 proxied resources</td></tr>
-<tr class="odd"><td><a href="mod_proxy.html#proxymaxforwards">ProxyMaxForwards <var>number</var></a></td><td> -1 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximium number of proxies that a request can be forwarded
+<tr class="odd"><td><a href="mod_proxy.html#proxymaxforwards">ProxyMaxForwards <var>number</var></a></td><td> -1 </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Maximum number of proxies that a request can be forwarded
 through</td></tr>
 <tr><td><a href="mod_proxy.html#proxypass">ProxyPass [<var>path</var>] !|<var>url</var> [<var>key=value</var>
   <var>[key=value</var> ...]] [nocanon] [interpolate] [noquery]</a></td><td></td><td>svd</td><td>E</td></tr><tr><td class="descr" colspan="4">Maps remote servers into the local server URL-space</td></tr>
@@ -845,9 +856,11 @@ header</td></tr>
 <tr class="odd"><td><a href="mod_proxy.html#proxytimeout">ProxyTimeout <var>seconds</var></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Network timeout for proxied requests</td></tr>
 <tr><td><a href="mod_proxy.html#proxyvia">ProxyVia On|Off|Full|Block</a></td><td> Off </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Information provided in the <code>Via</code> HTTP response
 header for proxied requests</td></tr>
-<tr class="odd"><td><a href="core.html#qualifyredirecturl" id="Q" name="Q">QualifyRedirectURL On|Off</a></td><td> Off </td><td>svd</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Controls whether the REDIRECT_URL environment variable is
+<tr class="odd"><td><a href="mod_proxy_wstunnel.html#proxywebsocketfallbacktoproxyhttp">ProxyWebsocketFallbackToProxyHttp On|Off</a></td><td> On </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Instructs this module to let <code class="module"><a href="../mod/mod_proxy_http.html">mod_proxy_http</a></code> handle the request</td></tr>
+<tr><td><a href="core.html#qualifyredirecturl" id="Q" name="Q">QualifyRedirectURL On|Off</a></td><td> Off </td><td>svd</td><td>C</td></tr><tr><td class="descr" colspan="4">Controls whether the REDIRECT_URL environment variable is
              fully qualified</td></tr>
-<tr><td><a href="mod_autoindex.html#readmename" id="R" name="R">ReadmeName <var>filename</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Name of the file that will be inserted at the end
+<tr class="odd"><td><a href="core.html#readbuffersize" id="R" name="R">ReadBufferSize <var>bytes</var></a></td><td> 8192 </td><td>svd</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Size of the buffers used to read data</td></tr>
+<tr><td><a href="mod_autoindex.html#readmename">ReadmeName <var>filename</var></a></td><td></td><td>svdh</td><td>B</td></tr><tr><td class="descr" colspan="4">Name of the file that will be inserted at the end
 of the index listing</td></tr>
 <tr class="odd"><td><a href="mpm_common.html#receivebuffersize">ReceiveBufferSize <var>bytes</var></a></td><td> 0 </td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">TCP receive buffer size</td></tr>
 <tr><td><a href="mod_alias.html#redirect">Redirect [<var>status</var>] [<var>URL-path</var>]
@@ -1050,7 +1063,7 @@ handshake</td></tr>
 <tr class="odd"><td><a href="mod_ssl.html#sslinsecurerenegotiation">SSLInsecureRenegotiation on|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Option to enable support for insecure renegotiation</td></tr>
 <tr><td><a href="mod_ssl.html#sslocspdefaultresponder">SSLOCSPDefaultResponder <em>uri</em></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Set the default responder URI for OCSP validation</td></tr>
 <tr class="odd"><td><a href="mod_ssl.html#sslocspenable">SSLOCSPEnable on|leaf|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Enable OCSP validation of the client certificate chain</td></tr>
-<tr><td><a href="mod_ssl.html#sslocspnoverify">SSLOCSPNoverify <em>On/Off</em></a></td><td> Off </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">skip the OCSP responder certificates verification</td></tr>
+<tr><td><a href="mod_ssl.html#sslocspnoverify">SSLOCSPNoverify on|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">skip the OCSP responder certificates verification</td></tr>
 <tr class="odd"><td><a href="mod_ssl.html#sslocspoverrideresponder">SSLOCSPOverrideResponder on|off</a></td><td> off </td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Force use of the default responder URI for OCSP validation</td></tr>
 <tr><td><a href="mod_ssl.html#sslocspproxyurl">SSLOCSPProxyURL <em>url</em></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">Proxy URL to use for OCSP requests</td></tr>
 <tr class="odd"><td><a href="mod_ssl.html#sslocsprespondercertificatefile">SSLOCSPResponderCertificateFile <em>file</em></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Set of trusted PEM encoded OCSP responder certificates</td></tr>
@@ -1123,18 +1136,36 @@ host.
 Certificate verification</td></tr>
 <tr><td><a href="mpm_common.html#startservers">StartServers <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Number of child server processes created at startup</td></tr>
 <tr class="odd"><td><a href="mpm_common.html#startthreads">StartThreads <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Number of threads created on startup</td></tr>
-<tr><td><a href="mod_substitute.html#substitute">Substitute <var>s/pattern/substitution/[infq]</var></a></td><td></td><td>dh</td><td>E</td></tr><tr><td class="descr" colspan="4">Pattern to filter the response content</td></tr>
-<tr class="odd"><td><a href="mod_substitute.html#substituteinheritbefore">SubstituteInheritBefore on|off</a></td><td> off </td><td>dh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Change the merge order of inherited patterns</td></tr>
-<tr><td><a href="mod_substitute.html#substitutemaxlinelength">SubstituteMaxLineLength <var>bytes</var>(b|B|k|K|m|M|g|G)</a></td><td> 1m </td><td>dh</td><td>E</td></tr><tr><td class="descr" colspan="4">Set the maximum line size</td></tr>
-<tr class="odd"><td><a href="mod_unixd.html#suexec">Suexec On|Off</a></td><td></td><td>s</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">Enable or disable the suEXEC feature</td></tr>
-<tr><td><a href="mod_suexec.html#suexecusergroup">SuexecUserGroup <em>User Group</em></a></td><td></td><td>sv</td><td>E</td></tr><tr><td class="descr" colspan="4">User and group for CGI programs to run as</td></tr>
-<tr class="odd"><td><a href="mpm_common.html#threadlimit" id="T" name="T">ThreadLimit <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Sets the upper limit on the configurable number of threads
+<tr><td><a href="core.html#stricthostcheck">StrictHostCheck ON|OFF</a></td><td> OFF </td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Controls whether the server requires the requested hostname be
+             listed enumerated in the virtual host handling the request
+             </td></tr>
+<tr class="odd"><td><a href="mod_substitute.html#substitute">Substitute <var>s/pattern/substitution/[infq]</var></a></td><td></td><td>dh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Pattern to filter the response content</td></tr>
+<tr><td><a href="mod_substitute.html#substituteinheritbefore">SubstituteInheritBefore on|off</a></td><td> off </td><td>dh</td><td>E</td></tr><tr><td class="descr" colspan="4">Change the merge order of inherited patterns</td></tr>
+<tr class="odd"><td><a href="mod_substitute.html#substitutemaxlinelength">SubstituteMaxLineLength <var>bytes</var>(b|B|k|K|m|M|g|G)</a></td><td> 1m </td><td>dh</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">Set the maximum line size</td></tr>
+<tr><td><a href="mod_unixd.html#suexec">Suexec On|Off</a></td><td></td><td>s</td><td>B</td></tr><tr><td class="descr" colspan="4">Enable or disable the suEXEC feature</td></tr>
+<tr class="odd"><td><a href="mod_suexec.html#suexecusergroup">SuexecUserGroup <em>User Group</em></a></td><td></td><td>sv</td><td>E</td></tr><tr class="odd"><td class="descr" colspan="4">User and group for CGI programs to run as</td></tr>
+<tr><td><a href="mpm_common.html#threadlimit" id="T" name="T">ThreadLimit <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Sets the upper limit on the configurable number of threads
 per child process</td></tr>
-<tr><td><a href="mpm_common.html#threadsperchild">ThreadsPerChild <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">Number of threads created by each child process</td></tr>
-<tr class="odd"><td><a href="mpm_common.html#threadstacksize">ThreadStackSize <var>size</var></a></td><td></td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">The size in bytes of the stack used by threads handling
+<tr class="odd"><td><a href="mpm_common.html#threadsperchild">ThreadsPerChild <var>number</var></a></td><td></td><td>s</td><td>M</td></tr><tr class="odd"><td class="descr" colspan="4">Number of threads created by each child process</td></tr>
+<tr><td><a href="mpm_common.html#threadstacksize">ThreadStackSize <var>size</var></a></td><td></td><td>s</td><td>M</td></tr><tr><td class="descr" colspan="4">The size in bytes of the stack used by threads handling
 client connections</td></tr>
-<tr><td><a href="core.html#timeout">TimeOut <var>seconds</var></a></td><td> 60 </td><td>sv</td><td>C</td></tr><tr><td class="descr" colspan="4">Amount of time the server will wait for
+<tr class="odd"><td><a href="core.html#timeout">TimeOut <var>seconds</var></a></td><td> 60 </td><td>sv</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Amount of time the server will wait for
 certain events before failing a request</td></tr>
+<tr><td><a href="mod_tls.html#tlscertificate">TLSCertificate <em>cert_file</em> [<em>key_file</em>]</a></td><td></td><td>sv</td><td>X</td></tr><tr><td class="descr" colspan="4">adds a certificate and key (PEM encoded) to a server/virtual host.</td></tr>
+<tr class="odd"><td><a href="mod_tls.html#tlsciphersprefer">TLSCiphersPrefer <em>cipher(-list)</em></a></td><td></td><td>sv</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">defines ciphers that are preferred.</td></tr>
+<tr><td><a href="mod_tls.html#tlscipherssuppress">TLSCiphersSuppress <em>cipher(-list)</em></a></td><td></td><td>sv</td><td>X</td></tr><tr><td class="descr" colspan="4">defines ciphers that are not to be used.</td></tr>
+<tr class="odd"><td><a href="mod_tls.html#tlsengine">TLSEngine [<em>address</em>:]<em>port</em></a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">defines on which address+port the module shall handle incoming connections.</td></tr>
+<tr><td><a href="mod_tls.html#tlshonorclientorder">TLSHonorClientOrder on|off</a></td><td> on </td><td>sv</td><td>X</td></tr><tr><td class="descr" colspan="4">determines if the order of ciphers supported by the client is honored</td></tr>
+<tr class="odd"><td><a href="mod_tls.html#tlsoptions">TLSOptions [+|-]<em>option</em></a></td><td></td><td>svdh</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">enables SSL variables for requests.</td></tr>
+<tr><td><a href="mod_tls.html#tlsprotocol">TLSProtocol <em>version</em>+</a></td><td> v1.2+ </td><td>sv</td><td>X</td></tr><tr><td class="descr" colspan="4">specifies the minimum version of the TLS protocol to use.</td></tr>
+<tr class="odd"><td><a href="mod_tls.html#tlsproxyca">TLSProxyCA <em>file.pem</em></a></td><td></td><td>svp</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">sets the root certificates to validate the backend server with.</td></tr>
+<tr><td><a href="mod_tls.html#tlsproxyciphersprefer">TLSProxyCiphersPrefer <em>cipher(-list)</em></a></td><td></td><td>svp</td><td>X</td></tr><tr><td class="descr" colspan="4">defines ciphers that are preferred for a proxy connection.</td></tr>
+<tr class="odd"><td><a href="mod_tls.html#tlsproxycipherssuppress">TLSProxyCiphersSuppress <em>cipher(-list)</em></a></td><td></td><td>svp</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">defines ciphers that are not to be used for a proxy connection.</td></tr>
+<tr><td><a href="mod_tls.html#tlsproxyengine">TLSProxyEngine on|off</a></td><td></td><td>svp</td><td>X</td></tr><tr><td class="descr" colspan="4">enables TLS for backend connections.</td></tr>
+<tr class="odd"><td><a href="mod_tls.html#tlsproxymachinecertificate">TLSProxyMachineCertificate <em>cert_file</em> [<em>key_file</em>]</a></td><td></td><td>svp</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">adds a certificate and key file (PEM encoded) to a proxy setup.</td></tr>
+<tr><td><a href="mod_tls.html#tlsproxyprotocol">TLSProxyProtocol <em>version</em>+</a></td><td> v1.2+ </td><td>svp</td><td>X</td></tr><tr><td class="descr" colspan="4">specifies the minimum version of the TLS protocol to use in proxy connections.</td></tr>
+<tr class="odd"><td><a href="mod_tls.html#tlssessioncache">TLSSessionCache <em>cache-spec</em></a></td><td></td><td>s</td><td>X</td></tr><tr class="odd"><td class="descr" colspan="4">specifies the cache for TLS session resumption.</td></tr>
+<tr><td><a href="mod_tls.html#tlsstrictsni">TLSStrictSNI on|off</a></td><td> on </td><td>s</td><td>X</td></tr><tr><td class="descr" colspan="4">enforces exact matches of client server indicators (SNI) against host names.</td></tr>
 <tr class="odd"><td><a href="core.html#traceenable">TraceEnable <var>[on|off|extended]</var></a></td><td> on </td><td>s</td><td>C</td></tr><tr class="odd"><td class="descr" colspan="4">Determines the behaviour on <code>TRACE</code> requests</td></tr>
 <tr><td><a href="mod_log_config.html#transferlog">TransferLog <var>file</var>|<var>pipe</var></a></td><td></td><td>sv</td><td>B</td></tr><tr><td class="descr" colspan="4">Specify location of a log file</td></tr>
 <tr class="odd"><td><a href="mod_mime.html#typesconfig">TypesConfig <var>file-path</var></a></td><td> conf/mime.types </td><td>s</td><td>B</td></tr><tr class="odd"><td class="descr" colspan="4">The location of the <code>mime.types</code> file</td></tr>
@@ -1184,13 +1215,13 @@ can be <a href="#sniffing">automatically detected</a></td></tr>
 <div class="bottomlang">
 <p><span>Idiomas disponibles: </span><a href="../de/mod/quickreference.html" hreflang="de" rel="alternate" title="Deutsch">&nbsp;de&nbsp;</a> |
 <a href="../en/mod/quickreference.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
-<a href="../es/mod/quickreference.html" title="Español">&nbsp;es&nbsp;</a> |
-<a href="../fr/mod/quickreference.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
+<a href="../es/mod/quickreference.html" title="Espa&#241;ol">&nbsp;es&nbsp;</a> |
+<a href="../fr/mod/quickreference.html" hreflang="fr" rel="alternate" title="Fran&#231;ais">&nbsp;fr&nbsp;</a> |
 <a href="../ja/mod/quickreference.html" hreflang="ja" rel="alternate" title="Japanese">&nbsp;ja&nbsp;</a> |
 <a href="../ko/mod/quickreference.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
-<a href="../tr/mod/quickreference.html" hreflang="tr" rel="alternate" title="Türkçe">&nbsp;tr&nbsp;</a> |
+<a href="../tr/mod/quickreference.html" hreflang="tr" rel="alternate" title="T&#252;rk&#231;e">&nbsp;tr&nbsp;</a> |
 <a href="../zh-cn/mod/quickreference.html" hreflang="zh-cn" rel="alternate" title="Simplified Chinese">&nbsp;zh-cn&nbsp;</a></p>
-</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comentarios</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="https://httpd.apache.org/lists.html">mailing lists</a>.</div>
+</div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comentarios</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Libera.chat, or sent to our <a href="https://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
 var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/quickreference.html';
@@ -1208,8 +1239,8 @@ var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/quickreference.h
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
-<p class="apache">Copyright 2020 The Apache Software Foundation.<br />Licencia bajo los términos de la <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Módulos</a> | <a href="../mod/directives.html">Directivas</a> | <a href="http://wiki.apache.org/httpd/FAQ">Preguntas Frecuentes</a> | <a href="../glossary.html">Glosario</a> | <a href="../sitemap.html">Mapa del sitio web</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="apache">Copyright 2022 The Apache Software Foundation.<br />Licencia bajo los t&#233;rminos de la <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+<p class="menu"><a href="../mod/">M&#243;dulos</a> | <a href="../mod/directives.html">Directivas</a> | <a href="http://wiki.apache.org/httpd/FAQ">Preguntas Frecuentes</a> | <a href="../glossary.html">Glosario</a> | <a href="../sitemap.html">Mapa del sitio web</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

@@ -18,6 +18,12 @@
 #include "apr_file_io.h"
 #include "apr_strings.h"
 #include "apr_buckets.h"
+
+#include "apr_version.h"
+#if !APR_VERSION_AT_LEAST(2,0,0)
+#include "apu_version.h"
+#endif
+
 #include "httpd.h"
 #include "http_config.h"
 #include "http_log.h"
@@ -471,6 +477,7 @@ static int open_entity(cache_handle_t *h, request_rec *r, const char *key)
      * about for the lifetime of the response.
      */
     apr_pool_create(&sobj->pool, r->pool);
+    apr_pool_tag(sobj->pool, "mod_cache_socache (open_entity)");
 
     sobj->buffer = apr_palloc(sobj->pool, dconf->max);
     sobj->buffer_len = dconf->max;
@@ -800,6 +807,7 @@ static apr_status_t store_headers(cache_handle_t *h, request_rec *r,
                     : obj->info.expire + dconf->mintime;
 
     apr_pool_create(&sobj->pool, r->pool);
+    apr_pool_tag(sobj->pool, "mod_cache_socache (store_headers)");
 
     sobj->buffer = apr_palloc(sobj->pool, dconf->max);
     sobj->buffer_len = dconf->max;
@@ -1044,7 +1052,8 @@ static apr_status_t store_body(cache_handle_t *h, request_rec *r,
     /* Was this the final bucket? If yes, perform sanity checks.
      */
     if (seen_eos) {
-        const char *cl_header = apr_table_get(r->headers_out, "Content-Length");
+        const char *cl_header;
+        apr_off_t cl;
 
         if (r->connection->aborted || r->no_cache) {
             ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(02380)
@@ -1055,18 +1064,16 @@ static apr_status_t store_body(cache_handle_t *h, request_rec *r,
             sobj->pool = NULL;
             return APR_EGENERAL;
         }
-        if (cl_header) {
-            apr_off_t cl;
-            char *cl_endp;
-            if (apr_strtoff(&cl, cl_header, &cl_endp, 10) != APR_SUCCESS
-                    || *cl_endp != '\0' || cl != sobj->body_length) {
-                ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(02381)
-                        "URL %s didn't receive complete response, not caching",
-                        h->cache_obj->key);
-                apr_pool_destroy(sobj->pool);
-                sobj->pool = NULL;
-                return APR_EGENERAL;
-            }
+
+        cl_header = apr_table_get(r->headers_out, "Content-Length");
+        if (cl_header && (!ap_parse_strict_length(&cl, cl_header)
+                          || cl != sobj->body_length)) {
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(02381)
+                    "URL %s didn't receive complete response, not caching",
+                    h->cache_obj->key);
+            apr_pool_destroy(sobj->pool);
+            sobj->pool = NULL;
+            return APR_EGENERAL;
         }
 
         /* All checks were fine, we're good to go when the commit comes */

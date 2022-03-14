@@ -58,9 +58,12 @@
 
 int md_http_cert_status(request_rec *r)
 {
-    md_json_t *resp, *j, *mdj, *certj;
+    int i;
+    md_json_t *resp, *mdj, *cj;
     const md_srv_conf_t *sc;
     const md_t *md;
+    md_pkey_spec_t *spec;
+    const char *keyname;
     apr_bucket_brigade *bb;
     apr_status_t rv;
     
@@ -96,32 +99,40 @@ int md_http_cert_status(request_rec *r)
                   "status for MD: %s is %s", md->name, md_json_writep(mdj, r->pool, MD_JSON_FMT_INDENT));
 
     resp = md_json_create(r->pool);
-    
-    if (md_json_has_key(mdj, MD_KEY_CERT, MD_KEY_VALID, MD_KEY_UNTIL, NULL)) {
-        md_json_sets(md_json_gets(mdj, MD_KEY_CERT, MD_KEY_VALID, MD_KEY_UNTIL, NULL), 
-                     resp, MD_KEY_VALID, MD_KEY_UNTIL, NULL);
-    }
-    if (md_json_has_key(mdj, MD_KEY_CERT, MD_KEY_VALID, MD_KEY_FROM, NULL)) {
-        md_json_sets(md_json_gets(mdj, MD_KEY_CERT, MD_KEY_VALID, MD_KEY_FROM, NULL), 
-                     resp, MD_KEY_VALID, MD_KEY_FROM, NULL);
-    }
-    if (md_json_has_key(mdj, MD_KEY_CERT, MD_KEY_SERIAL, NULL)) {
-        md_json_sets(md_json_gets(mdj, MD_KEY_CERT, MD_KEY_SERIAL, NULL), 
-                     resp, MD_KEY_SERIAL, NULL);
-    }
-    if (md_json_has_key(mdj, MD_KEY_CERT, MD_KEY_SHA256_FINGERPRINT, NULL)) {
-        md_json_sets(md_json_gets(mdj, MD_KEY_CERT, MD_KEY_SHA256_FINGERPRINT, NULL), 
-                     resp, MD_KEY_SHA256_FINGERPRINT, NULL);
+
+    if (md_json_has_key(mdj, MD_KEY_CERT, MD_KEY_VALID, NULL)) {
+         md_json_setj(md_json_getj(mdj, MD_KEY_CERT, MD_KEY_VALID, NULL), resp, MD_KEY_VALID, NULL);
+     }
+
+    for (i = 0; i < md_cert_count(md); ++i) {
+        spec = md_pkeys_spec_get(md->pks, i);
+        keyname = md_pkey_spec_name(spec);
+        cj = md_json_create(r->pool);
+
+        if (md_json_has_key(mdj, MD_KEY_CERT, keyname, MD_KEY_VALID, NULL)) {
+            md_json_setj(md_json_getj(mdj, MD_KEY_CERT, keyname, MD_KEY_VALID, NULL),
+                         cj, MD_KEY_VALID, NULL);
+        }
+
+        if (md_json_has_key(mdj, MD_KEY_CERT, keyname, MD_KEY_SERIAL, NULL)) {
+            md_json_sets(md_json_gets(mdj, MD_KEY_CERT, keyname, MD_KEY_SERIAL, NULL),
+                         cj, MD_KEY_SERIAL, NULL);
+        }
+        if (md_json_has_key(mdj, MD_KEY_CERT, keyname, MD_KEY_SHA256_FINGERPRINT, NULL)) {
+            md_json_sets(md_json_gets(mdj, MD_KEY_CERT, keyname, MD_KEY_SHA256_FINGERPRINT, NULL),
+                         cj, MD_KEY_SHA256_FINGERPRINT, NULL);
+        }
+        md_json_setj(cj, resp, keyname, NULL );
     }
     
     if (md_json_has_key(mdj, MD_KEY_RENEWAL, NULL)) {
-        /* copy over the information we want to make public about this:
-         *  - when not finished, add an empty object to indicate something is going on
-         *  - when a certificate is staged, add the information from that */
-        certj = md_json_getj(mdj, MD_KEY_RENEWAL, MD_KEY_CERT, NULL);
-        j = certj? certj : md_json_create(r->pool);; 
-        md_json_setj(j, resp, MD_KEY_RENEWAL, NULL);
-    }
+           /* copy over the information we want to make public about this:
+            *  - when not finished, add an empty object to indicate something is going on
+            *  - when a certificate is staged, add the information from that */
+           cj = md_json_getj(mdj, MD_KEY_RENEWAL, MD_KEY_CERT, NULL);
+           cj = cj? cj : md_json_create(r->pool);; 
+           md_json_setj(cj, resp, MD_KEY_RENEWAL, MD_KEY_CERT, NULL);
+     }
     
     ap_log_rerror(APLOG_MARK, APLOG_TRACE2, 0, r, "md[%s]: sending status", md->name);
     apr_table_set(r->headers_out, "Content-Type", "application/json"); 
@@ -161,7 +172,10 @@ static void si_val_status(status_ctx *ctx, md_json_t *mdj, const status_info *in
     apr_time_t until;
     (void)info;
     switch (md_json_getl(mdj, info->key, NULL)) {
-        case MD_S_INCOMPLETE: s = "incomplete"; break;
+        case MD_S_INCOMPLETE:
+            s = md_json_gets(mdj, MD_KEY_STATE_DESCR, NULL);
+            s = s? apr_psprintf(ctx->p, "incomplete: %s", s) : "incomplete";
+            break;
         case MD_S_EXPIRED_DEPRECATED:
         case MD_S_COMPLETE:
             until = md_json_get_time(mdj, MD_KEY_CERT, MD_KEY_VALID, MD_KEY_UNTIL, NULL);
@@ -177,28 +191,11 @@ static void si_val_status(status_ctx *ctx, md_json_t *mdj, const status_info *in
 static void si_val_url(status_ctx *ctx, md_json_t *mdj, const status_info *info)
 {
     const char *url, *s;
-    apr_uri_t uri_parsed;
 
-    
     s = url = md_json_gets(mdj, info->key, NULL);
     if (!url) return;
-    if (!strcmp(LE_ACMEv2_PROD, url)) {
-        s = "Let's Encrypt";
-    }
-    else if (!strcmp(LE_ACMEv2_STAGING, url)) {
-        s = "Let's Encrypt (staging)";
-    }
-    else if (!strcmp(LE_ACMEv1_PROD, url)) {
-        s = "Let's Encrypt (v1)";
-    }
-    else if (!strcmp(LE_ACMEv1_STAGING, url)) {
-        s = "Let's Encrypt (v1,staging)";
-    }
-    else if (APR_SUCCESS == apr_uri_parse(ctx->p, url, &uri_parsed)) {
-        s = uri_parsed.hostname;
-        
-    }
-    apr_brigade_printf(ctx->bb, NULL, NULL, "<a href='%s'>%s</a>", 
+    s = md_get_ca_name_from_url(ctx->p, url);
+    apr_brigade_printf(ctx->bb, NULL, NULL, "<a href='%s'>%s</a>",
                        ap_escape_html2(ctx->p, url, 1), 
                        ap_escape_html2(ctx->p, s, 1));
 }
@@ -315,13 +312,24 @@ static void si_val_ca_url(status_ctx *ctx, md_json_t *mdj, const status_info *in
     jcert = md_json_getj(mdj, info->key, NULL);
     if (jcert) si_val_url(ctx, jcert, &sub);
 }
-    
+
+static int count_certs(void *baton, const char *key, md_json_t *json)
+{
+    int *pcount = baton;
+
+    (void)json;
+    if (strcmp(key, MD_KEY_VALID)) {
+        *pcount += 1;
+    }
+    return 1;
+}
+
 static void print_job_summary(apr_bucket_brigade *bb, md_json_t *mdj, const char *key, 
                               const char *separator)
 {
     char buffer[HUGE_STRING_LEN];
     apr_status_t rv;
-    int finished, errors;
+    int finished, errors, cert_count;
     apr_time_t t;
     const char *s, *line;
     
@@ -329,7 +337,7 @@ static void print_job_summary(apr_bucket_brigade *bb, md_json_t *mdj, const char
         return;
     }
     
-    finished = (int)md_json_getl(mdj, key, MD_KEY_FINISHED, NULL);
+    finished = md_json_getb(mdj, key, MD_KEY_FINISHED, NULL);
     errors = (int)md_json_getl(mdj, key, MD_KEY_ERRORS, NULL);
     rv = (apr_status_t)md_json_getl(mdj, key, MD_KEY_LAST, MD_KEY_STATUS, NULL);
     
@@ -342,8 +350,16 @@ static void print_job_summary(apr_bucket_brigade *bb, md_json_t *mdj, const char
     }
     
     if (finished) {
-        line = apr_psprintf(bb->p, "%s finished successfully.", line);
-    } 
+        cert_count = 0;
+        md_json_iterkey(count_certs, &cert_count, mdj, key, MD_KEY_CERT, NULL);
+        if (cert_count > 0) {
+            line =apr_psprintf(bb->p, "%s  finished, %d new certificate%s staged.",
+                               line, cert_count, cert_count > 1? "s" : "");
+        }
+        else {
+            line = apr_psprintf(bb->p, "%s  finished successfully.", line);
+        }
+    }
     else {
         s = md_json_gets(mdj, key, MD_KEY_LAST, MD_KEY_DETAIL, NULL);
         if (s) line = apr_psprintf(bb->p, "%s %s", line, s);
@@ -388,16 +404,26 @@ static void si_val_activity(status_ctx *ctx, md_json_t *mdj, const status_info *
     }
 }
 
-static void si_val_remote_check(status_ctx *ctx, md_json_t *mdj, const status_info *info)
+static int cert_check_iter(void *baton, const char *key, md_json_t *json)
 {
+    status_ctx *ctx = baton;
     const char *fingerprint;
     
+    fingerprint = md_json_gets(json, MD_KEY_SHA256_FINGERPRINT, NULL);
+    if (fingerprint) {
+        apr_brigade_printf(ctx->bb, NULL, NULL, 
+                           "<a href=\"%s%s\">%s[%s]</a><br>", 
+                           ctx->mc->cert_check_url, fingerprint, 
+                           ctx->mc->cert_check_name, key);
+    }
+    return 1;
+}
+
+static void si_val_remote_check(status_ctx *ctx, md_json_t *mdj, const status_info *info)
+{
     (void)info;
     if (ctx->mc->cert_check_name && ctx->mc->cert_check_url) {
-        fingerprint = md_json_gets(mdj, MD_KEY_CERT, MD_KEY_SHA256_FINGERPRINT, NULL);
-        apr_brigade_printf(ctx->bb, NULL, NULL, 
-                           "<a href=\"%s%s\">%s</a> ", 
-                           ctx->mc->cert_check_url, fingerprint, ctx->mc->cert_check_name);
+        md_json_iterkey(cert_check_iter, ctx, mdj, MD_KEY_CERT, NULL);
     }
 }
 
@@ -436,6 +462,13 @@ static void add_json_val(status_ctx *ctx, md_json_t *j)
     }
 }
 
+static void si_val_names(status_ctx *ctx, md_json_t *mdj, const status_info *info)
+{
+    apr_brigade_puts(ctx->bb, NULL, NULL, "<div style=\"max-width:400px;\">");
+    add_json_val(ctx, md_json_getj(mdj, info->key, NULL));
+    apr_brigade_puts(ctx->bb, NULL, NULL, "</div>");
+}
+
 static void add_status_cell(status_ctx *ctx, md_json_t *mdj, const status_info *info)
 {
     if (info->fn) {
@@ -448,7 +481,7 @@ static void add_status_cell(status_ctx *ctx, md_json_t *mdj, const status_info *
 
 static const status_info status_infos[] = {
     { "Domain", MD_KEY_NAME, NULL },
-    { "Names", MD_KEY_DOMAINS, NULL },
+    { "Names", MD_KEY_DOMAINS, si_val_names },
     { "Status", MD_KEY_STATE, si_val_status },
     { "Valid", MD_KEY_CERT, si_val_cert_valid_time },
     { "CA", MD_KEY_CA, si_val_ca_url },

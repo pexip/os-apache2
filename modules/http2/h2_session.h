@@ -132,7 +132,7 @@ typedef struct h2_session {
     const char *last_status_msg;    /* the one already reported */
     
     struct h2_iqueue *in_pending;   /* all streams with input pending */
-    struct h2_iqueue *in_process;   /* all streams ready for processing on slave */
+    struct h2_iqueue *in_process;   /* all streams ready for processing on a secondary */
 
 } h2_session;
 
@@ -186,11 +186,6 @@ void h2_session_close(h2_session *session);
  * @param != 0 iff push is enabled in client settings
  */
 int h2_session_push_enabled(h2_session *session);
-
-/**
- * Look up the stream in this session with the given id.
- */
-struct h2_stream *h2_session_stream_get(h2_session *session, int stream_id);
 
 /**
  * Submit a push promise on the stream and schedule the new steam for

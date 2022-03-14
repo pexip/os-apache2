@@ -21,7 +21,7 @@
 
 /**
  * A h2_task fakes a HTTP/1.1 request from the data in a HTTP/2 stream 
- * (HEADER+CONT.+DATA) the module recieves.
+ * (HEADER+CONT.+DATA) the module receives.
  *
  * In order to answer a HTTP/2 stream, we want all Apache httpd infrastructure
  * to be involved as usual, as if this stream can as a separate HTTP/1.1
@@ -71,6 +71,7 @@ struct h2_task {
         unsigned int opened : 1;
         unsigned int sent_response : 1;
         unsigned int copy_files : 1;
+        unsigned int buffered : 1;
         struct h2_response_parser *rparser;
         apr_bucket_brigade *bb;
         apr_size_t max_buffer;
@@ -90,7 +91,7 @@ struct h2_task {
     apr_bucket *eor;
 };
 
-h2_task *h2_task_create(conn_rec *slave, int stream_id,
+h2_task *h2_task_create(conn_rec *secondary, int stream_id,
                         const h2_request *req, struct h2_mplx *m, 
                         struct h2_bucket_beam *input, 
                         apr_interval_time_t timeout,
@@ -111,7 +112,7 @@ void h2_task_rst(h2_task *task, int error);
 
 void h2_task_register_hooks(void);
 /*
- * One time, post config intialization.
+ * One time, post config initialization.
  */
 apr_status_t h2_task_init(apr_pool_t *pool, server_rec *s);
 

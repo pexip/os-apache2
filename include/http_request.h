@@ -364,6 +364,18 @@ AP_DECLARE_HOOK(int,create_request,(request_rec *r))
 
 /**
  * This hook allow modules an opportunity to translate the URI into an
+ * actual filename, before URL decoding happens.
+ * @param r The current request
+ * @return DECLINED to let other modules handle the pre-translation,
+ *         OK if it was handled and no other module should process it,
+ *         DONE if no further transformation should happen on the URI,
+ *         HTTP_... in case of error.
+ * @ingroup hooks
+ */
+AP_DECLARE_HOOK(int,pre_translate_name,(request_rec *r))
+
+/**
+ * This hook allow modules an opportunity to translate the URI into an
  * actual filename.  If no modules do anything special, the server's default
  * rules will be followed.
  * @param r The current request
@@ -589,7 +601,7 @@ AP_DECLARE_DATA extern const apr_bucket_type_t ap_bucket_type_eor;
  * @param e The bucket to inspect
  * @return true or false
  */
-#define AP_BUCKET_IS_EOR(e)         (e->type == &ap_bucket_type_eor)
+#define AP_BUCKET_IS_EOR(e)         ((e)->type == &ap_bucket_type_eor)
 
 /**
  * Make the bucket passed in an End Of REQUEST (EOR) bucket

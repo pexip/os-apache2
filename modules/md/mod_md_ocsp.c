@@ -23,6 +23,7 @@
 #include <httpd.h>
 #include <http_core.h>
 #include <http_log.h>
+#include <http_ssl.h>
 
 #include "mod_watchdog.h"
 
@@ -52,52 +53,73 @@ static int staple_here(md_srv_conf_t *sc)
             && md_config_geti(sc, MD_CONFIG_STAPLE_OTHERS));
 }
 
-apr_status_t md_ocsp_init_stapling_status(server_rec *s, apr_pool_t *p, 
-                                          X509 *cert, X509 *issuer)
+int md_ocsp_prime_status(server_rec *s, apr_pool_t *p,
+                         const char *id, apr_size_t id_len, const char *pem)
 {
     md_srv_conf_t *sc;
     const md_t *md;
-    apr_status_t rv;
+    apr_array_header_t *chain;
+    apr_status_t rv = APR_ENOENT;
 
     sc = md_config_get(s);
-    if (!staple_here(sc)) goto declined;
+    if (!staple_here(sc)) goto cleanup;
 
     md = ((sc->assigned && sc->assigned->nelts == 1)?
           APR_ARRAY_IDX(sc->assigned, 0, const md_t*) : NULL);
-    rv = md_ocsp_prime(sc->mc->ocsp, md_cert_wrap(p, cert), 
-                       md_cert_wrap(p, issuer), md);
-    ap_log_error(APLOG_MARK, APLOG_TRACE1, rv, s, "init stapling for: %s", 
-                 md? md->name : s->server_hostname);
-    if (APR_SUCCESS == rv) {
-        return OK;
+    chain = apr_array_make(p, 5, sizeof(md_cert_t*));
+    rv = md_cert_read_chain(chain, p, pem, strlen(pem));
+    if (APR_SUCCESS != rv) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, rv, s, APLOGNO(10268) "init stapling for: %s, "
+                     "unable to parse PEM data", md? md->name : s->server_hostname);
+        goto cleanup;
     }
-declined:
-    return DECLINED;
+    else if (chain->nelts < 2) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, rv, s, APLOGNO(10269) "init stapling for: %s, "
+                     "need at least 2 certificates in PEM data", md? md->name : s->server_hostname);
+        rv = APR_EINVAL;
+        goto cleanup;
+    }
+
+    rv = md_ocsp_prime(sc->mc->ocsp, id, id_len,
+                       APR_ARRAY_IDX(chain, 0, md_cert_t*),
+                       APR_ARRAY_IDX(chain, 1, md_cert_t*), md);
+    ap_log_error(APLOG_MARK, APLOG_TRACE1, rv, s, "init stapling for: %s",
+                 md? md->name : s->server_hostname);
+
+cleanup:
+    return (APR_SUCCESS == rv)? OK : DECLINED;
 }
 
-apr_status_t md_ocsp_get_stapling_status(unsigned char **pder, int *pderlen, 
-                                         conn_rec *c, server_rec *s, X509 *cert)
+typedef struct {
+    unsigned char *der;
+    apr_size_t der_len;
+} ocsp_copy_ctx_t;
+
+int md_ocsp_provide_status(server_rec *s, conn_rec *c,
+                           const char *id, apr_size_t id_len,
+                           ap_ssl_ocsp_copy_resp *cb, void *userdata)
 {
     md_srv_conf_t *sc;
     const md_t *md;
     apr_status_t rv;
-    
+
     sc = md_config_get(s);
     if (!staple_here(sc)) goto declined;
-    
+
     md = ((sc->assigned && sc->assigned->nelts == 1)?
           APR_ARRAY_IDX(sc->assigned, 0, const md_t*) : NULL);
-    ap_log_cerror(APLOG_MARK, APLOG_TRACE2, 0, c, "get stapling for: %s", 
+    ap_log_cerror(APLOG_MARK, APLOG_TRACE2, 0, c, "get stapling for: %s",
                   md? md->name : s->server_hostname);
-    rv = md_ocsp_get_status(pder, pderlen, sc->mc->ocsp, 
-                            md_cert_wrap(c->pool, cert), c->pool, md);
+
+    rv = md_ocsp_get_status(cb, userdata, sc->mc->ocsp, id, id_len, c->pool, md);
     if (APR_STATUS_IS_ENOENT(rv)) goto declined;
-    return rv;
-    
+    return OK;
+
 declined:
     return DECLINED;
 }
-                          
+
+
 /**************************************************************************************************/
 /* watchdog based impl. */
 
