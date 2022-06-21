@@ -1,3 +1,9 @@
+apache2 (2.4.54-0pexip1) pexip; urgency=medium
+
+  * New upstream release.
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 21 Jun 2022 17:09:21 +0100
+
 apache2 (2.4.53-0pexip2) pexip; urgency=medium
 
   * Initial bullseye build
