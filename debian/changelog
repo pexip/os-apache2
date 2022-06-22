@@ -1,3 +1,9 @@
+apache2 (2.4.54-0pexip2) pexip; urgency=medium
+
+  * Build for bullseye.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Wed, 22 Jun 2022 15:20:01 +0100
+
 apache2 (2.4.54-0pexip1) pexip; urgency=medium
 
   * New upstream release.
